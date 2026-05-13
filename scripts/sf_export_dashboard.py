@@ -33,12 +33,12 @@ _creds = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', '')
 if _creds and not Path(_creds).is_absolute():
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = str(_ROOT / _creds)
 
-# ── AUTH ──────────────────────────────────────────────────────────────────────
+# -- AUTH ----------------------------------------------------------------------
 # Set SALESFORCE_SESSION_ID in .env (F12 → Application → Cookies → sid)
 SESSION_ID   = os.environ.get("SALESFORCE_SESSION_ID", "")
 INSTANCE     = "qad.my.salesforce.com"
 
-# ── CONFIG ────────────────────────────────────────────────────────────────────
+# -- CONFIG --------------------------------------------------------------------
 FISCAL_YEAR  = 2027
 OUTPUT_FILE  = "dashboard_export.csv"
 GCP_PROJECT  = "forecast-dashboard-mvp"
@@ -90,7 +90,7 @@ STAGE_GROUP = {
 }
 
 
-# ── SOQL ──────────────────────────────────────────────────────────────────────
+# -- SOQL ----------------------------------------------------------------------
 # Quarter assignment uses Prior_Contract_End_Date__c (PCED) for renewals,
 # CloseDate for sales opps. FY label = end year (Feb-Apr 2026 = FY2027).
 #
@@ -109,6 +109,7 @@ STAGE_GROUP = {
 SOQL = f"""
 SELECT
     Id,
+    CurrencyIsoCode,
     Name,
     AccountId,
     Account.Name,
@@ -157,7 +158,7 @@ ORDER BY CloseDate ASC
 """
 
 
-# ── HELPERS ───────────────────────────────────────────────────────────────────
+# -- HELPERS -------------------------------------------------------------------
 def safe_float(val):
     try:
         return float(val) if val is not None else 0.0
@@ -206,17 +207,17 @@ def flatten_record(rec):
     return flat
 
 
-# ── CONNECT ───────────────────────────────────────────────────────────────────
+# -- CONNECT -------------------------------------------------------------------
 def connect_sf():
     if not SESSION_ID:
         raise RuntimeError("SALESFORCE_SESSION_ID is not set. Add it to .env or export it.")
     print("  Connecting to Salesforce...")
     sf = Salesforce(instance=INSTANCE, session_id=SESSION_ID)
-    print(f"  Connected → {sf.sf_instance}")
+    print(f"  Connected: {sf.sf_instance}")
     return sf
 
 
-# ── FETCH ─────────────────────────────────────────────────────────────────────
+# -- FETCH ---------------------------------------------------------------------
 def fetch_opportunities(sf):
     print("  Running SOQL query...")
     result  = sf.query_all(SOQL)
@@ -226,8 +227,18 @@ def fetch_opportunities(sf):
     return df
 
 
-# ── TRANSFORM ─────────────────────────────────────────────────────────────────
-def transform(df):
+def fetch_fx_rates(sf) -> dict:
+    """Returns {IsoCode: ConversionRate} for all active currencies. USD=1.0 always present."""
+    print("  Fetching FX rates...")
+    result = sf.query_all("SELECT IsoCode, ConversionRate FROM CurrencyType WHERE IsActive = true")
+    fx = {r["IsoCode"]: float(r["ConversionRate"]) for r in result["records"]}
+    fx.setdefault("USD", 1.0)
+    print(f"  FX rates: {len(fx)} currencies — {', '.join(sorted(fx))}")
+    return fx
+
+
+# -- TRANSFORM -----------------------------------------------------------------
+def transform(df, fx_rates=None):
     print("  Transforming...")
 
     # Rename for clarity
@@ -292,6 +303,18 @@ def transform(df):
 
     df["ACV_Final"] = df.apply(smart_acv, axis=1)
 
+    # FX conversion — ACV_USD and ATR_Value_USD in USD
+    _fx = fx_rates or {}
+    def _rate(iso):
+        return _fx.get(str(iso).strip().upper(), 1.0) if iso and str(iso).strip() else 1.0
+
+    df["FX_Rate"]      = df["CurrencyIsoCode"].apply(_rate)
+    # ConversionRate in SF = units of currency per 1 USD (e.g. INR=83, EUR~0.9)
+    # Divide to convert native amount to USD
+    safe_fx = df["FX_Rate"].replace(0, 1.0)
+    df["ACV_USD"]      = (df["ACV_Final"]   / safe_fx).round(2)
+    df["ATR_Value_USD"]= (df["ATR_Value"]   / safe_fx).round(2)
+
     # Fiscal quarter (PCED-based for renewals)
     df["FiscalQuarter"] = df.apply(assign_quarter, axis=1)
 
@@ -353,7 +376,7 @@ def transform(df):
     return df
 
 
-# ── FILTER ────────────────────────────────────────────────────────────────────
+# -- FILTER --------------------------------------------------------------------
 def apply_filters(df):
     print("  Applying exclusion filters...")
     before = len(df)
@@ -366,21 +389,22 @@ def apply_filters(df):
         df = df[~df["Name"].str.contains(pattern, case=False, na=False)]
 
     after = len(df)
-    print(f"  Filtered {before - after} rows → {after} remaining")
+    print(f"  Filtered {before - after} rows -> {after} remaining")
     return df.copy()
 
 
-# ── PREVIEW ───────────────────────────────────────────────────────────────────
+# -- PREVIEW -------------------------------------------------------------------
 def print_preview(df):
     print()
-    print(f"  {'─'*50}")
+    print(f"  {'-'*50}")
     print(f"  Total opps     : {len(df)}")
     won  = df[df["Is_Won"]]
     lost = df[df["Is_Lost"]]
     open_ = df[df["Is_Open"]]
-    print(f"  Closed-Won     : {len(won):>4}  ACV: ${won['ACV_Final'].sum()/1e6:.1f}M")
-    print(f"  Closed-Lost    : {len(lost):>4}  ACV: ${lost['ACV_Final'].sum()/1e6:.1f}M")
-    print(f"  Open pipeline  : {len(open_):>4}  ACV: ${open_['ACV_Final'].sum()/1e6:.1f}M")
+    def _usd(sub): return sub["ACV_USD"].sum() if "ACV_USD" in sub.columns else sub["ACV_Final"].sum()
+    print(f"  Closed-Won     : {len(won):>4}  ACV native: ${won['ACV_Final'].sum()/1e6:.1f}M  ACV_USD: ${_usd(won)/1e6:.1f}M")
+    print(f"  Closed-Lost    : {len(lost):>4}  ACV native: ${lost['ACV_Final'].sum()/1e6:.1f}M  ACV_USD: ${_usd(lost)/1e6:.1f}M")
+    print(f"  Open pipeline  : {len(open_):>4}  ACV native: ${open_['ACV_Final'].sum()/1e6:.1f}M  ACV_USD: ${_usd(open_)/1e6:.1f}M")
     print()
     print(f"  Sales motion (Won):")
     for motion, acv in won.groupby("Sales_Motion")["ACV_Final"].sum().sort_values(ascending=False).items():
@@ -393,16 +417,16 @@ def print_preview(df):
     print(f"    No next step       : {df['Flag_No_Next_Step'].sum()}")
     print(f"    Overdue close date : {df['Flag_Overdue_Close'].sum()}")
     print(f"    Touch-back overdue : {df['Flag_Touch_Back_Overdue'].sum()}")
-    print(f"  {'─'*50}")
+    print(f"  {'-'*50}")
 
 
-# ── SAVE CSV ──────────────────────────────────────────────────────────────────
+# -- SAVE CSV ------------------------------------------------------------------
 def save_csv(df):
     df.to_csv(OUTPUT_FILE, index=False)
-    print(f"  Saved → {OUTPUT_FILE} ({len(df)} rows, {len(df.columns)} cols)")
+    print(f"  Saved: {OUTPUT_FILE} ({len(df)} rows, {len(df.columns)} cols)")
 
 
-# ── UPLOAD TO BIGQUERY ────────────────────────────────────────────────────────
+# -- UPLOAD TO BIGQUERY --------------------------------------------------------
 def upload_bq(df):
     print("  Uploading to BigQuery...")
     client    = bigquery.Client(project=GCP_PROJECT)
@@ -417,30 +441,33 @@ def upload_bq(df):
     job.result()
 
     table = client.get_table(table_ref)
-    print(f"  Uploaded → {table_ref} ({table.num_rows} rows)")
+    print(f"  Uploaded: {table_ref} ({table.num_rows} rows)")
 
 
-# ── MAIN ──────────────────────────────────────────────────────────────────────
+# -- MAIN ----------------------------------------------------------------------
 def main():
     print("=" * 60)
     print(f"  Revenue Intelligence Export — FY{FISCAL_YEAR} (full year)")
     print(f"  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
 
-    print("\n[1/5] Connecting to Salesforce...")
+    print("\n[1/6] Connecting to Salesforce...")
     sf = connect_sf()
 
-    print("\n[2/5] Fetching opportunities...")
+    print("\n[2/6] Fetching FX rates...")
+    fx_rates = fetch_fx_rates(sf)
+
+    print("\n[3/6] Fetching opportunities...")
     df_raw = fetch_opportunities(sf)
 
-    print("\n[3/5] Transforming...")
-    df = transform(df_raw)
+    print("\n[4/6] Transforming...")
+    df = transform(df_raw, fx_rates=fx_rates)
 
-    print("\n[4/5] Filtering...")
+    print("\n[5/6] Filtering...")
     df = apply_filters(df)
     print_preview(df)
 
-    print("\n[5/5] Saving...")
+    print("\n[6/6] Saving...")
     save_csv(df)
     upload_bq(df)
 

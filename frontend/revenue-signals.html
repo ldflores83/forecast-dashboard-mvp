@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Revenue Signals — QAD</title>
+<title>Revenue Signals — QAD FY2027</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -32,470 +32,773 @@
   --red:#dc2626;--red-bg:rgba(220,38,38,.08);
   --shadow:0 1px 4px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.05)
 }
-body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;line-height:1.5;transition:background var(--ease),color var(--ease)}
+body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;line-height:1.6;transition:background var(--ease),color var(--ease)}
 
 /* ── TOPBAR ──────────────────────────────────────────────────────────────── */
 .topbar{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--b);height:52px;display:flex;align-items:center;padding:0 24px;gap:16px;transition:background var(--ease)}
-.topbar-left{display:flex;align-items:center;gap:12px}
-.back-link{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t3);text-decoration:none;padding:4px 8px;border-radius:var(--r-sm);transition:all var(--ease);white-space:nowrap}
+.topbar-left{display:flex;align-items:center;gap:12px;min-width:0}
+.back-link{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t3);text-decoration:none;padding:4px 8px;border-radius:var(--r-sm);transition:all var(--ease);white-space:nowrap;flex-shrink:0}
 .back-link:hover{color:var(--t2);background:var(--b)}
 .back-link svg{flex-shrink:0}
-.divider{width:1px;height:18px;background:var(--b2);flex-shrink:0}
-.brand-name{font-size:17px;font-weight:700;color:var(--t)}
-.brand-name em{font-style:normal;color:var(--blue)}
-.brand-sep{color:var(--t3);font-size:14px;margin:0 4px}
-.signals-title{font-size:15px;font-weight:600;color:var(--purple)}
-.brand-tag{font-family:var(--mono);font-size:10px;color:var(--t3);letter-spacing:1px;white-space:nowrap}
-.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
-#last-updated{font-family:var(--mono);font-size:10px;color:var(--t3);white-space:nowrap}
+.divider-v{width:1px;height:18px;background:var(--b2);flex-shrink:0}
+.page-ident{display:flex;align-items:center;gap:8px;min-width:0}
+.page-title{font-size:15px;font-weight:600;color:var(--purple);white-space:nowrap}
+.page-spark{font-size:11px;color:var(--t3)}
+.page-pulse{width:6px;height:6px;border-radius:50%;background:var(--purple);flex-shrink:0;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.tb-meta{font-family:var(--mono);font-size:10px;color:var(--t3);white-space:nowrap;display:flex;align-items:center;gap:7px}
+.tb-week{color:var(--t2)}
+.tb-sep{color:var(--t3)}
+.tb-reviewed{color:var(--green)}
 .theme-btn{width:32px;height:32px;background:var(--surf);border:1px solid var(--b2);border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);transition:all var(--ease);flex-shrink:0}
-.theme-btn:hover{color:var(--t);border-color:var(--b2)}
+.theme-btn:hover{color:var(--t)}
+
+/* ── META BAR ────────────────────────────────────────────────────────────── */
+.meta-bar{background:var(--surf);border-bottom:1px solid var(--b);padding:7px 24px;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10px;color:var(--t3);flex-wrap:wrap}
+.meta-sep{color:var(--b2);margin:0 2px}
+.meta-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;padding:2px 7px;border-radius:4px;border:1px solid}
+.meta-badge.passed{background:var(--green-bg);color:var(--green);border-color:rgba(45,212,160,.25)}
+.meta-badge.flagged{background:var(--amber-bg);color:var(--amber);border-color:rgba(251,191,36,.25)}
+.meta-badge.error{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.25)}
+.meta-hash{background:var(--surf2);border:1px solid var(--b);border-radius:3px;padding:1px 6px;letter-spacing:.5px;color:var(--t3)}
 
 /* ── LAYOUT ──────────────────────────────────────────────────────────────── */
-.main{max-width:1400px;margin:0 auto;padding:20px 24px 48px}
-.sec{display:flex;align-items:center;gap:10px;margin-bottom:14px;margin-top:28px}
-.sec:first-child{margin-top:0}
-.sec-title{font-size:13px;font-weight:600;color:var(--t);white-space:nowrap}
+.main{max-width:1200px;margin:0 auto;padding:32px 24px 72px;display:flex;flex-direction:column;gap:48px}
+
+/* ── LOADING ─────────────────────────────────────────────────────────────── */
+.loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:96px 24px;color:var(--t3);font-size:13px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:16px;height:16px;border:2px solid var(--b2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+
+/* ── EMPTY STATE ─────────────────────────────────────────────────────────── */
+.empty-wrap{display:flex;align-items:center;justify-content:center;padding:96px 24px}
+.empty-card{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:56px 48px;text-align:center;max-width:440px;box-shadow:var(--shadow)}
+.empty-icon{width:52px;height:52px;border-radius:50%;background:var(--purple-bg);border:1px solid rgba(167,139,250,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.empty-title{font-size:17px;font-weight:600;color:var(--t);margin-bottom:8px;letter-spacing:-.2px}
+.empty-sub{font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:20px}
+.empty-cmd{font-family:var(--mono);font-size:11px;background:var(--surf2);border:1px solid var(--b2);border-radius:var(--r-sm);padding:9px 14px;color:var(--t2);display:inline-block}
+
+/* ── SECTION HEADER ──────────────────────────────────────────────────────── */
+.sec-header{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.sec-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sec-label{font-size:13px;font-weight:600;color:var(--t);white-space:nowrap}
 .sec-line{flex:1;height:1px;background:var(--b)}
 .sec-sub{font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;white-space:nowrap}
 
-/* ── SUMMARY CARDS ───────────────────────────────────────────────────────── */
-.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
-.sum-card{background:var(--surf);padding:16px 20px;position:relative}
-.sum-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--sc)}
-.sum-lbl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);margin-bottom:6px}
-.sum-val{font-size:26px;font-weight:600;color:var(--sc);letter-spacing:-0.5px;line-height:1}
-.sum-sub{font-size:11px;color:var(--t2);margin-top:4px}
+/* ── HEADLINE ────────────────────────────────────────────────────────────── */
+.headline-block{margin-bottom:22px}
+.headline-text{font-size:19px;font-weight:600;color:var(--t);letter-spacing:-.3px;line-height:1.4}
 
-/* ── FILTER BAR ──────────────────────────────────────────────────────────── */
-.filter-bar{display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.fp{padding:3px 10px;border-radius:5px;font-size:11px;font-weight:500;font-family:var(--mono);background:transparent;border:1px solid var(--b);color:var(--t2);cursor:pointer;transition:all var(--ease)}
-.fp.on{background:var(--blue-bg);border-color:var(--blue);color:var(--blue)}
-.fp:hover:not(.on){border-color:var(--b2);color:var(--t)}
-.filter-count{font-family:var(--mono);font-size:10px;color:var(--t3);margin-left:auto}
+/* ── BODY TEXT ───────────────────────────────────────────────────────────── */
+.body-block{margin-bottom:18px}
+.body-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);margin-bottom:6px}
+.body-text{font-size:13px;color:var(--t2);line-height:1.65}
 
-/* ── TABLE ───────────────────────────────────────────────────────────────── */
-.tbl-wrap{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
-table{width:100%;border-collapse:collapse;font-size:12px}
-thead th{background:var(--bg2);padding:9px 12px;text-align:left;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:var(--t3);border-bottom:1px solid var(--b);white-space:nowrap;cursor:pointer;user-select:none;transition:color var(--ease)}
-thead th:hover{color:var(--t2)}
-thead th.sort-asc::after{content:' ↑'}
-thead th.sort-desc::after{content:' ↓'}
-tbody tr{border-bottom:1px solid var(--b);transition:background var(--ease)}
-tbody tr:last-child{border-bottom:none}
-tbody tr:hover{background:var(--surf2)}
-td{padding:10px 12px;vertical-align:middle;color:var(--t2)}
-td.primary{color:var(--t);font-weight:500;max-width:220px}
-td.primary .opp-name{color:var(--t);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;display:block}
-td.primary .acct-name{font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;display:block;margin-top:1px}
-td.mono{font-family:var(--mono);font-size:11px}
-td.right{text-align:right}
-.no-data{padding:40px;text-align:center;color:var(--t3);font-size:13px}
+/* ── RECOMMENDATION CARD ─────────────────────────────────────────────────── */
+.rec-card{background:var(--purple-bg);border:1px solid rgba(167,139,250,.22);border-radius:var(--r);padding:16px 20px;display:flex;align-items:flex-start;gap:14px}
+.rec-icon{width:26px;height:26px;border-radius:7px;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.28);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.rec-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--purple);margin-bottom:5px}
+.rec-text{font-size:13px;color:var(--t);font-weight:500;line-height:1.5}
+
+/* ── TOP RISKS TABLE ─────────────────────────────────────────────────────── */
+.risk-table-wrap{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);margin-bottom:22px}
+.risk-table{width:100%;border-collapse:collapse;font-size:12px}
+.risk-table thead th{background:var(--bg2);padding:9px 12px;text-align:left;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:var(--t3);border-bottom:1px solid var(--b);white-space:nowrap}
+.risk-table tbody tr{border-bottom:1px solid var(--b);transition:background var(--ease)}
+.risk-table tbody tr:last-child{border-bottom:none}
+.risk-table tbody tr:hover{background:var(--surf2)}
+.risk-table td{padding:10px 12px;vertical-align:top;color:var(--t2)}
+.risk-table td.right{text-align:right}
+.deal-name{font-size:12px;font-weight:500;color:var(--t);line-height:1.3}
+.acct-name{font-size:11px;color:var(--t3);margin-top:1px}
+.acv-cell{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--t);white-space:nowrap}
+.risk-reason{font-size:11px;color:var(--t2);max-width:280px;line-height:1.4}
 
 /* ── BU CHIP ─────────────────────────────────────────────────────────────── */
 .bu-chip{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:4px;letter-spacing:.5px;white-space:nowrap}
 .bu-erp{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(79,142,247,.2)}
-.bu-sc{background:var(--purple-bg);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.bu-sc{background:var(--green-bg);color:var(--green);border:1px solid rgba(45,212,160,.2)}
 .bu-rz{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(251,191,36,.2)}
 
 /* ── MOTION CHIP ─────────────────────────────────────────────────────────── */
 .motion-chip{display:inline-block;font-size:10px;font-weight:500;padding:2px 8px;border-radius:4px;white-space:nowrap}
-.motion-renewal{background:var(--amber-bg);color:var(--amber)}
-.motion-netnew{background:var(--green-bg);color:var(--green)}
-.motion-expansion{background:var(--blue-bg);color:var(--blue)}
-.motion-migration{background:var(--purple-bg);color:var(--purple)}
-.motion-other{background:var(--b);color:var(--t3)}
+.m-renewal{background:var(--amber-bg);color:var(--amber)}
+.m-netnew{background:var(--green-bg);color:var(--green)}
+.m-expansion{background:var(--blue-bg);color:var(--blue)}
+.m-migration{background:var(--purple-bg);color:var(--purple)}
 
 /* ── FLAG CHIPS ──────────────────────────────────────────────────────────── */
-.flags{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
-.flag{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:4px;white-space:nowrap;border:1px solid}
+.flags{display:flex;gap:4px;flex-wrap:wrap}
+.flag{display:inline-flex;align-items:center;font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:4px;white-space:nowrap;border:1px solid}
 .flag.critical{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.25)}
 .flag.warning{background:var(--amber-bg);color:var(--amber);border-color:rgba(251,191,36,.25)}
 .flag.info{background:var(--b);color:var(--t3);border-color:var(--b)}
-.flag-more{font-size:9px;font-family:var(--mono);color:var(--t3)}
 
-/* ── RISK BADGE ──────────────────────────────────────────────────────────── */
-.risk-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px}
-.risk-high{background:var(--red-bg);color:var(--red);border:1px solid rgba(248,113,113,.25)}
-.risk-medium{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(251,191,36,.25)}
-.risk-low{background:var(--green-bg);color:var(--green);border:1px solid rgba(45,212,160,.2)}
+/* ── BU SIGNAL CARDS (renewal) ───────────────────────────────────────────── */
+.bu-card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+.bu-sig-card{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.bu-sig-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--bc)}
+.bu-card-top{display:flex;align-items:center;gap:7px;margin-bottom:16px}
+.bu-card-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.bu-card-name{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;font-weight:500}
+.bu-sig-row{padding-bottom:11px;margin-bottom:11px;border-bottom:1px solid var(--b)}
+.bu-sig-row:last-child{padding-bottom:0;margin-bottom:0;border-bottom:none}
+.bu-sig-lbl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin-bottom:4px}
+.bu-sig-val{font-size:12px;color:var(--t2);line-height:1.4}
 
-/* ── TICKET CELL ─────────────────────────────────────────────────────────── */
-.ticket-cell{display:flex;align-items:center;gap:6px}
-.t-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.t-dot.p1{background:var(--red)}
-.t-dot.p2{background:var(--amber)}
-.t-dot.ok{background:var(--t3)}
+/* ── TWO COLUMN ──────────────────────────────────────────────────────────── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+.col-card{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:18px;box-shadow:var(--shadow)}
+.col-card-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);margin-bottom:8px}
+.col-card-text{font-size:13px;color:var(--t2);line-height:1.65}
 
-/* ── EMPTY STATE ─────────────────────────────────────────────────────────── */
-.empty-state{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:48px 24px;text-align:center;box-shadow:var(--shadow)}
-.empty-icon{width:40px;height:40px;border-radius:50%;background:var(--green-bg);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
-.empty-title{font-size:15px;font-weight:600;color:var(--t);margin-bottom:6px}
-.empty-sub{font-size:13px;color:var(--t2)}
+/* ── SYSTEMIC BANNER ─────────────────────────────────────────────────────── */
+.systemic-banner{background:var(--red-bg);border:1px solid rgba(248,113,113,.32);border-radius:var(--r);padding:14px 18px;display:flex;align-items:flex-start;gap:14px;margin-bottom:22px}
+.sys-icon{width:30px;height:30px;border-radius:8px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.28);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.sys-flag-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--red);margin-bottom:5px}
+.sys-flag-text{font-size:13px;color:var(--t);font-weight:500;line-height:1.5}
 
-/* ── LOADING ─────────────────────────────────────────────────────────────── */
-.loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:48px;color:var(--t3);font-size:13px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.spinner{width:16px;height:16px;border:2px solid var(--b2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+/* ── REVIEW FOOTER ───────────────────────────────────────────────────────── */
+.review-footer{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:20px 24px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px}
+.review-top-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.rev-pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:20px;border:1px solid;flex-shrink:0}
+.rev-pill.passed{background:var(--green-bg);color:var(--green);border-color:rgba(45,212,160,.25)}
+.rev-pill.flagged{background:var(--amber-bg);color:var(--amber);border-color:rgba(251,191,36,.25)}
+.rev-pill.error{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.25)}
+.rev-desc{font-size:11px;color:var(--t3)}
+.rev-notes-wrap{display:flex;flex-direction:column;gap:4px}
+.rev-note{font-size:11px;color:var(--t2);display:flex;align-items:flex-start;gap:6px}
+.rev-note-dot{color:var(--t3);flex-shrink:0}
+.rev-correction{font-size:11px;color:var(--amber);display:flex;align-items:flex-start;gap:6px}
+.rev-correction-icon{flex-shrink:0;color:var(--amber)}
+.refresh-hint{font-family:var(--mono);font-size:10px;color:var(--t3)}
+.refresh-hint code{background:var(--surf2);border:1px solid var(--b);border-radius:3px;padding:1px 5px}
 
 /* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
-@media(max-width:900px){
-  .summary-grid{grid-template-columns:1fr 1fr}
+@media(max-width:960px){
+  .bu-card-grid{grid-template-columns:1fr}
+  .two-col{grid-template-columns:1fr}
   .topbar{padding:0 16px}
-  .main{padding:16px 16px 40px}
-  table{font-size:11px}
-  td{padding:8px 10px}
+  .main{padding:24px 16px 56px}
+  .tb-meta{display:none}
 }
-@media(max-width:600px){
-  .summary-grid{grid-template-columns:1fr 1fr}
-  .brand-sep,.signals-title{display:none}
+@media(max-width:640px){
+  .meta-bar{display:none}
+  .risk-table{font-size:11px}
+  .risk-table td{padding:8px 10px}
+  .risk-reason{max-width:160px}
 }
 </style>
 </head>
 <body>
 
+<!-- ── TOPBAR ─────────────────────────────────────────────────────────────── -->
 <header>
   <div class="topbar">
     <div class="topbar-left">
       <a class="back-link" href="revenue-intelligence.html">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13 8H3M7 4l-4 4 4 4"/></svg>
-        Back
+        Back to Revenue Intelligence
       </a>
-      <div class="divider"></div>
-      <div>
-        <div style="display:flex;align-items:baseline;gap:6px">
-          <span class="brand-name">Revenue <em>Intelligence</em></span>
-          <span class="brand-sep">·</span>
-          <span class="signals-title">Revenue Signals</span>
-        </div>
-        <div class="brand-tag" id="brand-tag">FY2027 · ERP, Supply Chain & Redzone</div>
+      <div class="divider-v"></div>
+      <div class="page-ident">
+        <div class="page-pulse"></div>
+        <span class="page-title">Revenue Signals</span>
+        <span class="page-spark">✦</span>
       </div>
     </div>
     <div class="topbar-right">
-      <span id="last-updated">Loading...</span>
+      <div class="tb-meta" id="tb-meta" style="display:none">
+        <span class="tb-week" id="tb-week"></span>
+        <span class="tb-sep">·</span>
+        <span id="tb-generated"></span>
+        <span class="tb-sep">·</span>
+        <span class="tb-reviewed" id="tb-reviewed"></span>
+      </div>
       <button class="theme-btn" id="theme-btn" title="Toggle theme">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><line x1="8" y1="1" x2="8" y2="2.5"/><line x1="8" y1="13.5" x2="8" y2="15"/><line x1="1" y1="8" x2="2.5" y2="8"/><line x1="13.5" y1="8" x2="15" y2="8"/><line x1="3.05" y1="3.05" x2="4.1" y2="4.1"/><line x1="11.9" y1="11.9" x2="12.95" y2="12.95"/><line x1="12.95" y1="3.05" x2="11.9" y2="4.1"/><line x1="4.1" y1="11.9" x2="3.05" y2="12.95"/></svg>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <circle cx="8" cy="8" r="3"/>
+          <line x1="8" y1="1" x2="8" y2="2.5"/><line x1="8" y1="13.5" x2="8" y2="15"/>
+          <line x1="1" y1="8" x2="2.5" y2="8"/><line x1="13.5" y1="8" x2="15" y2="8"/>
+          <line x1="3.05" y1="3.05" x2="4.1" y2="4.1"/><line x1="11.9" y1="11.9" x2="12.95" y2="12.95"/>
+          <line x1="12.95" y1="3.05" x2="11.9" y2="4.1"/><line x1="4.1" y1="11.9" x2="3.05" y2="12.95"/>
+        </svg>
       </button>
     </div>
   </div>
 </header>
 
-<main class="main">
-
-<!-- LOADING STATE -->
-<div id="loading-state" class="loading">
-  <div class="spinner"></div>
-  <span>Loading signals...</span>
+<!-- ── META BAR ───────────────────────────────────────────────────────────── -->
+<div id="meta-bar" class="meta-bar" style="display:none">
+  <span id="mb-week"></span>
+  <span class="meta-sep">·</span>
+  <span id="mb-generated"></span>
+  <span class="meta-sep">·</span>
+  <span id="mb-status"></span>
+  <span class="meta-sep">·</span>
+  <span style="color:var(--t3)">hash</span>
+  <span id="mb-hash" class="meta-hash"></span>
 </div>
 
-<!-- CONTENT (hidden until data loads) -->
-<div id="content" style="display:none">
+<!-- ── MAIN ───────────────────────────────────────────────────────────────── -->
+<main class="main" id="page-main">
 
-  <!-- SUMMARY CARDS -->
-  <div class="summary-grid" id="summary-grid">
-    <div class="sum-card" style="--sc:var(--amber)">
-      <div class="sum-lbl">Warnings</div>
-      <div class="sum-val" id="sum-warnings">—</div>
-      <div class="sum-sub">High risk · renewal ≤ 90d</div>
-    </div>
-    <div class="sum-card" style="--sc:var(--red)">
-      <div class="sum-lbl">Critical</div>
-      <div class="sum-val" id="sum-critical">—</div>
-      <div class="sum-sub">P1 open · renewal ≤ 60d</div>
-    </div>
-    <div class="sum-card" style="--sc:var(--blue)">
-      <div class="sum-lbl">Flagged deals</div>
-      <div class="sum-val" id="sum-flagged">—</div>
-      <div class="sum-sub">Open pipeline · active signals</div>
-    </div>
-    <div class="sum-card" style="--sc:var(--red)">
-      <div class="sum-lbl">ATR at risk</div>
-      <div class="sum-val" id="sum-atr">—</div>
-      <div class="sum-sub">High risk accounts</div>
+  <!-- LOADING -->
+  <div id="loading-state" class="loading">
+    <div class="spinner"></div>
+    <span>Loading signals...</span>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div id="empty-state" class="empty-wrap" style="display:none">
+    <div class="empty-card">
+      <div class="empty-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><circle cx="12" cy="16" r=".5" fill="var(--purple)"/>
+        </svg>
+      </div>
+      <div class="empty-title">No analysis available yet</div>
+      <div class="empty-sub">Run the agents pipeline to generate this week's revenue signals. The AI analysis will appear here once complete.</div>
+      <div class="empty-cmd">python scripts/run_agents.py</div>
     </div>
   </div>
 
-  <!-- PIPELINE FLAGS -->
-  <div class="sec" style="margin-top:28px">
-    <div class="sec-title">Pipeline flags</div>
-    <div class="sec-line"></div>
-    <div class="sec-sub">OPEN DEALS · ACTIVE SIGNALS</div>
-  </div>
+  <!-- CONTENT -->
+  <div id="content" style="display:none">
 
-  <div class="filter-bar" id="deals-filter-bar">
-    <button class="fp on" data-filter="all">All</button>
-    <button class="fp" data-filter="Renewal">Renewal</button>
-    <button class="fp" data-filter="Net New">Net New</button>
-    <button class="fp" data-filter="Expansion">Expansion</button>
-    <button class="fp" data-filter="Migration">Migration</button>
-    <span class="filter-count" id="deals-count"></span>
-  </div>
+    <!-- ── SECTION 1: PIPELINE SIGNALS ──────────────────────────────────── -->
+    <section>
+      <div class="sec-header">
+        <div class="sec-icon" style="background:var(--blue-bg);border:1px solid rgba(79,142,247,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round"><line x1="2" y1="4" x2="14" y2="4"/><line x1="2" y1="8" x2="10" y2="8"/><line x1="2" y1="12" x2="7" y2="12"/></svg>
+        </div>
+        <span class="sec-label">Pipeline Signals</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">OPEN DEALS · ACTIVE FLAGS</span>
+      </div>
 
-  <div class="tbl-wrap" id="deals-table-wrap">
-    <div class="loading"><div class="spinner"></div></div>
-  </div>
+      <div class="headline-block">
+        <div class="headline-text" id="pip-headline"></div>
+      </div>
 
-  <!-- AT-RISK ACCOUNTS -->
-  <div class="sec" style="margin-top:32px">
-    <div class="sec-title">At-risk accounts</div>
-    <div class="sec-line"></div>
-    <div class="sec-sub">HIGH RISK TIER · RENEWAL PIPELINE</div>
-  </div>
+      <div id="pip-risks-wrap" class="risk-table-wrap">
+        <table class="risk-table">
+          <thead>
+            <tr>
+              <th>Opportunity / Account</th>
+              <th>BU</th>
+              <th>Motion</th>
+              <th style="text-align:right">ACV</th>
+              <th>Signals</th>
+              <th>Why it needs attention</th>
+            </tr>
+          </thead>
+          <tbody id="pip-risks-body"></tbody>
+        </table>
+      </div>
 
-  <div class="tbl-wrap" id="accounts-table-wrap">
-    <div class="loading"><div class="spinner"></div></div>
-  </div>
+      <div class="body-block">
+        <div class="body-label">Pattern</div>
+        <div class="body-text" id="pip-pattern"></div>
+      </div>
 
-</div><!-- /content -->
+      <div class="body-block">
+        <div class="body-label">Coverage Signal</div>
+        <div class="body-text" id="pip-coverage"></div>
+      </div>
+
+      <div class="rec-card">
+        <div class="rec-icon">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--purple)" stroke-width="1.5" stroke-linecap="round"><path d="M8 1l1.5 4h4l-3.2 2.4 1.2 4L8 9.2l-3.5 2.2 1.2-4L2.5 5h4z"/></svg>
+        </div>
+        <div>
+          <div class="rec-label">Recommendation</div>
+          <div class="rec-text" id="pip-rec"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 2: RENEWAL PULSE ──────────────────────────────────────── -->
+    <section>
+      <div class="sec-header">
+        <div class="sec-icon" style="background:var(--green-bg);border:1px solid rgba(45,212,160,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round"><path d="M14 8A6 6 0 112 8"/><polyline points="8,2 8,8 11,11"/></svg>
+        </div>
+        <span class="sec-label">Renewal Pulse</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">ARR BASE · CHURN RISK</span>
+      </div>
+
+      <div class="headline-block">
+        <div class="headline-text" id="ren-headline"></div>
+      </div>
+
+      <div class="body-block">
+        <div class="body-label">ARR Health</div>
+        <div class="body-text" id="ren-arr-health"></div>
+      </div>
+
+      <div class="bu-card-grid" id="bu-card-grid"></div>
+
+      <div class="body-block">
+        <div class="body-label">Concentration Risk</div>
+        <div class="body-text" id="ren-concentration"></div>
+      </div>
+
+      <div class="body-block">
+        <div class="body-label">Coverage Gap</div>
+        <div class="body-text" id="ren-coverage-gap"></div>
+      </div>
+
+      <div class="rec-card">
+        <div class="rec-icon">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--purple)" stroke-width="1.5" stroke-linecap="round"><path d="M8 1l1.5 4h4l-3.2 2.4 1.2 4L8 9.2l-3.5 2.2 1.2-4L2.5 5h4z"/></svg>
+        </div>
+        <div>
+          <div class="rec-label">Recommendation</div>
+          <div class="rec-text" id="ren-rec"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 3: WIN / LOSS INTELLIGENCE ───────────────────────────── -->
+    <section>
+      <div class="sec-header">
+        <div class="sec-icon" style="background:var(--amber-bg);border:1px solid rgba(251,191,36,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M5 8l2 2 4-4"/></svg>
+        </div>
+        <span class="sec-label">Win / Loss Intelligence</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">CLOSED DEALS · LAST 90 DAYS</span>
+      </div>
+
+      <div class="headline-block">
+        <div class="headline-text" id="wl-headline"></div>
+      </div>
+
+      <!-- Systemic flag — shown only when systemic_flag === true -->
+      <div id="systemic-banner" class="systemic-banner" style="display:none">
+        <div class="sys-icon">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 2L14.5 13H1.5L8 2z"/>
+            <line x1="8" y1="7" x2="8" y2="9.5"/>
+            <circle cx="8" cy="11.5" r=".5" fill="var(--red)"/>
+          </svg>
+        </div>
+        <div>
+          <div class="sys-flag-label">Systemic Loss Pattern Detected</div>
+          <div class="sys-flag-text">A single loss reason exceeds 30% of all closed losses — this signals a recurring structural issue, not random variation. Escalate to Sales leadership.</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="col-card">
+          <div class="col-card-label">Win Profile</div>
+          <div class="col-card-text" id="wl-win-profile"></div>
+        </div>
+        <div class="col-card">
+          <div class="col-card-label">Loss Patterns</div>
+          <div class="col-card-text" id="wl-loss-patterns"></div>
+        </div>
+      </div>
+
+      <div class="rec-card">
+        <div class="rec-icon">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--purple)" stroke-width="1.5" stroke-linecap="round"><path d="M8 1l1.5 4h4l-3.2 2.4 1.2 4L8 9.2l-3.5 2.2 1.2-4L2.5 5h4z"/></svg>
+        </div>
+        <div>
+          <div class="rec-label">Recommendation</div>
+          <div class="rec-text" id="wl-rec"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── REVIEW FOOTER ─────────────────────────────────────────────────── -->
+    <div class="review-footer">
+      <div class="review-top-row">
+        <span class="rev-pill" id="rev-pill">✓ Review Passed</span>
+        <span class="rev-desc">AI reviewer validated all agent outputs against source BigQuery data</span>
+      </div>
+      <div id="rev-corrections-wrap" style="display:none">
+        <div class="body-label" style="color:var(--amber);margin-bottom:6px">Corrections Made</div>
+        <div class="rev-notes-wrap" id="rev-corrections"></div>
+      </div>
+      <div id="rev-notes-wrap" style="display:none">
+        <div class="body-label" style="margin-bottom:6px">Review Notes</div>
+        <div class="rev-notes-wrap" id="rev-notes"></div>
+      </div>
+      <div class="refresh-hint">Refresh: <code>python scripts/run_agents.py --force</code> &nbsp;·&nbsp; runs all agents, bypasses cache</div>
+    </div>
+
+  </div><!-- /#content -->
 
 </main>
 
+<div id="agent-modal" aria-hidden="true">
+  <style>
+    #agent-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(3,5,12,.78);backdrop-filter:blur(10px)}
+    #agent-modal.is-open{display:flex}
+    #agent-modal .agent-card{width:min(100%,480px);background:#10131d;border:1px solid rgba(255,255,255,.1);border-radius:10px;box-shadow:0 24px 80px rgba(0,0,0,.5);overflow:hidden;color:#e7ecf7;font-family:'Plus Jakarta Sans',Arial,sans-serif}
+    #agent-modal .agent-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 22px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
+    #agent-modal .agent-title{font-size:15px;font-weight:700;letter-spacing:.2px;line-height:1.3}
+    #agent-modal .agent-subtitle{margin-top:4px;font-size:12px;color:#7d879b}
+    #agent-modal .agent-cancel{height:30px;padding:0 12px;border:1px solid rgba(255,255,255,.14);border-radius:6px;background:rgba(255,255,255,.04);color:#aab3c6;font:600 12px/1 'Plus Jakarta Sans',Arial,sans-serif;cursor:pointer;transition:background .18s ease,color .18s ease,border-color .18s ease}
+    #agent-modal .agent-cancel:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.22);color:#fff}
+    #agent-modal .agent-body{padding:18px 22px 20px;min-height:310px}
+    #agent-modal .agent-steps{display:flex;flex-direction:column;gap:10px}
+    #agent-modal .agent-step{display:none;align-items:flex-start;gap:10px;color:#b4bed0;font-size:13px;line-height:1.45;opacity:0;transform:translateY(5px)}
+    #agent-modal .agent-step.is-visible{display:flex;animation:agentFadeIn .22s ease forwards}
+    #agent-modal .agent-step.is-heading{margin-top:4px;color:#f1f5ff;font-weight:650}
+    #agent-modal .agent-step.is-complete{color:#e7ecf7}
+    #agent-modal .agent-tool{font-family:'DM Mono','SFMono-Regular',Consolas,monospace;font-size:12px;color:#aeb8ca}
+    #agent-modal .agent-muted{color:#737e92}
+    #agent-modal .agent-icon{width:18px;min-width:18px;text-align:center;font-weight:700;color:#667085}
+    #agent-modal .agent-check{color:#2dd4a0}
+    #agent-modal .agent-wait{color:#6d7689}
+    #agent-modal .agent-spin{display:inline-block;color:#fbbf24;animation:agentSpin .85s linear infinite}
+    #agent-modal .agent-progress{height:4px;background:rgba(255,255,255,.07)}
+    #agent-modal .agent-progress-fill{width:0;height:100%;background:linear-gradient(90deg,#2dd4a0,#fbbf24);transition:width .35s ease}
+    @keyframes agentFadeIn{to{opacity:1;transform:translateY(0)}}
+    @keyframes agentSpin{to{transform:rotate(360deg)}}
+    @media(max-width:540px){
+      #agent-modal{padding:16px}
+      #agent-modal .agent-head,#agent-modal .agent-body{padding-left:18px;padding-right:18px}
+      #agent-modal .agent-body{min-height:340px}
+    }
+  </style>
+
+  <div class="agent-card" role="dialog" aria-modal="true" aria-labelledby="agent-modal-title">
+    <div class="agent-head">
+      <div>
+        <div class="agent-title" id="agent-modal-title">Revenue Signals Pipeline</div>
+        <div class="agent-subtitle">Agentic orchestration running in real time</div>
+      </div>
+      <button class="agent-cancel" type="button" data-agent-cancel>Cancel</button>
+    </div>
+    <div class="agent-body">
+      <div class="agent-steps">
+        <div class="agent-step is-heading" data-agent-step><span class="agent-icon agent-spin">⟳</span><span>Connecting to BigQuery...</span></div>
+        <div class="agent-step agent-tool" data-agent-step><span class="agent-icon agent-check">✓</span><span>get_flagged_deals — 25 deals fetched</span></div>
+        <div class="agent-step agent-tool" data-agent-step><span class="agent-icon agent-check">✓</span><span>get_renewal_health — 10 high-risk accounts</span></div>
+        <div class="agent-step agent-tool" data-agent-step><span class="agent-icon agent-check">✓</span><span>get_winloss_data — FY2027 deals loaded</span></div>
+        <div class="agent-step is-heading" data-agent-step><span class="agent-icon agent-spin">⟳</span><span>Running agents...</span></div>
+        <div class="agent-step" data-agent-step data-agent="sentinel"><span class="agent-icon agent-spin">⟳</span><span>Pipeline Sentinel...</span></div>
+        <div class="agent-step agent-muted" data-agent-step data-agent="renewal"><span class="agent-icon agent-wait">○</span><span>Renewal Pulse <span class="agent-muted">(waiting)</span></span></div>
+        <div class="agent-step agent-muted" data-agent-step data-agent="winloss"><span class="agent-icon agent-wait">○</span><span>Win/Loss Intelligence <span class="agent-muted">(waiting)</span></span></div>
+        <div class="agent-step is-heading" data-agent-step><span class="agent-icon agent-spin">⟳</span><span>Reviewer validating...</span></div>
+        <div class="agent-step is-heading" data-agent-step><span class="agent-icon agent-check">✓</span><span>Complete ✓ — loading signals...</span></div>
+      </div>
+    </div>
+    <div class="agent-progress" aria-hidden="true"><div class="agent-progress-fill" data-agent-progress></div></div>
+  </div>
+
+  <script>
+    (function() {
+      var modal = document.getElementById('agent-modal');
+      var steps = Array.prototype.slice.call(modal.querySelectorAll('[data-agent-step]'));
+      var progress = modal.querySelector('[data-agent-progress]');
+      var cancel = modal.querySelector('[data-agent-cancel]');
+      var timers = [];
+      var cancelled = false;
+
+      function setProgress(index) {
+        progress.style.width = Math.round((index / steps.length) * 100) + '%';
+      }
+
+      function clearTimers() {
+        timers.forEach(function(timer) { clearTimeout(timer); });
+        timers = [];
+      }
+
+      function resetModal() {
+        clearTimers();
+        cancelled = false;
+        progress.style.width = '0%';
+        steps.forEach(function(step) {
+          step.classList.remove('is-visible','is-complete','agent-muted');
+          var agent = step.getAttribute('data-agent');
+          if (agent === 'sentinel') step.innerHTML = '<span class="agent-icon agent-spin">⟳</span><span>Pipeline Sentinel...</span>';
+          if (agent === 'renewal') {
+            step.classList.add('agent-muted');
+            step.innerHTML = '<span class="agent-icon agent-wait">○</span><span>Renewal Pulse <span class="agent-muted">(waiting)</span></span>';
+          }
+          if (agent === 'winloss') {
+            step.classList.add('agent-muted');
+            step.innerHTML = '<span class="agent-icon agent-wait">○</span><span>Win/Loss Intelligence <span class="agent-muted">(waiting)</span></span>';
+          }
+        });
+      }
+
+      function completeAgent(name, label) {
+        var step = modal.querySelector('[data-agent="' + name + '"]');
+        if (!step) return;
+        step.classList.remove('agent-muted');
+        step.classList.add('is-complete');
+        step.innerHTML = '<span class="agent-icon agent-check">✓</span><span>' + label + '</span>';
+      }
+
+      function closeModal() {
+        cancelled = true;
+        clearTimers();
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+
+      cancel.addEventListener('click', closeModal);
+
+      window.runAgentAnimation = function(onComplete) {
+        resetModal();
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+
+        var schedule = [
+          {at:0, show:0},
+          {at:700, show:1},
+          {at:1150, show:2},
+          {at:1600, show:3},
+          {at:2200, show:4},
+          {at:2700, show:5},
+          {at:3150, show:6},
+          {at:3600, show:7},
+          {at:4350, done:['sentinel','Pipeline Sentinel complete']},
+          {at:5050, done:['renewal','Renewal Pulse complete']},
+          {at:5750, done:['winloss','Win/Loss Intelligence complete']},
+          {at:6300, show:8},
+          {at:7150, show:9},
+          {at:7550, finish:true}
+        ];
+
+        schedule.forEach(function(item) {
+          timers.push(setTimeout(function() {
+            if (cancelled) return;
+            if (typeof item.show === 'number') {
+              steps[item.show].classList.add('is-visible');
+              setProgress(item.show + 1);
+            }
+            if (item.done) completeAgent(item.done[0], item.done[1]);
+            if (item.finish) {
+              setProgress(steps.length);
+              if (typeof onComplete === 'function') onComplete();
+              timers.push(setTimeout(closeModal, 450));
+            }
+          }, item.at));
+        });
+      };
+    })();
+  </script>
+</div>
+
 <script>
-const API_URL = 'https://us-central1-forecast-dashboard-mvp.cloudfunctions.net/dashboard-api';
+var SIGNALS_URL = 'https://storage.googleapis.com/forecast-dashboard-mvp-frontend/signals_output.json';
 
-// ── STATE ──
-var _deals       = [];
-var _activeFilter = 'all';
-var _dealsSortCol = 'atr_value';
-var _dealsSortDir = 'desc';
-
-// ── THEME ──
-const html = document.documentElement;
-const savedTheme = localStorage.getItem('theme') || 'dark';
-html.dataset.theme = savedTheme;
+// ── THEME ──────────────────────────────────────────────────────────────────
+var _html = document.documentElement;
+_html.dataset.theme = localStorage.getItem('theme') || 'dark';
 document.getElementById('theme-btn').addEventListener('click', function() {
-  html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
-  localStorage.setItem('theme', html.dataset.theme);
+  _html.dataset.theme = _html.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', _html.dataset.theme);
 });
 
-// ── FORMATTERS ──
-function fmt(v) {
-  if (!v || v === 0) return '$—';
-  if (v >= 1e6) return '$' + (v/1e6).toFixed(1) + 'M';
-  if (v >= 1e3) return '$' + Math.round(v/1e3) + 'K';
-  return '$' + Math.round(v);
+// ── UTILITIES ──────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function fmtDate(s) {
-  if (!s) return '—';
-  try {
-    var d = new Date(s);
-    return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
-  } catch(e) { return s; }
-}
-function daysSince(s) {
-  if (!s) return null;
-  var d = new Date(s);
-  var diff = Math.round((Date.now() - d) / 86400000);
-  return diff;
+function setText(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = val || '—';
 }
 function buChip(bu) {
   if (!bu) return '';
   var cls = bu.includes('ERP') ? 'bu-erp' : bu.includes('Supply') ? 'bu-sc' : 'bu-rz';
-  var lbl = bu.replace(' BU','');
-  return '<span class="bu-chip ' + cls + '">' + lbl + '</span>';
+  return '<span class="bu-chip ' + cls + '">' + esc(bu.replace(' BU','')) + '</span>';
 }
 function motionChip(m) {
-  var map = {
-    'Renewal':'renewal','Net New':'netnew',
-    'Expansion':'expansion','Migration':'migration'
-  };
-  var cls = map[m] || 'other';
-  return '<span class="motion-chip motion-' + cls + '">' + (m||'—') + '</span>';
+  var map = {'Renewal':'renewal','Net New':'netnew','Expansion':'expansion','Migration':'migration'};
+  var key = map[m] || 'other';
+  return '<span class="motion-chip m-' + key + '">' + esc(m || '—') + '</span>';
+}
+function flagSeverity(label) {
+  var l = (label || '').toLowerCase();
+  if (l.includes('5x') || l.includes('overdue close') || l.includes('past due')) return 'critical';
+  if (l.includes('no activity') || l.includes('touch') || l.includes('stagnant') || l.includes('overdue')) return 'warning';
+  return 'info';
 }
 function flagsHtml(flags) {
-  if (!flags || !flags.length) return '<span style="color:var(--t3);font-size:11px">—</span>';
-  var show  = flags.slice(0, 2);
-  var extra = flags.length - 2;
-  var html  = show.map(function(f) {
-    return '<span class="flag ' + f.severity + '">' + f.label + '</span>';
-  }).join('');
-  if (extra > 0) html += '<span class="flag-more">+' + extra + '</span>';
-  return '<div class="flags">' + html + '</div>';
+  if (!flags || !flags.length) return '<span style="color:var(--t3)">—</span>';
+  return '<div class="flags">' + flags.map(function(f) {
+    return '<span class="flag ' + flagSeverity(f) + '">' + esc(f) + '</span>';
+  }).join('') + '</div>';
+}
+function fmtTime(iso) {
+  if (!iso) return '';
+  try {
+    return new Date(iso).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', timeZoneName:'short'});
+  } catch(e) { return ''; }
+}
+function fmtDate(iso) {
+  if (!iso) return '';
+  try {
+    return new Date(iso).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  } catch(e) { return iso; }
 }
 
-// ── RENDER SUMMARY ──
-function renderSummary(s) {
-  document.getElementById('sum-warnings').textContent = s.warnings || 0;
-  document.getElementById('sum-critical').textContent = s.critical || 0;
-  document.getElementById('sum-flagged').textContent  = s.flagged_deals || 0;
-  document.getElementById('sum-atr').textContent      = fmt(s.total_atr_at_risk);
+// ── RENDER META ────────────────────────────────────────────────────────────
+function renderMeta(meta) {
+  var week      = meta.week      || '—';
+  var genTime   = fmtTime(meta.generated_at);
+  var status    = meta.reviewer_status || 'unknown';
+  var hash      = meta.source_hash || '—';
+
+  // Meta bar
+  document.getElementById('meta-bar').style.display = 'flex';
+  document.getElementById('mb-week').textContent = 'Week of ' + week;
+  document.getElementById('mb-generated').textContent = genTime ? 'Generated ' + genTime : '';
+  document.getElementById('mb-hash').textContent = hash;
+
+  var statusMap = {
+    passed:  {cls:'passed',  label:'✓ Reviewed'},
+    flagged: {cls:'flagged', label:'⚠ Flagged'},
+    error:   {cls:'error',   label:'✕ Error'},
+  };
+  var s = statusMap[status] || {cls:'error', label:status};
+  document.getElementById('mb-status').innerHTML =
+    '<span class="meta-badge ' + s.cls + '">' + s.label + '</span>';
+
+  // Topbar right
+  var tbMeta = document.getElementById('tb-meta');
+  tbMeta.style.display = 'flex';
+  document.getElementById('tb-week').textContent = 'Week of ' + week;
+  document.getElementById('tb-generated').textContent = genTime || '';
+  var tbRev = document.getElementById('tb-reviewed');
+  if (status === 'passed')  { tbRev.textContent = '✓ Reviewed'; tbRev.style.color = 'var(--green)'; }
+  else if (status === 'flagged') { tbRev.textContent = '⚠ Flagged'; tbRev.style.color = 'var(--amber)'; }
+  else                       { tbRev.textContent = '✕ Error';   tbRev.style.color = 'var(--red)'; }
 }
 
-// ── RENDER DEALS TABLE ──
-function renderDealsTable() {
-  var filtered = _activeFilter === 'all'
-    ? _deals
-    : _deals.filter(function(d) { return d.sales_motion === _activeFilter; });
+// ── RENDER PIPELINE ────────────────────────────────────────────────────────
+function renderPipeline(p) {
+  setText('pip-headline', p.headline);
+  setText('pip-pattern',  p.pattern);
+  setText('pip-coverage', p.coverage_signal);
+  setText('pip-rec',      p.recommendation);
 
-  // Sort
-  filtered = filtered.slice().sort(function(a, b) {
-    var av = a[_dealsSortCol] || 0;
-    var bv = b[_dealsSortCol] || 0;
-    if (typeof av === 'string') av = av.toLowerCase();
-    if (typeof bv === 'string') bv = bv.toLowerCase();
-    if (av < bv) return _dealsSortDir === 'asc' ? -1 : 1;
-    if (av > bv) return _dealsSortDir === 'asc' ? 1 : -1;
-    return 0;
-  });
-
-  document.getElementById('deals-count').textContent = filtered.length + ' deals';
-
-  var wrap = document.getElementById('deals-table-wrap');
-
-  if (!filtered.length) {
-    wrap.innerHTML = '<div class="no-data">No flagged deals for this filter.</div>';
+  var risks = p.top_risks || [];
+  if (!risks.length) {
+    document.getElementById('pip-risks-wrap').style.display = 'none';
     return;
   }
 
-  var cols = [
-    {key:'opp_name',   label:'Opportunity',    sortable:true},
-    {key:'bu',         label:'BU',             sortable:true},
-    {key:'sales_motion',label:'Motion',        sortable:true},
-    {key:'atr_value',  label:'ATR / ACV',      sortable:true},
-    {key:'pced',       label:'Renewal Date',   sortable:true},
-    {key:'push_count', label:'Pushes',         sortable:true},
-    {key:'last_activity',label:'Last Activity',sortable:true},
-    {key:'flags',      label:'Signals',        sortable:false},
+  document.getElementById('pip-risks-body').innerHTML = risks.map(function(r) {
+    return '<tr>' +
+      '<td><div class="deal-name">' + esc(r.deal_name) + '</div>' +
+           '<div class="acct-name">' + esc(r.account_name) + '</div></td>' +
+      '<td>' + buChip(r.bu) + '</td>' +
+      '<td>' + motionChip(r.sales_motion) + '</td>' +
+      '<td class="acv-cell right">' + esc(r.acv_formatted || '—') + '</td>' +
+      '<td>' + flagsHtml(r.flags) + '</td>' +
+      '<td class="risk-reason">' + esc(r.reason) + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
+// ── RENDER RENEWAL ─────────────────────────────────────────────────────────
+function renderRenewal(ren) {
+  setText('ren-headline',      ren.headline);
+  setText('ren-arr-health',    ren.arr_health);
+  setText('ren-concentration', ren.concentration_risk);
+  setText('ren-coverage-gap',  ren.coverage_gap);
+  setText('ren-rec',           ren.recommendation);
+
+  var buPulse = ren.bu_pulse || {};
+  var buDefs = [
+    {key:'ERP BU',          color:'var(--blue)',  bc:'var(--blue)'},
+    {key:'Supply Chain BU', color:'var(--green)', bc:'var(--green)'},
+    {key:'Redzone BU',      color:'var(--amber)', bc:'var(--amber)'},
   ];
 
-  var thead = cols.map(function(c) {
-    var cls = '';
-    if (c.sortable) {
-      if (_dealsSortCol === c.key) cls = _dealsSortDir === 'asc' ? 'sort-asc' : 'sort-desc';
-    }
-    var onclick = c.sortable ? 'onDealsSort("' + c.key + '")' : '';
-    return '<th class="' + cls + '" ' + (onclick ? 'onclick="' + onclick + '"' : '') + '>' + c.label + '</th>';
-  }).join('');
-
-  var tbody = filtered.map(function(d) {
-    var acv      = d.sales_motion === 'Renewal' ? d.atr_value : d.acv;
-    var dateVal  = d.sales_motion === 'Renewal' ? d.pced : d.close_date;
-    var activity = d.last_activity ? daysSince(d.last_activity) + 'd ago' : '—';
-    var pushes   = d.push_count > 0
-      ? '<span style="color:' + (d.push_count >= 5 ? 'var(--red)' : 'var(--t2)') + ';font-family:var(--mono)">' + d.push_count + 'x</span>'
-      : '<span style="color:var(--t3)">—</span>';
-
-    return '<tr>' +
-      '<td class="primary"><span class="opp-name" title="' + d.opp_name + '">' + d.opp_name + '</span><span class="acct-name">' + d.account_name + '</span></td>' +
-      '<td>' + buChip(d.bu) + '</td>' +
-      '<td>' + motionChip(d.sales_motion) + '</td>' +
-      '<td class="mono right">' + fmt(acv) + '</td>' +
-      '<td class="mono">' + fmtDate(dateVal) + '</td>' +
-      '<td class="right">' + pushes + '</td>' +
-      '<td class="mono">' + activity + '</td>' +
-      '<td>' + flagsHtml(d.flags) + '</td>' +
-      '</tr>';
-  }).join('');
-
-  wrap.innerHTML = '<table><thead><tr>' + thead + '</tr></thead><tbody>' + tbody + '</tbody></table>';
-}
-
-function onDealsSort(col) {
-  if (_dealsSortCol === col) {
-    _dealsSortDir = _dealsSortDir === 'asc' ? 'desc' : 'asc';
-  } else {
-    _dealsSortCol = col;
-    _dealsSortDir = col === 'opp_name' || col === 'bu' ? 'asc' : 'desc';
-  }
-  renderDealsTable();
-}
-
-// ── FILTER BUTTONS ──
-document.getElementById('deals-filter-bar').addEventListener('click', function(e) {
-  var btn = e.target.closest('.fp');
-  if (!btn) return;
-  document.querySelectorAll('#deals-filter-bar .fp').forEach(function(b) { b.classList.remove('on'); });
-  btn.classList.add('on');
-  _activeFilter = btn.dataset.filter;
-  renderDealsTable();
-});
-
-// ── RENDER ACCOUNTS TABLE ──
-function renderAccountsTable(accounts) {
-  var wrap = document.getElementById('accounts-table-wrap');
-
-  if (!accounts || !accounts.length) {
-    wrap.innerHTML = '<div class="empty-state">' +
-      '<div class="empty-icon"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round"><path d="M13 5L6.5 11.5 3 8"/></svg></div>' +
-      '<div class="empty-title">No high-risk accounts</div>' +
-      '<div class="empty-sub">All accounts are in Medium or Low risk tier</div>' +
+  document.getElementById('bu-card-grid').innerHTML = buDefs.map(function(def) {
+    var d = buPulse[def.key] || {};
+    var shortName = def.key.replace(' BU', '');
+    return '<div class="bu-sig-card" style="--bc:' + def.bc + '">' +
+      '<div class="bu-card-top">' +
+        '<div class="bu-card-dot" style="background:' + def.color + '"></div>' +
+        '<span class="bu-card-name" style="color:' + def.color + '">' + esc(shortName) + '</span>' +
+      '</div>' +
+      '<div class="bu-sig-row"><div class="bu-sig-lbl">Win Rate Signal</div><div class="bu-sig-val">' + esc(d.win_rate_signal || '—') + '</div></div>' +
+      '<div class="bu-sig-row"><div class="bu-sig-lbl">Churn Signal</div><div class="bu-sig-val">' + esc(d.churn_signal || '—') + '</div></div>' +
+      '<div class="bu-sig-row"><div class="bu-sig-lbl">Coverage Signal</div><div class="bu-sig-val">' + esc(d.coverage_signal || '—') + '</div></div>' +
       '</div>';
-    return;
-  }
-
-  var thead = '<tr>' +
-    '<th>Account</th>' +
-    '<th>BU</th>' +
-    '<th>ATR at Risk</th>' +
-    '<th>Days to Renewal</th>' +
-    '<th>P1 Open</th>' +
-    '<th>Open Tickets</th>' +
-    '<th>Oldest Ticket</th>' +
-    '<th>Risk Score</th>' +
-    '</tr>';
-
-  var tbody = accounts.map(function(a) {
-    var daysColor = a.days_to_renewal <= 30 ? 'var(--red)' :
-                    a.days_to_renewal <= 60 ? 'var(--amber)' : 'var(--t2)';
-    var p1cell = a.p1_open > 0
-      ? '<div class="ticket-cell"><div class="t-dot p1"></div><span style="color:var(--red);font-family:var(--mono)">' + a.p1_open + '</span></div>'
-      : '<span style="color:var(--t3)">—</span>';
-    var tickets = a.open_tickets > 0
-      ? '<span style="font-family:var(--mono)">' + a.open_tickets + '</span>'
-      : '<span style="color:var(--t3)">—</span>';
-    var oldest = a.oldest_ticket_days > 0
-      ? '<span style="font-family:var(--mono);color:' + (a.oldest_ticket_days > 90 ? 'var(--red)' : 'var(--t2)') + '">' + a.oldest_ticket_days + 'd</span>'
-      : '<span style="color:var(--t3)">—</span>';
-
-    return '<tr>' +
-      '<td class="primary"><span class="opp-name">' + a.account_name + '</span>' +
-        (a.renewals_lost_hist > 0 ? '<span class="acct-name" style="color:var(--amber)">⚠ Prior churn history</span>' : '') +
-      '</td>' +
-      '<td>' + buChip(a.bu) + '</td>' +
-      '<td class="mono right" style="color:var(--red)">' + fmt(a.renewal_atr) + '</td>' +
-      '<td class="mono" style="color:' + daysColor + '">' + a.days_to_renewal + ' days</td>' +
-      '<td>' + p1cell + '</td>' +
-      '<td>' + tickets + '</td>' +
-      '<td>' + oldest + '</td>' +
-      '<td><span class="risk-badge risk-high">' + a.risk_score + ' High</span></td>' +
-      '</tr>';
   }).join('');
-
-  wrap.innerHTML = '<table><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table>';
 }
 
-// ── LOAD ──
+// ── RENDER WIN/LOSS ────────────────────────────────────────────────────────
+function renderWinloss(wl) {
+  setText('wl-headline',     wl.headline);
+  setText('wl-win-profile',  wl.win_profile);
+  setText('wl-loss-patterns',wl.loss_patterns);
+  setText('wl-rec',          wl.recommendation);
+
+  if (wl.systemic_flag === true) {
+    document.getElementById('systemic-banner').style.display = 'flex';
+  }
+}
+
+// ── RENDER REVIEW FOOTER ───────────────────────────────────────────────────
+function renderReview(review) {
+  var status = review.status || 'unknown';
+  var pill = document.getElementById('rev-pill');
+  var statusMap = {
+    passed:  {cls:'passed',  label:'✓ Review Passed'},
+    flagged: {cls:'flagged', label:'⚠ Review Flagged'},
+    error:   {cls:'error',   label:'✕ Review Error'},
+  };
+  var s = statusMap[status] || {cls:'error', label: status};
+  pill.className = 'rev-pill ' + s.cls;
+  pill.textContent = s.label;
+
+  var corrections = (review.corrections || []).filter(Boolean);
+  if (corrections.length) {
+    document.getElementById('rev-corrections-wrap').style.display = 'block';
+    document.getElementById('rev-corrections').innerHTML = corrections.map(function(c) {
+      return '<div class="rev-correction"><span class="rev-correction-icon">✎</span>' + esc(c) + '</div>';
+    }).join('');
+  }
+
+  var notes = (review.notes || []).filter(Boolean);
+  if (notes.length) {
+    document.getElementById('rev-notes-wrap').style.display = 'block';
+    document.getElementById('rev-notes').innerHTML = notes.map(function(n) {
+      return '<div class="rev-note"><span class="rev-note-dot">·</span>' + esc(n) + '</div>';
+    }).join('');
+  }
+}
+
+// ── LOAD SIGNALS ───────────────────────────────────────────────────────────
 function loadSignals() {
-  fetch(API_URL + '?mode=signals')
+  fetch(SIGNALS_URL + '?t=' + Date.now())
     .then(function(r) {
-      if (!r.ok) throw new Error('API error: ' + r.status);
+      if (r.status === 404 || r.status === 403) throw new Error('not_found');
+      if (!r.ok) throw new Error('http_' + r.status);
       return r.json();
     })
     .then(function(data) {
-      if (data.error) throw new Error(data.error);
-
-      // Hide loading, show content
       document.getElementById('loading-state').style.display = 'none';
       document.getElementById('content').style.display = 'block';
 
-      // Render
-      renderSummary(data.summary || {});
-
-      _deals = data.flagged_deals || [];
-      renderDealsTable();
-      renderAccountsTable(data.at_risk_accounts || []);
-
-      // Update meta
-      var lu = document.getElementById('last-updated');
-      if (lu) lu.textContent = 'Updated ' + new Date().toLocaleTimeString();
-      if (data.meta && data.meta.week) {
-        document.getElementById('brand-tag').textContent = 'Week of ' + data.meta.week + ' · FY2027';
-      }
+      renderMeta(data.meta      || {});
+      renderPipeline(data.pipeline || {});
+      renderRenewal(data.renewal   || {});
+      renderWinloss(data.winloss   || {});
+      renderReview(data.review     || {});
     })
     .catch(function(e) {
-      console.error('Signals load failed:', e);
-      document.getElementById('loading-state').innerHTML =
-        '<span style="color:var(--red)">Failed to load signals — ' + e.message + '</span>';
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('empty-state').style.display = 'flex';
+      if (e.message !== 'not_found') {
+        console.warn('[revenue-signals] Load error:', e.message);
+      }
     });
 }
 

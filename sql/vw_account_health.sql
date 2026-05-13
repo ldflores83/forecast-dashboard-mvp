@@ -20,8 +20,8 @@ open_renewals AS (
     AccountId                                     AS account_id,
     Account_Name                                  AS account_name,
     BU                                            AS bu,
-    COALESCE(SUM(ATR_Value), 0)                   AS renewal_atr,
-    COALESCE(SUM(ACV), 0)                         AS renewal_acv,
+    COALESCE(SUM(ATR_Value_USD), 0)               AS renewal_atr,
+    COALESCE(SUM(ACV_USD), 0)                     AS renewal_acv,
     COUNT(*)                                      AS renewal_opp_count,
     MIN(PCED)                                     AS earliest_renewal_date,
     DATE_DIFF(PARSE_DATE('%Y-%m-%d', MIN(PCED)), CURRENT_DATE(), DAY) AS days_to_earliest_renewal,
@@ -105,7 +105,7 @@ renewal_history AS (
     COUNTIF(Is_Won = TRUE)                        AS renewals_won_hist,
     COUNTIF(Is_Lost = TRUE)                       AS renewals_lost_hist,
     COALESCE(SUM(CASE WHEN Is_Lost = TRUE
-      THEN ATR_Value ELSE 0 END), 0)              AS historical_churn_acv
+      THEN ATR_Value_USD ELSE 0 END), 0)          AS historical_churn_acv
   FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
   WHERE Sales_Motion = 'Renewal'
     AND IsClosed = TRUE

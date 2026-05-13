@@ -24,13 +24,13 @@ movements AS (
   SELECT
     FiscalQuarter  AS fiscal_quarter,
     FiscalYear     AS fiscal_year,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Net New'   AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV END), 0)               AS net_new,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Expansion' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV END), 0)               AS expansion,
-    GREATEST(COALESCE(SUM(CASE WHEN Sales_Motion = 'Migration' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV END), 0), 0)  AS migration,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value > 0 THEN ATR_Value END), 0) AS churn_arr,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Won THEN ACV END), 0)                 AS renewal_won_acv,
+    COALESCE(SUM(CASE WHEN Sales_Motion = 'Net New'   AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0)               AS net_new,
+    COALESCE(SUM(CASE WHEN Sales_Motion = 'Expansion' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0)               AS expansion,
+    GREATEST(COALESCE(SUM(CASE WHEN Sales_Motion = 'Migration' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0), 0)  AS migration,
+    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value_USD > 0 THEN ATR_Value_USD END), 0) AS churn_arr,
+    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Won THEN ACV_USD END), 0)                 AS renewal_won_acv,
     COUNTIF(Sales_Motion = 'Renewal' AND Is_Won)                                                  AS renewal_won_count,
-    COUNTIF(Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value > 0)                              AS renewal_lost_count
+    COUNTIF(Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value_USD > 0)                              AS renewal_lost_count
   FROM base_filter
   GROUP BY FiscalQuarter, FiscalYear
 ),
@@ -39,13 +39,13 @@ fy AS (
   SELECT
     0              AS fiscal_quarter,
     FiscalYear     AS fiscal_year,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Net New'   AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV END), 0)               AS net_new,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Expansion' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV END), 0)               AS expansion,
-    GREATEST(COALESCE(SUM(CASE WHEN Sales_Motion = 'Migration' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV END), 0), 0)  AS migration,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value > 0 THEN ATR_Value END), 0) AS churn_arr,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Won THEN ACV END), 0)                 AS renewal_won_acv,
+    COALESCE(SUM(CASE WHEN Sales_Motion = 'Net New'   AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0)               AS net_new,
+    COALESCE(SUM(CASE WHEN Sales_Motion = 'Expansion' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0)               AS expansion,
+    GREATEST(COALESCE(SUM(CASE WHEN Sales_Motion = 'Migration' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0), 0)  AS migration,
+    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value_USD > 0 THEN ATR_Value_USD END), 0) AS churn_arr,
+    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Won THEN ACV_USD END), 0)                 AS renewal_won_acv,
     COUNTIF(Sales_Motion = 'Renewal' AND Is_Won)                                                  AS renewal_won_count,
-    COUNTIF(Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value > 0)                              AS renewal_lost_count
+    COUNTIF(Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value_USD > 0)                              AS renewal_lost_count
   FROM base_filter
   GROUP BY FiscalYear
 )

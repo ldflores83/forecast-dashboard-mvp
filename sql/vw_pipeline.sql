@@ -22,7 +22,7 @@ WITH stage_pipeline AS (
       ELSE 'other'
     END             AS stage_group,
 
-    COALESCE(SUM(ACV), 0) AS open_acv,
+    COALESCE(SUM(ACV_USD), 0) AS open_acv,
     COUNT(*)              AS open_count
 
   FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
@@ -44,7 +44,7 @@ stage_fy AS (
                          'Renewal Negotiation','Renewal Confirmed')          THEN 'renewal'
       ELSE 'other'
     END             AS stage_group,
-    COALESCE(SUM(ACV), 0) AS open_acv,
+    COALESCE(SUM(ACV_USD), 0) AS open_acv,
     COUNT(*)              AS open_count
   FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
   WHERE Is_Open = TRUE
@@ -60,23 +60,23 @@ bu_summary AS (
     FiscalYear      AS fiscal_year,
 
     -- Open pipeline
-    COALESCE(SUM(CASE WHEN Is_Open THEN ACV END), 0)              AS open_acv,
+    COALESCE(SUM(CASE WHEN Is_Open THEN ACV_USD END), 0)              AS open_acv,
     COUNTIF(Is_Open)                                               AS open_count,
 
     -- By motion (open)
-    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Net New'   AND Category = 'Solutions'   THEN ACV END), 0) AS open_net_new_acv,
-    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Expansion' AND Category = 'Solutions' THEN ACV END), 0) AS open_expansion_acv,
-    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Migration' AND Category = 'Solutions' THEN ACV END), 0) AS open_migration_acv,
-    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Renewal'   THEN ACV END), 0) AS open_renewal_acv,
+    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Net New'   AND Category = 'Solutions'   THEN ACV_USD END), 0) AS open_net_new_acv,
+    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Expansion' AND Category = 'Solutions' THEN ACV_USD END), 0) AS open_expansion_acv,
+    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Migration' AND Category = 'Solutions' THEN ACV_USD END), 0) AS open_migration_acv,
+    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Renewal'   THEN ACV_USD END), 0) AS open_renewal_acv,
 
     -- Win rate (all time for the period)
     COUNTIF(IsClosed AND Is_Won)                                   AS won_count,
     COUNTIF(IsClosed)                                              AS closed_count,
-    COALESCE(SUM(CASE WHEN Is_Won THEN ACV END), 0)               AS won_acv,
+    COALESCE(SUM(CASE WHEN Is_Won THEN ACV_USD END), 0)               AS won_acv,
 
     -- Avg deal (won only)
     SAFE_DIVIDE(
-      SUM(CASE WHEN Is_Won THEN ACV END),
+      SUM(CASE WHEN Is_Won THEN ACV_USD END),
       NULLIF(COUNTIF(Is_Won), 0)
     )                                                              AS avg_deal_won
 
@@ -93,17 +93,17 @@ bu_fy AS (
     BU,
     0               AS fiscal_quarter,
     FiscalYear      AS fiscal_year,
-    COALESCE(SUM(CASE WHEN Is_Open THEN ACV END), 0)              AS open_acv,
+    COALESCE(SUM(CASE WHEN Is_Open THEN ACV_USD END), 0)              AS open_acv,
     COUNTIF(Is_Open)                                               AS open_count,
-    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Net New'   AND Category = 'Solutions'   THEN ACV END), 0) AS open_net_new_acv,
-    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Expansion' AND Category = 'Solutions' THEN ACV END), 0) AS open_expansion_acv,
-    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Migration' AND Category = 'Solutions' THEN ACV END), 0) AS open_migration_acv,
-    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Renewal'   THEN ACV END), 0) AS open_renewal_acv,
+    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Net New'   AND Category = 'Solutions'   THEN ACV_USD END), 0) AS open_net_new_acv,
+    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Expansion' AND Category = 'Solutions' THEN ACV_USD END), 0) AS open_expansion_acv,
+    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Migration' AND Category = 'Solutions' THEN ACV_USD END), 0) AS open_migration_acv,
+    COALESCE(SUM(CASE WHEN Is_Open AND Sales_Motion = 'Renewal'   THEN ACV_USD END), 0) AS open_renewal_acv,
     COUNTIF(IsClosed AND Is_Won)                                   AS won_count,
     COUNTIF(IsClosed)                                              AS closed_count,
-    COALESCE(SUM(CASE WHEN Is_Won THEN ACV END), 0)               AS won_acv,
+    COALESCE(SUM(CASE WHEN Is_Won THEN ACV_USD END), 0)               AS won_acv,
     SAFE_DIVIDE(
-      SUM(CASE WHEN Is_Won THEN ACV END),
+      SUM(CASE WHEN Is_Won THEN ACV_USD END),
       NULLIF(COUNTIF(Is_Won), 0)
     )                                                              AS avg_deal_won
   FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`

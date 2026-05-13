@@ -20,41 +20,41 @@ WITH by_quarter AS (
     COUNTIF(Sales_Motion = 'Renewal' AND IsClosed AND Is_Lost)                 AS renewal_lost_count,
     COUNTIF(Sales_Motion = 'Renewal' AND IsClosed)                             AS renewal_closed_count,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Won
-                      THEN ACV END), 0)                                        AS renewal_won_acv,
+                      THEN ACV_USD END), 0)                                        AS renewal_won_acv,
     -- Churn uses ATR_Value (annual value at risk), not ACV
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value > 0
-                      THEN ATR_Value END), 0)                                  AS renewal_lost_acv,
+    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value_USD > 0
+                      THEN ATR_Value_USD END), 0)                                  AS renewal_lost_acv,
 
     -- Sales new revenue: Solutions + Direct only (apples to apples vs software renewals)
     COALESCE(SUM(CASE WHEN Sales_Motion IN ('Net New','Expansion','Migration')
                        AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won
-                      THEN ACV END), 0)                                        AS sales_won_acv,
+                      THEN ACV_USD END), 0)                                        AS sales_won_acv,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Net New'
                        AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won
-                      THEN ACV END), 0)                                        AS net_new_won_acv,
+                      THEN ACV_USD END), 0)                                        AS net_new_won_acv,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Expansion'
                        AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won
-                      THEN ACV END), 0)                                        AS expansion_won_acv,
+                      THEN ACV_USD END), 0)                                        AS expansion_won_acv,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Migration'
                        AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won
-                      THEN ACV END), 0)                                        AS migration_won_acv,
+                      THEN ACV_USD END), 0)                                        AS migration_won_acv,
 
     -- Channel sales (Solutions only, for separate display)
     COALESCE(SUM(CASE WHEN Sales_Motion IN ('Net New','Expansion','Migration')
                        AND Category = 'Solutions' AND Is_Channel = TRUE AND Is_Won
-                      THEN ACV END), 0)                                        AS channel_won_acv,
+                      THEN ACV_USD END), 0)                                        AS channel_won_acv,
 
     -- Services revenue (excluded from coverage calc, shown separately)
     COALESCE(SUM(CASE WHEN Sales_Motion IN ('Net New','Expansion','Migration')
                        AND Category = 'Services' AND Is_Won
-                      THEN ACV END), 0)                                        AS services_won_acv,
+                      THEN ACV_USD END), 0)                                        AS services_won_acv,
 
     -- Open pipeline: Solutions Direct only
     COALESCE(SUM(CASE WHEN Sales_Motion IN ('Net New','Expansion','Migration')
                        AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Open
-                      THEN ACV END), 0)                                        AS sales_open_acv,
+                      THEN ACV_USD END), 0)                                        AS sales_open_acv,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Open
-                      THEN ACV END), 0)                                        AS renewal_open_acv
+                      THEN ACV_USD END), 0)                                        AS renewal_open_acv
 
   FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
   WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
@@ -73,32 +73,32 @@ fy AS (
     COUNTIF(Sales_Motion = 'Renewal' AND IsClosed AND Is_Lost)                 AS renewal_lost_count,
     COUNTIF(Sales_Motion = 'Renewal' AND IsClosed)                             AS renewal_closed_count,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Won
-                      THEN ACV END), 0)                                        AS renewal_won_acv,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value > 0
-                      THEN ATR_Value END), 0)                                  AS renewal_lost_acv,
+                      THEN ACV_USD END), 0)                                        AS renewal_won_acv,
+    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value_USD > 0
+                      THEN ATR_Value_USD END), 0)                                  AS renewal_lost_acv,
     COALESCE(SUM(CASE WHEN Sales_Motion IN ('Net New','Expansion','Migration')
                        AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won
-                      THEN ACV END), 0)                                        AS sales_won_acv,
+                      THEN ACV_USD END), 0)                                        AS sales_won_acv,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Net New'
                        AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won
-                      THEN ACV END), 0)                                        AS net_new_won_acv,
+                      THEN ACV_USD END), 0)                                        AS net_new_won_acv,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Expansion'
                        AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won
-                      THEN ACV END), 0)                                        AS expansion_won_acv,
+                      THEN ACV_USD END), 0)                                        AS expansion_won_acv,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Migration'
                        AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won
-                      THEN ACV END), 0)                                        AS migration_won_acv,
+                      THEN ACV_USD END), 0)                                        AS migration_won_acv,
     COALESCE(SUM(CASE WHEN Sales_Motion IN ('Net New','Expansion','Migration')
                        AND Category = 'Solutions' AND Is_Channel = TRUE AND Is_Won
-                      THEN ACV END), 0)                                        AS channel_won_acv,
+                      THEN ACV_USD END), 0)                                        AS channel_won_acv,
     COALESCE(SUM(CASE WHEN Sales_Motion IN ('Net New','Expansion','Migration')
                        AND Category = 'Services' AND Is_Won
-                      THEN ACV END), 0)                                        AS services_won_acv,
+                      THEN ACV_USD END), 0)                                        AS services_won_acv,
     COALESCE(SUM(CASE WHEN Sales_Motion IN ('Net New','Expansion','Migration')
                        AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Open
-                      THEN ACV END), 0)                                        AS sales_open_acv,
+                      THEN ACV_USD END), 0)                                        AS sales_open_acv,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Open
-                      THEN ACV END), 0)                                        AS renewal_open_acv
+                      THEN ACV_USD END), 0)                                        AS renewal_open_acv
   FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
   WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
