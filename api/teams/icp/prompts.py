@@ -1,0 +1,248 @@
+"""
+teams/icp/prompts.py
+System prompts and user message builders for the ICP Analysis pipeline.
+
+Two agents:
+  icp_discovery  — defines ICP per BU from historical win/loss patterns
+  icp_validator  — validates current pipeline against the discovered ICP
+  reviewer       — validates all agent claims against source data
+"""
+
+import json
+
+
+# ── CONSTANTS ─────────────────────────────────────────────────────────────────
+
+ICP_DISCOVERY_SYSTEM = """You are analyzing historical win/loss data to define the Ideal Customer \
+Profile (ICP) for each QAD business unit.
+
+QAD business units: ERP BU, Supply Chain BU, Redzone BU.
+
+The payload contains two sections:
+  - bu_summary: BU-level totals (total deals, won, lost, full-population win rate, avg deal size)
+  - by_bu: detailed breakdown by vertical, revenue range, region, customer profile
+
+For each BU, identify:
+- Top 3 verticals by a combination of win rate AND deal volume (not just one metric)
+- Revenue range that concentrates wins — use the buckets: <$40M, $40M-$500M, $500M-$4B, >$4B
+- Anti-ICP signals: verticals or segments with high loss rates or consistently small deal sizes
+- Customer_Profile distribution among wins: ICP vs ACP vs UCP tier
+
+IMPORTANT rules:
+- bu_overall_win_rate_pct MUST be copied directly from bu_summary[bu].bu_overall_win_rate_pct.
+  This is the full-population win rate. Do NOT compute it yourself. Do NOT average vertical win rates.
+- icp_segment_win_rate_pct is the win rate within your identified top ICP verticals only —
+  compute this from by_bu[bu].by_vertical for just those verticals.
+- These two numbers will almost always differ. Report both. Never conflate them.
+- Primary_Vertical coverage is provided in the payload (vertical_coverage field). State it per BU.
+- Do not invent patterns not supported by the data. If a vertical has fewer than 10 deals, note it.
+- If a BU has fewer than 50 closed deals total, flag it as low confidence.
+- avg_deal_size must come directly from bu_summary[bu].avg_deal_won.
+- Output must be specific with numbers, not vague generalizations.
+- VP_Forecast and ForecastCategoryName are NOT independent signals — do not reference them.
+
+Return ONLY valid JSON matching this exact schema:
+{
+  "ERP BU": {
+    "icp_profile": {
+      "top_verticals": ["<vertical1>", "<vertical2>", "<vertical3>"],
+      "revenue_range": "<dominant_range>",
+      "bu_overall_win_rate_pct": <float, 0-100 scale, copied from bu_summary>,
+      "icp_segment_win_rate_pct": <float, 0-100 scale, ICP verticals only>,
+      "avg_deal_size": <float>
+    },
+    "anti_icp": {
+      "loss_patterns": ["<pattern1>", "<pattern2>"],
+      "low_win_rate_segments": ["<segment - X%>", ...]
+    },
+    "sample_size": <int>,
+    "coverage_note": "<X% of deals have vertical data>"
+  },
+  "Supply Chain BU": { ... },
+  "Redzone BU": { ... }
+}
+
+Return ONLY the JSON object. No explanation, no markdown fences."""
+
+ICP_VALIDATOR_SYSTEM = """You are validating the current open pipeline against a defined ICP profile.
+
+For each QAD business unit (ERP BU, Supply Chain BU, Redzone BU), quantify:
+- Total open pipeline ACV and deal count
+- ICP-aligned pipeline ACV and % (deals in ICP verticals + revenue range, where data exists)
+- Non-ICP pipeline at risk — top 5 deals by ACV with a specific reason why they fall outside ICP
+- Customer_Profile breakdown for open pipeline (ICP/ACP/UCP/Unknown)
+
+IMPORTANT rules:
+- Primary_Vertical coverage is in the payload. Use vertical data where available; for nulls, note as "vertical unknown".
+- Customer_Profile is also sparse for pipeline. Note % populated, use where available.
+- Do not over-flag deals where vertical is simply unknown — only flag when vertical IS known and is anti-ICP.
+- Lead with the risk number (non-ICP ACV) — that is the most actionable metric.
+- trend_vs_prior compares to the prior week context if provided; otherwise "No prior week data."
+- Be specific with dollar amounts and percentages.
+
+Return ONLY valid JSON matching this exact schema:
+{
+  "ERP BU": {
+    "total_pipeline_acv": <float>,
+    "total_pipeline_count": <int>,
+    "icp_pipeline_acv": <float>,
+    "icp_pipeline_pct": <float>,
+    "non_icp_deals": [
+      {"opp_name": "...", "account_name": "...", "acv": <float>, "reason": "..."}
+    ],
+    "customer_profile_breakdown": {"ICP": <int>, "ACP": <int>, "UCP": <int>, "Unknown": <int>},
+    "trend_vs_prior": "..."
+  },
+  "Supply Chain BU": { ... },
+  "Redzone BU": { ... }
+}
+
+Return ONLY the JSON object. No explanation, no markdown fences."""
+
+REVIEWER_SYSTEM = """You are reviewing ICP analysis outputs for factual accuracy.
+
+You have access to:
+1. Ground-truth aggregated win/loss data per BU (source of truth)
+2. Ground-truth pipeline data per BU (source of truth)
+3. ICP discovery agent output (to verify)
+4. ICP validation agent output (to verify)
+
+Your job:
+- Verify that win rates, deal counts, and ACV figures cited match the source data
+- Verify that pipeline ACV figures are consistent with the pipeline source data
+- Flag any ICP profiles that appear invented or not supported by the data
+- Note when sample sizes are low (<100 deals with vertical data for a BU)
+- Correct or flag any claim that contradicts the source data
+- Do NOT invent new analysis — only verify what the agents produced
+
+If a claim is directionally correct but numerically imprecise (within 5%), note it but do not flag it as an error.
+
+Return ONLY valid JSON matching this exact schema:
+{
+  "status": "passed" | "flagged",
+  "notes": ["<observation1>", "<observation2>"],
+  "corrections": ["<specific correction1>", ...],
+  "icp_profile": { ... same structure as discovery output ... },
+  "validation": { ... same structure as validator output ... }
+}
+
+Return ONLY the JSON object. No explanation, no markdown fences."""
+
+
+# ── PROMPT BUILDERS ───────────────────────────────────────────────────────────
+
+def icp_discovery_prompt(won_lost_data: dict, prior_week_context: dict | None) -> tuple[str, str]:
+    """
+    Builds the system prompt and user message for the ICP discovery agent.
+
+    Sends only the aggregated by_bu stats (not raw_deals) to keep token count manageable.
+    bu_summary is a flattened, clearly-labeled copy of the BU-level totals so the LLM
+    can copy bu_overall_win_rate_pct directly without searching nested structures.
+    """
+    by_bu = won_lost_data.get("by_bu", {})
+
+    # Explicit BU-level summary — grounding anchor for win rates and deal counts.
+    # Prevents the LLM from re-deriving these from vertical-level sub-data.
+    bu_summary = {
+        bu: {
+            "total_deals":              b.get("total", 0),
+            "won_deals":                b.get("won", 0),
+            "lost_deals":               b.get("lost", 0),
+            "bu_overall_win_rate_pct":  b.get("win_rate_pct", 0.0),  # copy this directly to output
+            "avg_deal_won":             b.get("avg_deal_won", 0.0),
+            "won_acv":                  b.get("won_acv", 0.0),
+        }
+        for bu, b in by_bu.items()
+    }
+
+    payload = {
+        "bu_summary":        bu_summary,
+        "by_bu":             by_bu,
+        "vertical_coverage": won_lost_data.get("vertical_coverage", 0),
+        "total_deals":       won_lost_data.get("total_deals", 0),
+        "with_vertical":     won_lost_data.get("with_vertical", 0),
+    }
+
+    if prior_week_context:
+        payload["prior_week_icp"] = prior_week_context
+
+    return ICP_DISCOVERY_SYSTEM, json.dumps(payload, default=str)
+
+
+def icp_validator_prompt(
+    icp_profile: dict,
+    pipeline_data: dict,
+    prior_week_context: dict | None,
+) -> tuple[str, str]:
+    """
+    Builds the system prompt and user message for the ICP validator agent.
+
+    Sends the discovery output + pipeline summary (top 30 deals by ACV + BU totals).
+    Does not send all pipeline deals to stay within token budget.
+    """
+    top_deals = [
+        {
+            "opp_name":       str(d.get("Name", "") or ""),
+            "account_name":   str(d.get("Account_Name", "") or ""),
+            "bu":             str(d.get("BU", "") or ""),
+            "stage":          str(d.get("StageName", "") or ""),
+            "acv":            d.get("ACV"),
+            "vertical":       str(d.get("Primary_Vertical") or "Unknown"),
+            "revenue_bucket": d.get("revenue_bucket", "Unknown"),
+            "customer_profile": str(d.get("Customer_Profile") or "Unknown"),
+            "sales_motion":   str(d.get("Sales_Motion", "") or ""),
+        }
+        for d in (pipeline_data.get("deals", []) or [])[:30]
+    ]
+
+    payload = {
+        "icp_profile":    icp_profile,
+        "pipeline_by_bu": pipeline_data.get("by_bu", {}),
+        "pipeline_total_acv":   pipeline_data.get("total_acv", 0),
+        "pipeline_total_count": pipeline_data.get("total_deals", 0),
+        "top_deals":      top_deals,
+    }
+
+    if prior_week_context:
+        payload["prior_week_context"] = prior_week_context
+
+    return ICP_VALIDATOR_SYSTEM, json.dumps(payload, default=str)
+
+
+def reviewer_prompt(
+    won_lost_data: dict,
+    pipeline_data: dict,
+    icp_profile: dict,
+    validation: dict,
+) -> tuple[str, str]:
+    """
+    Builds the system prompt and user message for the reviewer.
+    """
+    # Ground truth: per-BU aggregated win/loss stats (no raw_deals)
+    ground_truth = {
+        "won_lost_by_bu": {
+            bu: {
+                "total":         b.get("total"),
+                "won":           b.get("won"),
+                "lost":          b.get("lost"),
+                "win_rate_pct":  b.get("win_rate_pct"),
+                "avg_deal_won":  b.get("avg_deal_won"),
+                "won_acv":       b.get("won_acv"),
+                "by_vertical":   b.get("by_vertical", {}),
+                "by_revenue_range": b.get("by_revenue_range", {}),
+            }
+            for bu, b in (won_lost_data.get("by_bu") or {}).items()
+        },
+        "vertical_coverage": won_lost_data.get("vertical_coverage", 0),
+        "total_deals":       won_lost_data.get("total_deals", 0),
+        "pipeline_by_bu":    pipeline_data.get("by_bu", {}),
+        "pipeline_total_acv": pipeline_data.get("total_acv", 0),
+    }
+
+    payload = {
+        "ground_truth":  ground_truth,
+        "icp_profile":   icp_profile,
+        "validation":    validation,
+    }
+
+    return REVIEWER_SYSTEM, json.dumps(payload, default=str)

@@ -58,7 +58,9 @@ Flag_Stagnant_Stage: Deal has exceeded the maximum expected days in its current 
 Surface this as a stage velocity risk, especially on high-ACV deals.
 Each deal also carries stage_entered_date and days_in_current_stage computed from
 OpportunityHistory. When available, prefer these over days_in_stage (which is always 0
-in Salesforce). In narrative, write: "has been in [stage] since [date] ([X] days)".
+in Salesforce). OpportunityHistory starts on Feb 13, 2026, so the actual time in
+stage may be longer. In narrative, write: "has been in [stage] since [date] (at least
+[X] days)".
 
 Flag_No_Economic_Buyer: At_Power = False and deal is in Evaluation, Proposal, or Contracts.
 This is a MEDDPICC gap — no confirmed access to the economic buyer in a late-stage deal.

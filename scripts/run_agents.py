@@ -40,6 +40,7 @@ if project_root not in sys.path:
 # ── Team registry — maps --team flag to orchestrator module path ───────────────
 TEAM_REGISTRY = {
     "signals": "teams.revenue_signals.orchestrator",
+    "icp":     "teams.icp.orchestrator",
 }
 
 
@@ -50,7 +51,7 @@ def main():
     parser.add_argument(
         "--team", type=str, default="signals",
         choices=list(TEAM_REGISTRY.keys()),
-        help="Which team pipeline to run (default: signals)"
+        help="Which team pipeline to run (default: signals). Options: signals, icp"
     )
     parser.add_argument(
         "--q", type=int, default=0, choices=[0, 1, 2, 3, 4],
@@ -80,28 +81,45 @@ def main():
         print("=" * 60)
         print(f"DRY RUN — Tools only (no LLM calls) — team: {args.team}")
         print("=" * 60)
-        from teams.revenue_signals.tools import get_flagged_deals, get_renewal_health, get_winloss_data
-        from shared.utils  import build_context, source_hash
-        from shared.state  import SharedState
 
-        state = SharedState()
-        state.context       = build_context(args.q)
-        state.pipeline_data = get_flagged_deals(args.q)
-        state.renewal_data  = get_renewal_health(args.q)
-        state.winloss_data  = get_winloss_data(args.q)
+        if args.team == "icp":
+            from teams.icp.tools import get_won_lost_by_bu, get_pipeline_by_bu
 
-        s_hash = source_hash(state)
+            won_lost = get_won_lost_by_bu()
+            pipeline = get_pipeline_by_bu()
 
-        print(f"\nContext:          {state.context['week']} — Q{args.q or 'FY'}")
-        print(f"Source hash:      {s_hash}")
-        print(f"Flagged deals:    {len(state.pipeline_data.get('flagged_deals', []))}")
-        print(f"Pushed 5x:        {state.pipeline_data.get('pushed_5x_count', 0)}")
-        print(f"Overdue close:    {state.pipeline_data.get('overdue_close_count', 0)}")
-        print(f"High risk accts:  {len(state.renewal_data.get('high_risk_accounts', []))}")
-        print(f"ATR at risk:      ${state.renewal_data.get('total_atr_at_risk', 0)/1e6:.1f}M")
-        print(f"Closed FY2027:    {state.winloss_data.get('total_closed_count', 0)} deals")
-        print(f"Top loss reason:  {state.winloss_data.get('top_loss_reason', '—')}")
-        print(f"\n[OK] Dry run complete - BQ connectivity confirmed")
+            print(f"\nWon/lost deals:   {won_lost['total_deals']}")
+            print(f"With vertical:    {won_lost['with_vertical']} ({won_lost['vertical_coverage']}%)")
+            print(f"Open pipeline:    {pipeline['total_deals']} deals")
+            print(f"Pipeline ACV:     ${pipeline['total_acv']/1e6:.1f}M")
+            for bu, b in pipeline.get("by_bu", {}).items():
+                print(f"  {bu}: ${b['total_acv']/1e6:.1f}M ({b['deal_count']} deals)")
+            print(f"\n[OK] Dry run complete - BQ connectivity confirmed")
+
+        else:
+            from teams.revenue_signals.tools import get_flagged_deals, get_renewal_health, get_winloss_data
+            from shared.utils  import build_context, source_hash
+            from shared.state  import SharedState
+
+            state = SharedState()
+            state.context       = build_context(args.q)
+            state.pipeline_data = get_flagged_deals(args.q)
+            state.renewal_data  = get_renewal_health(args.q)
+            state.winloss_data  = get_winloss_data(args.q)
+
+            s_hash = source_hash(state)
+
+            print(f"\nContext:          {state.context['week']} — Q{args.q or 'FY'}")
+            print(f"Source hash:      {s_hash}")
+            print(f"Flagged deals:    {len(state.pipeline_data.get('flagged_deals', []))}")
+            print(f"Pushed 5x:        {state.pipeline_data.get('pushed_5x_count', 0)}")
+            print(f"Overdue close:    {state.pipeline_data.get('overdue_close_count', 0)}")
+            print(f"High risk accts:  {len(state.renewal_data.get('high_risk_accounts', []))}")
+            print(f"ATR at risk:      ${state.renewal_data.get('total_atr_at_risk', 0)/1e6:.1f}M")
+            print(f"Closed FY2027:    {state.winloss_data.get('total_closed_count', 0)} deals")
+            print(f"Top loss reason:  {state.winloss_data.get('top_loss_reason', '—')}")
+            print(f"\n[OK] Dry run complete - BQ connectivity confirmed")
+
         return
 
     # ── Full run ───────────────────────────────────────────────────────────────
@@ -116,18 +134,21 @@ def main():
             debug=args.debug,
         )
 
+        gcs_file = "icp_output.json" if args.team == "icp" else "signals_output.json"
+        corrections = result.get("review", {}).get("corrections", [])
+
         print(f"\n[OK] Pipeline complete — team: {args.team}")
         print(f"  Week:         {result['meta']['week']}")
-        print(f"  Reviewer:     {result['review']['status']}")
-        print(f"  Corrections:  {len(result['review'].get('corrections', []))}")
+        print(f"  Reviewer:     {result.get('review', {}).get('status', '—')}")
+        print(f"  Corrections:  {len(corrections)}")
         print(f"  Cache hit:    {result['meta']['cache_hit']}")
         print(f"  Source hash:  {result['meta']['source_hash']}")
         print(f"\n  Output written to GCS:")
-        print(f"  https://storage.googleapis.com/forecast-dashboard-mvp-frontend/signals_output.json")
+        print(f"  https://storage.googleapis.com/forecast-dashboard-mvp-frontend/{gcs_file}")
 
-        if result["review"].get("corrections"):
+        if corrections:
             print(f"\n  Reviewer corrections:")
-            for c in result["review"]["corrections"]:
+            for c in corrections:
                 print(f"    - {c}")
 
         if args.print_output:

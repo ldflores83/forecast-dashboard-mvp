@@ -42,18 +42,26 @@ def dashboard_api(request):
             payload = build_signals_payload(fiscal_quarter)
         elif mode == "clear-cache":
             from shared import cache
-            from teams.revenue_signals import memory
+            from teams.revenue_signals import memory as signals_memory
+            from teams.icp import memory as icp_memory
             from google.cloud import storage as _gcs
             cache.clear()
-            memory.clear()
-            try:
-                _gcs.Client().bucket("forecast-dashboard-mvp-frontend").blob("signals_output.json").delete()
-            except Exception:
-                pass  # non-fatal: file may not exist yet
+            signals_memory.clear()
+            icp_memory.clear()
+            gcs_client = _gcs.Client()
+            for blob_name in ("signals_output.json", "icp_output.json"):
+                try:
+                    gcs_client.bucket("forecast-dashboard-mvp-frontend").blob(blob_name).delete()
+                except Exception:
+                    pass  # non-fatal: file may not exist yet
             payload = {"status": "cleared", "timestamp": datetime.now(timezone.utc).isoformat()}
         elif mode == "run-agents":
             from teams.revenue_signals import orchestrator
             result = orchestrator.run(fiscal_quarter=fiscal_quarter, force_refresh=True)
+            return (json.dumps(result, default=str), 200, CORS)
+        elif mode == "icp":
+            from teams.icp import orchestrator as icp_orchestrator
+            result = icp_orchestrator.run(fiscal_quarter=fiscal_quarter, force_refresh=True)
             return (json.dumps(result, default=str), 200, CORS)
         else:
             payload = build_payload(fiscal_quarter)
