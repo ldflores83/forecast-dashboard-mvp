@@ -44,6 +44,8 @@ OUTPUT_FILE  = "dashboard_export.csv"
 GCP_PROJECT  = "forecast-dashboard-mvp"
 BQ_DATASET   = "forecast_data"
 BQ_TABLE     = "opportunities"
+BQ_TABLE_HISTORY = "opportunity_history"
+BQ_TABLE_CONTACT_ROLES = "contact_roles"
 
 # Substages and name patterns to exclude (inflate lost renewals otherwise)
 EXCL_SUBSTAGE = ['Combined', 'Credited', 'Closed-Duplicate', 'Junk']
@@ -108,66 +110,107 @@ STAGE_GROUP = {
 #                            to Age formula — using Days_In_Stage__c custom field
 FISCAL_YEAR_FILTER = ", ".join(str(year) for year in FISCAL_YEARS)
 
-SOQL = f"""
-SELECT
-    Id,
-    CurrencyIsoCode,
-    Name,
-    AccountId,
-    Account.Name,
-    Account.BillingCountry,
-    Account.Type,
-    Account.ERP_Customer_Base__c,
-    Account.SC_Customer_Base__c,
-    Account.Global_HQ_18_ID__c,
-    Account.Site_Type__c,
-    Account.Primary_Vertical__c,
-    Account.Primary_Sub_Vertical__c,
-    Account.AnnualRevenue,
-    Account.No_of_Employees__c,
+OPPORTUNITY_FIELDS = [
+    "Id",
+    "CurrencyIsoCode",
+    "Name",
+    "AccountId",
+    "StageName",
+    "Type",
+    "CloseDate",
+    "FiscalYear",
+    "FiscalQuarter",
+    "IsClosed",
+    "IsWon",
+    "Probability",
+    "ForecastCategoryName",
+    "LeadSource",
+    "CreatedDate",
+    "LastStageChangeInDays",
+    "HasOverdueTask",
+    "Prior_Contract_End_Date__c",
+    "ATR_Value__c",
+    "Total_Bookings_Net__c",
+    "Solutions_Rev_ACV_Net__c",
+    "Substage__c",
+    "Primary_Opp_Value_Stream__c",
+    "Reason_LQ_Q__c",
+    "Reason_LQ_Q_Description__c",
+    "Cancellation_Reason__c",
+    "Customer_Profile__c",
+    "Gong__Gong_Count__c",
+    "q_Score__c",
+    "q_Trend__c",
+    "q_Meetings_Booked__c",
+    "Push_Count_FQ__c",
+    "VP_Forecast__c",
+    "At_Power__c",
+    "Escalation__c",
+    "EO_Meeting_Date__c",
+    "First_Meeting__c",
+    "Meeting_With__c",
+    "Accord_Url__c",
+    "Accord_Execution_Score__c",
+    "Accord_Customer_Accepted__c",
+    "NextStep",
+    "Description",
+    "LastActivityDate",
+    "LastStageChangeDate",
+    "Touch_Back_Date__c",
+    "QAD_Status__c",
+    "OwnerId",
+]
 
-    StageName,
-    Type,
-    CloseDate,
-    FiscalYear,
-    FiscalQuarter,
-    IsClosed,
-    IsWon,
-    Probability,
-    ForecastCategoryName,
-    LeadSource,
-    CreatedDate,
-    LastStageChangeInDays,
-    HasOverdueTask,
+ACCOUNT_FIELDS = [
+    "Name",
+    "BillingCountry",
+    "Type",
+    "ERP_Customer_Base__c",
+    "SC_Customer_Base__c",
+    "Global_HQ_18_ID__c",
+    "Site_Type__c",
+    "Primary_Vertical__c",
+    "Primary_Sub_Vertical__c",
+    "AnnualRevenue",
+    "No_of_Employees__c",
+    "Account_Region__c",
+]
 
-    Prior_Contract_End_Date__c,
-    ATR_Value__c,
-    Total_Bookings_Net__c,
-    Solutions_Rev_ACV_Net__c,
-    Substage__c,
-    Primary_Opp_Value_Stream__c,
-    Reason_LQ_Q__c,
-    Reason_LQ_Q_Description__c,
-    Cancellation_Reason__c,
-    VP_Forecast__c,
-    At_Power__c,
-    Escalation__c,
+OWNER_FIELDS = [
+    "Name",
+    "Business_Unit__c",
+]
 
-    NextStep,
-    Description,
-    LastActivityDate,
-    LastStageChangeDate,
-    Push_Count_FQ__c,
-    Touch_Back_Date__c,
-    QAD_Status__c,
-    OwnerId,
-    Owner.Name,
-    Owner.Business_Unit__c
-
-FROM Opportunity
-WHERE FiscalYear IN ({FISCAL_YEAR_FILTER})
-ORDER BY CloseDate ASC
+OPPORTUNITY_HISTORY_SOQL = f"""
+SELECT OpportunityId, StageName, Amount, CloseDate, CreatedDate, SystemModstamp
+FROM OpportunityHistory
+WHERE Opportunity.FiscalYear IN ({FISCAL_YEAR_FILTER})
+ORDER BY OpportunityId, CreatedDate ASC
 """
+
+CONTACT_ROLES_SOQL = f"""
+SELECT OpportunityId, ContactId, Contact.Name, Contact.Title, Role, IsPrimary
+FROM OpportunityContactRole
+WHERE Opportunity.FiscalYear IN ({FISCAL_YEAR_FILTER})
+"""
+
+HISTORY_SCHEMA = [
+    bigquery.SchemaField("opportunityid", "STRING"),
+    bigquery.SchemaField("stagename", "STRING"),
+    bigquery.SchemaField("amount", "FLOAT"),
+    bigquery.SchemaField("closedate", "DATE"),
+    bigquery.SchemaField("createddate", "TIMESTAMP"),
+    bigquery.SchemaField("systemmodstamp", "TIMESTAMP"),
+]
+
+CONTACT_ROLE_SCHEMA = [
+    bigquery.SchemaField("opportunityid", "STRING"),
+    bigquery.SchemaField("contactid", "STRING"),
+    bigquery.SchemaField("contact_name", "STRING"),
+    bigquery.SchemaField("contact_title", "STRING"),
+    bigquery.SchemaField("role", "STRING"),
+    bigquery.SchemaField("isprimary", "BOOLEAN"),
+]
 
 
 # -- HELPERS -------------------------------------------------------------------
@@ -219,6 +262,51 @@ def flatten_record(rec):
     return flat
 
 
+def object_fields(sf, object_name):
+    """Return the set of field API names available on a Salesforce object."""
+    desc = getattr(sf, object_name).describe()
+    return {field["name"] for field in desc["fields"]}
+
+
+def keep_available_fields(requested, available, label):
+    fields = [field for field in requested if field in available]
+    missing = [field for field in requested if field not in available]
+    if missing:
+        print(f"  Skipping unavailable {label} fields: {', '.join(missing)}")
+    return fields
+
+
+def build_opportunity_soql(sf):
+    opp_available = object_fields(sf, "Opportunity")
+    account_available = object_fields(sf, "Account")
+    user_available = object_fields(sf, "User")
+
+    opp_fields = keep_available_fields(OPPORTUNITY_FIELDS, opp_available, "Opportunity")
+    account_fields = keep_available_fields(ACCOUNT_FIELDS, account_available, "Account")
+    owner_fields = keep_available_fields(OWNER_FIELDS, user_available, "Owner")
+
+    select_fields = (
+        opp_fields +
+        [f"Account.{field}" for field in account_fields] +
+        [f"Owner.{field}" for field in owner_fields]
+    )
+
+    return f"""
+SELECT
+    {", ".join(select_fields)}
+FROM Opportunity
+WHERE FiscalYear IN ({FISCAL_YEAR_FILTER})
+ORDER BY CloseDate ASC
+"""
+
+
+def ensure_columns(df, defaults):
+    for column, default in defaults.items():
+        if column not in df.columns:
+            df[column] = default
+    return df
+
+
 # -- CONNECT -------------------------------------------------------------------
 def connect_sf():
     if not SESSION_ID:
@@ -232,10 +320,67 @@ def connect_sf():
 # -- FETCH ---------------------------------------------------------------------
 def fetch_opportunities(sf):
     print("  Running SOQL query...")
-    result  = sf.query_all(SOQL)
+    result  = sf.query_all(build_opportunity_soql(sf))
     records = [flatten_record(r) for r in result["records"]]
     df = pd.DataFrame(records)
     print(f"  Fetched {len(df)} opportunities")
+    return df
+
+
+def fetch_opportunity_history(sf):
+    print("  Running OpportunityHistory SOQL query...")
+    result = sf.query_all(OPPORTUNITY_HISTORY_SOQL)
+    records = [flatten_record(r) for r in result["records"]]
+    df = pd.DataFrame(records)
+    df = df.rename(columns={
+        "OpportunityId": "opportunityid",
+        "StageName": "stagename",
+        "Amount": "amount",
+        "CloseDate": "closedate",
+        "CreatedDate": "createddate",
+        "SystemModstamp": "systemmodstamp",
+    })
+    df = ensure_columns(df, {
+        "opportunityid": None,
+        "stagename": None,
+        "amount": None,
+        "closedate": None,
+        "createddate": None,
+        "systemmodstamp": None,
+    })
+    df = df[["opportunityid", "stagename", "amount", "closedate", "createddate", "systemmodstamp"]]
+    df["amount"] = pd.to_numeric(df["amount"], errors="coerce")
+    df["closedate"] = pd.to_datetime(df["closedate"], errors="coerce").dt.date
+    df["createddate"] = pd.to_datetime(df["createddate"], errors="coerce", utc=True)
+    df["systemmodstamp"] = pd.to_datetime(df["systemmodstamp"], errors="coerce", utc=True)
+    print(f"  Fetched {len(df)} opportunity history rows")
+    return df
+
+
+def fetch_contact_roles(sf):
+    print("  Running OpportunityContactRole SOQL query...")
+    result = sf.query_all(CONTACT_ROLES_SOQL)
+    records = [flatten_record(r) for r in result["records"]]
+    df = pd.DataFrame(records)
+    df = df.rename(columns={
+        "OpportunityId": "opportunityid",
+        "ContactId": "contactid",
+        "Contact_Name": "contact_name",
+        "Contact_Title": "contact_title",
+        "Role": "role",
+        "IsPrimary": "isprimary",
+    })
+    df = ensure_columns(df, {
+        "opportunityid": None,
+        "contactid": None,
+        "contact_name": None,
+        "contact_title": None,
+        "role": None,
+        "isprimary": None,
+    })
+    df = df[["opportunityid", "contactid", "contact_name", "contact_title", "role", "isprimary"]]
+    df["isprimary"] = df["isprimary"].fillna(False).astype(bool)
+    print(f"  Fetched {len(df)} contact role rows")
     return df
 
 
@@ -267,6 +412,7 @@ def transform(df, fx_rates=None):
         "Account_Primary_Sub_Vertical__c": "Primary_Sub_Vertical",
         "Account_AnnualRevenue":       "Account_Annual_Revenue",
         "Account_No_of_Employees__c":  "Account_No_of_Employees",
+        "Account_Account_Region__c":   "Account_Region",
         "Owner_Name":                  "Owner_Name",
         "Owner_Business_Unit__c":      "Owner_BU",
         # Custom fields — strip __c suffix for cleaner names
@@ -279,9 +425,20 @@ def transform(df, fx_rates=None):
         "Reason_LQ_Q__c":              "Loss_Reason",
         "Reason_LQ_Q_Description__c":  "Loss_Details",
         "Cancellation_Reason__c":      "Cancellation_Reason",
+        "Customer_Profile__c":         "Customer_Profile",
+        "Gong__Gong_Count__c":         "Gong_Count",
+        "q_Score__c":                  "Q_Score",
+        "q_Trend__c":                  "Q_Trend",
+        "q_Meetings_Booked__c":        "Q_Meetings_Booked",
         "VP_Forecast__c":              "VP_Forecast",
         "At_Power__c":                 "At_Power",
         "Escalation__c":               "Escalation",
+        "EO_Meeting_Date__c":          "EO_Meeting_Date",
+        "First_Meeting__c":            "First_Meeting",
+        "Meeting_With__c":             "Meeting_With",
+        "Accord_Url__c":               "Accord_Url",
+        "Accord_Execution_Score__c":   "Accord_Execution_Score",
+        "Accord_Customer_Accepted__c": "Accord_Customer_Accepted",
         # Signal fields (new)
         "NextStep":                    "Next_Step",
         "LastActivityDate":            "Last_Activity_Date",
@@ -293,6 +450,27 @@ def transform(df, fx_rates=None):
         # Standard SF fields kept as-is (views reference these names):
         # Id, Name, AccountId, StageName, Type, FiscalYear, FiscalQuarter,
         # IsClosed, IsWon, CloseDate, Probability, LeadSource, CreatedDate, OwnerId
+    })
+
+    df = ensure_columns(df, {
+        "IsWon": False,
+        "IsClosed": False,
+        "Type": None,
+        "StageName": None,
+        "ATR_Value": 0,
+        "ACV": 0,
+        "Solutions_ACV": 0,
+        "CurrencyIsoCode": None,
+        "CloseDate": None,
+        "CreatedDate": None,
+        "LeadSource": None,
+        "Substage": None,
+        "Name": "",
+        "Last_Activity_Date": None,
+        "Touch_Back_Date": None,
+        "Push_Count": 0,
+        "Next_Step": "",
+        "Description": "",
     })
 
     # Derived flags
@@ -447,14 +625,15 @@ def save_csv(df):
 
 
 # -- UPLOAD TO BIGQUERY --------------------------------------------------------
-def upload_bq(df):
-    print("  Uploading to BigQuery...")
+def upload_bq(df, table_name=BQ_TABLE, schema=None):
+    print(f"  Uploading {table_name} to BigQuery...")
     client    = bigquery.Client(project=GCP_PROJECT)
-    table_ref = f"{GCP_PROJECT}.{BQ_DATASET}.{BQ_TABLE}"
+    table_ref = f"{GCP_PROJECT}.{BQ_DATASET}.{table_name}"
 
     job_config = bigquery.LoadJobConfig(
         write_disposition = bigquery.WriteDisposition.WRITE_TRUNCATE,
-        autodetect        = True,
+        autodetect        = schema is None,
+        schema            = schema,
     )
 
     job = client.load_table_from_dataframe(df, table_ref, job_config=job_config)
@@ -462,6 +641,7 @@ def upload_bq(df):
 
     table = client.get_table(table_ref)
     print(f"  Uploaded: {table_ref} ({table.num_rows} rows)")
+    return table.num_rows
 
 
 # -- MAIN ----------------------------------------------------------------------
@@ -471,25 +651,40 @@ def main():
     print(f"  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
 
-    print("\n[1/6] Connecting to Salesforce...")
+    print("\n[1/8] Connecting to Salesforce...")
     sf = connect_sf()
 
-    print("\n[2/6] Fetching FX rates...")
+    print("\n[2/8] Fetching FX rates...")
     fx_rates = fetch_fx_rates(sf)
 
-    print("\n[3/6] Fetching opportunities...")
+    print("\n[3/8] Fetching opportunities...")
     df_raw = fetch_opportunities(sf)
 
-    print("\n[4/6] Transforming...")
+    print("\n[4/8] Transforming...")
     df = transform(df_raw, fx_rates=fx_rates)
 
-    print("\n[5/6] Filtering...")
+    print("\n[5/8] Filtering opportunities...")
     df = apply_filters(df)
     print_preview(df)
 
-    print("\n[6/6] Saving...")
+    print("\n[6/8] Fetching related objects...")
+    history_df = fetch_opportunity_history(sf)
+    contact_roles_df = fetch_contact_roles(sf)
+
+    print("\n[7/8] Saving opportunity CSV...")
     save_csv(df)
-    upload_bq(df)
+
+    print("\n[8/8] Uploading to BigQuery...")
+    row_counts = {
+        BQ_TABLE: upload_bq(df, BQ_TABLE),
+        BQ_TABLE_HISTORY: upload_bq(history_df, BQ_TABLE_HISTORY, HISTORY_SCHEMA),
+        BQ_TABLE_CONTACT_ROLES: upload_bq(contact_roles_df, BQ_TABLE_CONTACT_ROLES, CONTACT_ROLE_SCHEMA),
+    }
+
+    print("\nBigQuery row counts:")
+    for table_name, rows in row_counts.items():
+        table_ref = f"{GCP_PROJECT}.{BQ_DATASET}.{table_name}"
+        print(f"  {table_ref}: {rows}")
 
     print(f"\nExport complete: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
