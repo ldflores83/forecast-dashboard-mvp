@@ -10,16 +10,27 @@ Design rules:
   - All counts are ints.
   - NULL handling: NULLs are kept as None in the output dict and documented
     in the dict so agents and prompts can handle them correctly.
-  - New flags (Flag_Stagnant_Stage, Flag_No_Economic_Buyer, Flag_No_Gong_Activity)
-    are computed in Python using deterministic business rules.
-    Contact roles are joined for flagged deals only (max 25 IDs).
+  - New flags (Flag_Stagnant_Stage, Flag_No_Economic_Buyer) are computed in Python
+    using deterministic business rules. Contact roles and account-level Gong call
+    counts are joined for the flagged deal set only (max 25 IDs each).
 """
 
+import html
 import os
+import re
 from datetime import date
 from google.cloud import bigquery
 
 from shared.utils import safe_float, safe_int, pct, fmt_currency
+
+def _strip_html(text) -> str | None:
+    """Strip HTML tags and decode entities from Gong Rich Text fields; return None if empty."""
+    if not text:
+        return None
+    cleaned = re.sub(r"<[^>]+>", "", str(text))
+    cleaned = html.unescape(cleaned).strip()
+    return cleaned if cleaned else None
+
 
 # ── BQ CLIENT ─────────────────────────────────────────────────────────────────
 PROJECT = "forecast-dashboard-mvp"
@@ -92,9 +103,9 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
     Python-computed flags (deterministic business rules, no LLM):
         Flag_Stagnant_Stage     — Days_In_Stage > STAGE_MAX_DAYS[stage]
         Flag_No_Economic_Buyer  — At_Power=False AND stage in Evaluation/Proposal/Contracts
-        Flag_No_Gong_Activity   — Gong_Count == 0
 
-    Contact roles are joined for the flagged deal set only (max 25 IDs).
+    Contact roles and account-level Gong call counts are joined for the flagged
+    deal set only. Gong_Count (opp-level) is kept as passive context only.
 
     Args:
         fiscal_quarter: 0 = full year, 1-4 = specific quarter.
@@ -119,6 +130,7 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
     deals_sql = f"""
         SELECT
             Id                      AS opp_id,
+            AccountId,
             Name                    AS opp_name,
             Account_Name,
             BU,
@@ -244,7 +256,6 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
         days     = safe_int(r.get("Days_In_Stage")) or 0
         max_days = STAGE_MAX_DAYS.get(stage)
         at_power = r.get("At_Power")
-        gong     = safe_int(r.get("Gong_Count")) or 0
 
         # Days_In_Stage is a placeholder (always 0) — fall back to Last_Stage_Change_Date
         if days == 0:
@@ -265,7 +276,6 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
             at_power is False
             and stage in _LATE_STAGES
         )
-        r["Flag_No_Gong_Activity"]  = (gong == 0)
 
     # ── Fetch contact roles for flagged deal IDs only ─────────────────────────
     contact_map: dict = {}
@@ -288,24 +298,132 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
                     "role":  str(row.get("role", "") or ""),
                 })
 
+    # ── Fetch stage history for flagged deals ────────────────────────────────
+    # Used to compute accurate days_in_current_stage (Days_In_Stage is always 0 in SF)
+    history_map: dict = {}  # opp_id -> {stagename -> entered_stage_date}
+    if opp_ids:
+        hist_tbl = _tbl("opportunity_history")
+        try:
+            for i in range(0, len(opp_ids), 150):
+                batch  = opp_ids[i:i + 150]
+                ids_in = ", ".join(f"'{oid}'" for oid in batch)
+                hist_sql = f"""
+                    SELECT
+                        opportunityid,
+                        stagename,
+                        MIN(createddate) AS entered_stage_date
+                    FROM {hist_tbl}
+                    WHERE opportunityid IN ({ids_in})
+                    GROUP BY opportunityid, stagename
+                    ORDER BY opportunityid, entered_stage_date ASC
+                """
+                for row in _query(hist_sql):
+                    oid = str(row.get("opportunityid", ""))
+                    stage_name = str(row.get("stagename", ""))
+                    raw_ts = row.get("entered_stage_date")
+                    if raw_ts is None:
+                        continue
+                    try:
+                        if hasattr(raw_ts, "date"):
+                            entered = raw_ts.date()
+                        elif isinstance(raw_ts, str):
+                            from datetime import datetime as _dt
+                            entered = _dt.fromisoformat(raw_ts[:10]).date()
+                        else:
+                            entered = raw_ts
+                        history_map.setdefault(oid, {})[stage_name] = entered
+                    except Exception:
+                        pass
+        except Exception:
+            pass  # table missing or inaccessible
+
+    # ── Fetch account-level Gong call data ───────────────────────────────────
+    gong_map: dict = {}
+    account_ids = list({str(r.get("AccountId", "")) for r in deals_rows if r.get("AccountId")})
+    if account_ids:
+        gong_tbl = _tbl("gong_conversations")
+        try:
+            for i in range(0, len(account_ids), 150):
+                batch  = account_ids[i:i + 150]
+                ids_in = ", ".join(f"'{aid}'" for aid in batch)
+                gong_sql = f"""
+                    SELECT
+                        account_id,
+                        COUNT(*)            AS total_calls,
+                        MAX(call_start)     AS last_call_date,
+                        MIN(call_start)     AS first_call_date,
+                        ARRAY_AGG(
+                            STRUCT(call_start, key_points, next_steps, title)
+                            ORDER BY call_start DESC
+                            LIMIT 1
+                        )[OFFSET(0)]        AS latest_call
+                    FROM {gong_tbl}
+                    WHERE account_id IN ({ids_in})
+                    GROUP BY account_id
+                """
+                for row in _query(gong_sql):
+                    latest = row.get("latest_call") or {}
+                    gong_map[str(row["account_id"])] = {
+                        "total_calls":    row["total_calls"],
+                        "last_call_date": row["last_call_date"],
+                        "key_points":     latest.get("key_points"),
+                        "next_steps":     latest.get("next_steps"),
+                        "title":          latest.get("title"),
+                    }
+        except Exception:
+            pass  # gong_conversations table doesn't exist yet — first run before gong export
+
     # ── Shape deals list ──────────────────────────────────────────────────────
     flagged_deals = []
     for r in deals_rows:
-        opp_id   = str(r.get("opp_id", ""))
-        contacts = contact_map.get(opp_id, [])
+        opp_id     = str(r.get("opp_id", ""))
+        account_id = str(r.get("AccountId", ""))
+        contacts   = contact_map.get(opp_id, [])
+        current_stage = str(r.get("stage", ""))
+
+        # Stage history enrichment — accurate days in current stage
+        stage_entered_date    = None
+        days_in_current_stage = None
+        stage_history = history_map.get(opp_id, {})
+        entered_raw = stage_history.get(current_stage)
+        if entered_raw is not None:
+            stage_entered_date    = str(entered_raw)
+            days_in_current_stage = (today - entered_raw).days
+
+        # Account-level Gong enrichment
+        gong_data  = gong_map.get(account_id, {})
+        gong_call_count = safe_int(gong_data.get("total_calls")) or 0
+        gong_last_call  = None
+        gong_days_since = None
+        gong_last_raw   = gong_data.get("last_call_date")
+        if gong_last_raw is not None:
+            try:
+                if hasattr(gong_last_raw, "date"):
+                    lc = gong_last_raw.date()
+                elif isinstance(gong_last_raw, str):
+                    lc = date.fromisoformat(gong_last_raw[:10])
+                else:
+                    lc = gong_last_raw
+                gong_last_call  = str(lc)
+                gong_days_since = (today - lc).days
+            except Exception:
+                pass
+        gong_latest_key_points = _strip_html(gong_data.get("key_points"))
+        gong_latest_next_steps = _strip_html(gong_data.get("next_steps"))
+        gong_latest_call_title = _strip_html(gong_data.get("title"))
 
         flags = []
-        if r.get("Flag_Pushed_5x"):           flags.append({"key": "pushed_5x",       "label": "Pushed 5+ qtrs",     "severity": "critical"})
-        if r.get("Flag_Overdue_Close"):        flags.append({"key": "overdue_close",    "label": "Close date past",    "severity": "critical"})
-        if r.get("Flag_No_Economic_Buyer"):    flags.append({"key": "no_econ_buyer",    "label": "No economic buyer",  "severity": "critical"})
-        if r.get("Flag_No_Activity_7d"):       flags.append({"key": "no_activity",      "label": "No activity 7d",     "severity": "warning"})
-        if r.get("Flag_Touch_Back_Overdue"):   flags.append({"key": "touch_back",       "label": "Follow-up overdue",  "severity": "warning"})
-        if r.get("Flag_Stagnant_Stage"):       flags.append({"key": "stagnant_stage",   "label": "Stagnant in stage",  "severity": "warning"})
-        if r.get("Flag_No_Gong_Activity"):     flags.append({"key": "no_gong",          "label": "Zero Gong activity", "severity": "warning"})
-        if r.get("Flag_No_Next_Step"):         flags.append({"key": "no_next_step",     "label": "No next step",       "severity": "info"})
+        if r.get("Flag_Pushed_5x"):           flags.append({"key": "pushed_5x",     "label": "Pushed 5+ qtrs",    "severity": "critical"})
+        if r.get("Flag_Overdue_Close"):        flags.append({"key": "overdue_close",  "label": "Close date past",   "severity": "critical"})
+        if r.get("Flag_No_Economic_Buyer"):    flags.append({"key": "no_econ_buyer",  "label": "No economic buyer", "severity": "critical"})
+        if r.get("Flag_No_Activity_7d"):       flags.append({"key": "no_activity",    "label": "No activity 7d",    "severity": "warning"})
+        if r.get("Flag_Touch_Back_Overdue"):   flags.append({"key": "touch_back",     "label": "Follow-up overdue", "severity": "warning"})
+        if r.get("Flag_Stagnant_Stage"):       flags.append({"key": "stagnant_stage", "label": "Stagnant in stage", "severity": "warning"})
+        if r.get("Flag_No_Next_Step"):         flags.append({"key": "no_next_step",   "label": "No next step",      "severity": "info"})
 
         flagged_deals.append({
             "opp_id":        opp_id,
+            "account_id":    account_id,
             "opp_name":      str(r.get("opp_name", "")),
             "account_name":  str(r.get("Account_Name", "")),
             "bu":            str(r.get("BU", "")),
@@ -319,16 +437,23 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
             "push_count":    safe_int(r.get("Push_Count")),
             "last_activity": str(r.get("Last_Activity_Date") or ""),
             "next_step":     str(r.get("Next_Step") or ""),
-            "opp_age_days":  safe_int(r.get("Opp_Age_Days")),
-            "days_in_stage": safe_int(r.get("Days_In_Stage")),
+            "opp_age_days":           safe_int(r.get("Opp_Age_Days")),
+            "days_in_stage":          safe_int(r.get("Days_In_Stage")),
+            "stage_entered_date":     stage_entered_date,
+            "days_in_current_stage":  days_in_current_stage,
             "vp_forecast":   str(r.get("VP_Forecast") or ""),
             "forecast_category": str(r.get("ForecastCategoryName") or ""),
             "at_power":      bool(r.get("At_Power", False)),
-            "gong_count":    safe_int(r.get("Gong_Count")),
+            "gong_count":    safe_int(r.get("Gong_Count")),   # opp-level, passive context
+            "gong_call_count":              gong_call_count,
+            "gong_last_call":               gong_last_call,
+            "gong_days_since_last_call":    gong_days_since,
+            "gong_latest_key_points":       gong_latest_key_points,
+            "gong_latest_next_steps":       gong_latest_next_steps,
+            "gong_latest_call_title":       gong_latest_call_title,
             "customer_profile": str(r.get("Customer_Profile") or ""),
             "Flag_Stagnant_Stage":    bool(r.get("Flag_Stagnant_Stage")),
             "Flag_No_Economic_Buyer": bool(r.get("Flag_No_Economic_Buyer")),
-            "Flag_No_Gong_Activity":  bool(r.get("Flag_No_Gong_Activity")),
             "has_economic_buyer":     any(c["role"] == "Economic Buyer" for c in contacts),
             "has_decision_maker":     any(c["role"] == "Decision Maker"  for c in contacts),
             "contact_roles_summary":  contacts,
@@ -352,7 +477,6 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
         # Counts from flagged set (top 25) for prompt context
         "stagnant_stage_count":    sum(1 for d in flagged_deals if d["Flag_Stagnant_Stage"]),
         "no_econ_buyer_count":     sum(1 for d in flagged_deals if d["Flag_No_Economic_Buyer"]),
-        "no_gong_count":           sum(1 for d in flagged_deals if d["Flag_No_Gong_Activity"]),
     }
 
 
@@ -402,6 +526,7 @@ def get_renewal_health(fiscal_quarter: int = 0) -> dict:
             renewal_open_acv
         FROM {vw_dyn}
         WHERE 1=1 {fq_filter}
+          AND fiscal_year = 2027
           AND bu IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
         ORDER BY renewal_lost_acv DESC
     """

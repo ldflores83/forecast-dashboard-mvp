@@ -43,9 +43,10 @@ FISCAL_YEARS = (2026, 2027)
 OUTPUT_FILE  = "dashboard_export.csv"
 GCP_PROJECT  = "forecast-dashboard-mvp"
 BQ_DATASET   = "forecast_data"
-BQ_TABLE     = "opportunities"
-BQ_TABLE_HISTORY = "opportunity_history"
+BQ_TABLE               = "opportunities"
+BQ_TABLE_HISTORY       = "opportunity_history"
 BQ_TABLE_CONTACT_ROLES = "contact_roles"
+BQ_TABLE_GONG          = "gong_conversations"
 
 # Substages and name patterns to exclude (inflate lost renewals otherwise)
 EXCL_SUBSTAGE = ['Combined', 'Credited', 'Closed-Duplicate', 'Junk']
@@ -210,6 +211,57 @@ CONTACT_ROLE_SCHEMA = [
     bigquery.SchemaField("contact_title", "STRING"),
     bigquery.SchemaField("role", "STRING"),
     bigquery.SchemaField("isprimary", "BOOLEAN"),
+]
+
+# Gong conversations — date filter keeps volume manageable
+GONG_DATE_FILTER = "2025-01-01T00:00:00Z"
+
+GONG_FIELDS = [
+    "Id",
+    "Gong__Title__c",
+    "Gong__Primary_Account__c",
+    "Gong__Primary_Opportunity__c",
+    "Gong__Call_Start__c",
+    "Gong__Call_Duration__c",
+    "Gong__Call_Outcome__c",
+    "Gong__Call_Key_Points__c",
+    "Gong__Call_Highlights_Next_Steps__c",
+    "Gong__Opp_Stage_Time_Of_Call__c",
+    "Gong__View_call__c",
+    "Gong__Talk_Time_Them__c",
+    "Gong__Talk_Time_Us__c",
+]
+
+GONG_RENAME = {
+    "Id":                                    "gong_call_id",
+    "Gong__Title__c":                        "title",
+    "Gong__Primary_Account__c":              "account_id",
+    "Gong__Primary_Opportunity__c":          "opportunity_id",
+    "Gong__Call_Start__c":                   "call_start",
+    "Gong__Call_Duration__c":                "duration_min",
+    "Gong__Call_Outcome__c":                 "call_outcome",
+    "Gong__Call_Key_Points__c":              "key_points",
+    "Gong__Call_Highlights_Next_Steps__c":   "next_steps",
+    "Gong__Opp_Stage_Time_Of_Call__c":       "stage_at_call",
+    "Gong__View_call__c":                    "call_url",
+    "Gong__Talk_Time_Them__c":               "talk_time_them",
+    "Gong__Talk_Time_Us__c":                 "talk_time_us",
+}
+
+GONG_SCHEMA = [
+    bigquery.SchemaField("gong_call_id",   "STRING"),
+    bigquery.SchemaField("title",          "STRING"),
+    bigquery.SchemaField("account_id",     "STRING"),
+    bigquery.SchemaField("opportunity_id", "STRING"),
+    bigquery.SchemaField("call_start",     "TIMESTAMP"),
+    bigquery.SchemaField("duration_min",   "FLOAT"),
+    bigquery.SchemaField("call_outcome",   "STRING"),
+    bigquery.SchemaField("key_points",     "STRING"),
+    bigquery.SchemaField("next_steps",     "STRING"),
+    bigquery.SchemaField("stage_at_call",  "STRING"),
+    bigquery.SchemaField("call_url",       "STRING"),
+    bigquery.SchemaField("talk_time_them", "FLOAT"),
+    bigquery.SchemaField("talk_time_us",   "FLOAT"),
 ]
 
 
@@ -381,6 +433,59 @@ def fetch_contact_roles(sf):
     df = df[["opportunityid", "contactid", "contact_name", "contact_title", "role", "isprimary"]]
     df["isprimary"] = df["isprimary"].fillna(False).astype(bool)
     print(f"  Fetched {len(df)} contact role rows")
+    return df
+
+
+def fetch_gong_conversations(sf):
+    """
+    Exports Gong call records from Gong__Gong_Call__c.
+    Returns an empty DataFrame (not None) if the object is inaccessible or has no data.
+    Field availability is checked at runtime — any missing fields are skipped gracefully.
+    """
+    print("  Checking Gong__Gong_Call__c availability...")
+    try:
+        gong_available = object_fields(sf, "Gong__Gong_Call__c")
+    except Exception as e:
+        print(f"  Gong__Gong_Call__c not accessible ({type(e).__name__}) — skipping")
+        return pd.DataFrame()
+
+    available = keep_available_fields(GONG_FIELDS, gong_available, "Gong__Gong_Call__c")
+    if not available:
+        print("  No Gong fields available — skipping")
+        return pd.DataFrame()
+
+    soql = f"""
+        SELECT {", ".join(available)}
+        FROM Gong__Gong_Call__c
+        WHERE Gong__Call_Start__c >= {GONG_DATE_FILTER}
+        AND IsDeleted = false
+        ORDER BY Gong__Call_Start__c DESC
+    """
+
+    print("  Running Gong SOQL query...")
+    result  = sf.query_all(soql)
+    records = [flatten_record(r) for r in result["records"]]
+    if not records:
+        print("  No Gong records found")
+        return pd.DataFrame()
+
+    df = pd.DataFrame(records)
+    df = df.rename(columns={k: v for k, v in GONG_RENAME.items() if k in df.columns})
+
+    # Ensure all schema columns present (fill missing fields with None)
+    for col in [f.name for f in GONG_SCHEMA]:
+        if col not in df.columns:
+            df[col] = None
+
+    df = df[[f.name for f in GONG_SCHEMA]]
+
+    # Type coercion
+    df["call_start"]     = pd.to_datetime(df["call_start"],     errors="coerce", utc=True)
+    df["duration_min"]   = pd.to_numeric(df["duration_min"],    errors="coerce")
+    df["talk_time_them"] = pd.to_numeric(df["talk_time_them"],  errors="coerce")
+    df["talk_time_us"]   = pd.to_numeric(df["talk_time_us"],    errors="coerce")
+
+    print(f"  Fetched {len(df)} Gong conversations")
     return df
 
 
@@ -651,35 +756,42 @@ def main():
     print(f"  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
 
-    print("\n[1/8] Connecting to Salesforce...")
+    print("\n[1/9] Connecting to Salesforce...")
     sf = connect_sf()
 
-    print("\n[2/8] Fetching FX rates...")
+    print("\n[2/9] Fetching FX rates...")
     fx_rates = fetch_fx_rates(sf)
 
-    print("\n[3/8] Fetching opportunities...")
+    print("\n[3/9] Fetching opportunities...")
     df_raw = fetch_opportunities(sf)
 
-    print("\n[4/8] Transforming...")
+    print("\n[4/9] Transforming...")
     df = transform(df_raw, fx_rates=fx_rates)
 
-    print("\n[5/8] Filtering opportunities...")
+    print("\n[5/9] Filtering opportunities...")
     df = apply_filters(df)
     print_preview(df)
 
-    print("\n[6/8] Fetching related objects...")
-    history_df = fetch_opportunity_history(sf)
+    print("\n[6/9] Fetching related objects...")
+    history_df       = fetch_opportunity_history(sf)
     contact_roles_df = fetch_contact_roles(sf)
+    gong_df          = fetch_gong_conversations(sf)
 
-    print("\n[7/8] Saving opportunity CSV...")
+    print("\n[7/9] Saving opportunity CSV...")
     save_csv(df)
 
-    print("\n[8/8] Uploading to BigQuery...")
+    print("\n[8/9] Uploading to BigQuery...")
     row_counts = {
-        BQ_TABLE: upload_bq(df, BQ_TABLE),
-        BQ_TABLE_HISTORY: upload_bq(history_df, BQ_TABLE_HISTORY, HISTORY_SCHEMA),
+        BQ_TABLE:               upload_bq(df, BQ_TABLE),
+        BQ_TABLE_HISTORY:       upload_bq(history_df, BQ_TABLE_HISTORY, HISTORY_SCHEMA),
         BQ_TABLE_CONTACT_ROLES: upload_bq(contact_roles_df, BQ_TABLE_CONTACT_ROLES, CONTACT_ROLE_SCHEMA),
     }
+
+    print("\n[9/9] Uploading Gong conversations to BigQuery...")
+    if not gong_df.empty:
+        row_counts[BQ_TABLE_GONG] = upload_bq(gong_df, BQ_TABLE_GONG, GONG_SCHEMA)
+    else:
+        print(f"  Skipping {BQ_TABLE_GONG} — no data fetched")
 
     print("\nBigQuery row counts:")
     for table_name, rows in row_counts.items():

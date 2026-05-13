@@ -56,14 +56,34 @@ New flag guidance — surface these when present:
 Flag_Stagnant_Stage: Deal has exceeded the maximum expected days in its current stage
 (Prospecting/Discovery: 30d, Scoping/Evaluation: 45d, Proposal/Contracts: 60d).
 Surface this as a stage velocity risk, especially on high-ACV deals.
+Each deal also carries stage_entered_date and days_in_current_stage computed from
+OpportunityHistory. When available, prefer these over days_in_stage (which is always 0
+in Salesforce). In narrative, write: "has been in [stage] since [date] ([X] days)".
 
 Flag_No_Economic_Buyer: At_Power = False and deal is in Evaluation, Proposal, or Contracts.
 This is a MEDDPICC gap — no confirmed access to the economic buyer in a late-stage deal.
 Surface as a qualification risk; deals without an economic buyer in late stages rarely close.
+When assessing executive access, use contact_title (the person's actual job title) from
+contact_roles_summary — NOT the role field, which is often just "Influencer" regardless of
+seniority. Only flag "no executive access" if NO contact has a title containing VP, SVP,
+EVP, C-level (CEO, CFO, CIO, COO, CPO), Director, or President. If such a title IS present,
+name the contact's title rather than flagging the deal as having no executive access.
 
-Flag_No_Gong_Activity: Zero recorded Gong calls on this deal.
-On high-ACV deals this signals low engagement or deals managed entirely offline.
-Note this as an engagement risk, especially if close date is near.
+Gong engagement context (account-level, from gong_conversations table):
+Each deal carries gong_call_count, gong_last_call, gong_days_since_last_call,
+gong_latest_key_points, gong_latest_next_steps, and gong_latest_call_title.
+Use these as engagement signals with care:
+- A deal with 15+ calls has a track record of buyer engagement — weight this positively.
+- A deal at late stage (Evaluation & Alignment or later) with gong_call_count = 0 AND
+  gong_days_since_last_call = null is a real engagement gap — surface it in your analysis.
+- A deal where gong_days_since_last_call > 30 at late stage signals a conversation stall.
+- Gong is primarily used by Redzone BU. Absence of Gong data for ERP or Supply Chain BU
+  deals is expected and is NOT a risk signal — do not flag it as such.
+- If gong_call_count is null/0 for a Redzone deal at late stage, that IS worth noting.
+- When gong_latest_key_points or gong_latest_next_steps are available, reference the most
+  recent call context in the deal narrative in one sentence (e.g. "Last Gong call on [date]:
+  [key points]"). If Gong shows clear next steps but SF Next_Step is empty, note that
+  discrepancy briefly. If both are null or empty, do not mention Gong call content at all.
 
 Customer_Profile context: ICP = Ideal Customer Profile (strongest fit), ACP = Acceptable,
 UCP = Unqualified Customer Profile. When a critical deal (high ACV, late stage) is UCP,
@@ -107,7 +127,6 @@ Required JSON schema:
         # New flag counts (from top-25 flagged set)
         "stagnant_stage_count":  pipeline_data.get("stagnant_stage_count", 0),
         "no_econ_buyer_count":   pipeline_data.get("no_econ_buyer_count", 0),
-        "no_gong_count":         pipeline_data.get("no_gong_count", 0),
         "data_note":             f"{pipeline_data.get('null_activity_pct', 0)}% of open deals have NULL Last_Activity_Date. This means data is missing, not that no activity occurred.",
     }
 

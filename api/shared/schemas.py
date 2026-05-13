@@ -33,10 +33,19 @@ FLAGGED_DEAL_FIELDS = {
     "close_date":           str,
     "pced":                 str,
     "last_activity":        str,
-    "opp_age_days":         int,
-    "days_in_stage":        int,
-    # Engagement
+    "opp_age_days":           int,
+    "days_in_stage":          int,   # SF field (always 0 — kept as passive context)
+    "stage_entered_date":     str,   # ISO date from opportunity_history (nullable)
+    "days_in_current_stage":  int,   # today - stage_entered_date (nullable; preferred over days_in_stage)
+    # Engagement — opp-level (passive context only; always 1 in current data)
     "gong_count":           int,
+    # Engagement — account-level from gong_conversations table
+    "gong_call_count":               int,   # total Gong calls for this account (None if table missing)
+    "gong_last_call":                str,   # ISO date of most recent call (nullable)
+    "gong_days_since_last_call":     int,   # days since last call (nullable)
+    "gong_latest_key_points":        str,   # HTML-stripped key points from most recent call (nullable)
+    "gong_latest_next_steps":        str,   # HTML-stripped next steps from most recent call (nullable)
+    "gong_latest_call_title":        str,   # title of most recent call (nullable)
     "next_step":            str,
     "push_count":           int,
     # Forecast alignment
@@ -58,7 +67,6 @@ FLAGGED_DEAL_FIELDS = {
     # Python-computed flags (deterministic business rules)
     "Flag_Stagnant_Stage":      bool,  # Days_In_Stage > stage threshold
     "Flag_No_Economic_Buyer":   bool,  # At_Power=False AND late stage
-    "Flag_No_Gong_Activity":    bool,  # Gong_Count == 0
     # Summary
     "flags":        list,  # [{key, label, severity}]
     "flag_count":   int,
