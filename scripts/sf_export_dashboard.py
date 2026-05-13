@@ -22,11 +22,15 @@ Changes v2 (Apr 2026):
 import os
 import pandas as pd
 from datetime import datetime
+from dotenv import load_dotenv
 from simple_salesforce import Salesforce
 from google.cloud import bigquery
 
+load_dotenv()
+
 # ── AUTH ──────────────────────────────────────────────────────────────────────
-SESSION_ID   = "REMOVED_SF_SESSION_ID"   # F12 → Application → Cookies → sid
+# Set SALESFORCE_SESSION_ID in .env (F12 → Application → Cookies → sid)
+SESSION_ID   = os.environ.get("SALESFORCE_SESSION_ID", "")
 INSTANCE     = "qad.my.salesforce.com"
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
@@ -204,6 +208,8 @@ def flatten_record(rec):
 
 # ── CONNECT ───────────────────────────────────────────────────────────────────
 def connect_sf():
+    if not SESSION_ID:
+        raise RuntimeError("SALESFORCE_SESSION_ID is not set. Add it to .env or export it.")
     print("  Connecting to Salesforce...")
     sf = Salesforce(instance=INSTANCE, session_id=SESSION_ID)
     print(f"  Connected → {sf.sf_instance}")
