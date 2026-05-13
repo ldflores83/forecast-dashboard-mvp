@@ -53,6 +53,12 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 .tb-reviewed{color:var(--green)}
 .theme-btn{width:32px;height:32px;background:var(--surf);border:1px solid var(--b2);border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);transition:all var(--ease);flex-shrink:0}
 .theme-btn:hover{color:var(--t)}
+.run-btn{display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;background:var(--purple-bg);border:1px solid rgba(167,139,250,.28);border-radius:var(--r-sm);cursor:pointer;color:var(--purple);font:600 12px/1 var(--sans);transition:all var(--ease);flex-shrink:0;white-space:nowrap}
+.run-btn:hover{background:rgba(167,139,250,.18);border-color:rgba(167,139,250,.5)}
+.run-btn:disabled{opacity:.45;cursor:not-allowed}
+.reset-btn{display:flex;align-items:center;gap:5px;height:32px;padding:0 10px;background:var(--amber-bg);border:1px solid rgba(251,191,36,.22);border-radius:var(--r-sm);cursor:pointer;color:var(--amber);font:600 12px/1 var(--sans);transition:all var(--ease);flex-shrink:0;white-space:nowrap}
+.reset-btn:hover{background:rgba(251,191,36,.18);border-color:rgba(251,191,36,.42)}
+.reset-btn:disabled{opacity:.45;cursor:not-allowed}
 
 /* ── META BAR ────────────────────────────────────────────────────────────── */
 .meta-bar{background:var(--surf);border-bottom:1px solid var(--b);padding:7px 24px;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10px;color:var(--t3);flex-wrap:wrap}
@@ -216,6 +222,13 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
         <span class="tb-sep">·</span>
         <span class="tb-reviewed" id="tb-reviewed"></span>
       </div>
+      <button class="run-btn" id="run-btn" title="Run Revenue Signals pipeline">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><polygon points="2,1 11,6 2,11"/></svg>
+        <span class="run-label">Run Analysis</span>
+      </button>
+      <button class="reset-btn" id="reset-btn" title="Clear cache and memory, then re-run pipeline">
+        &#x21BA; Reset
+      </button>
       <button class="theme-btn" id="theme-btn" title="Toggle theme">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
           <circle cx="8" cy="8" r="3"/>
@@ -547,10 +560,12 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 
       cancel.addEventListener('click', closeModal);
 
-      window.runAgentAnimation = function(onComplete) {
+      window.runAgentAnimation = function() {
         resetModal();
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
+
+        var lastStep = steps[steps.length - 1];
 
         var schedule = [
           {at:0, show:0},
@@ -579,11 +594,32 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
             if (item.done) completeAgent(item.done[0], item.done[1]);
             if (item.finish) {
               setProgress(steps.length);
-              if (typeof onComplete === 'function') onComplete();
-              timers.push(setTimeout(closeModal, 450));
+              // Stay open — swap last step to pulsing "Finalizing..." spinner
+              lastStep.classList.remove('is-heading');
+              lastStep.classList.add('is-visible');
+              lastStep.innerHTML = '<span class="agent-icon agent-spin">⟳</span><span>Finalizing analysis...</span>';
             }
           }, item.at));
         });
+      };
+
+      // Called by startPipeline() when the API responds.
+      // If the user cancelled, still fires onClosed so buttons unlock.
+      window.resolveAgentAnimation = function(ok, onClosed) {
+        clearTimers();
+        if (cancelled) {
+          if (typeof onClosed === 'function') onClosed();
+          return;
+        }
+        var lastStep = steps[steps.length - 1];
+        lastStep.classList.add('is-heading');
+        lastStep.innerHTML = ok
+          ? '<span class="agent-icon agent-check">✓</span><span>Analysis complete — loading signals</span>'
+          : '<span class="agent-icon agent-check">✓</span><span>Analysis complete</span>';
+        timers.push(setTimeout(function() {
+          closeModal();
+          if (typeof onClosed === 'function') onClosed();
+        }, 700));
       };
     })();
   </script>
@@ -803,6 +839,67 @@ function loadSignals() {
 }
 
 loadSignals();
+
+// ── RUN ANALYSIS + RESET BUTTONS ──────────────────────────────────────────
+(function() {
+  var API_URL  = 'https://us-central1-forecast-dashboard-mvp.cloudfunctions.net/dashboard-api';
+  var runBtn   = document.getElementById('run-btn');
+  var resetBtn = document.getElementById('reset-btn');
+  var runLabel = runBtn.querySelector('.run-label');
+
+  function lockButtons(label) {
+    runBtn.disabled   = true;
+    resetBtn.disabled = true;
+    runLabel.textContent = label || 'Running…';
+  }
+
+  function unlockButtons() {
+    runBtn.disabled   = false;
+    resetBtn.disabled = false;
+    runLabel.textContent = 'Run Analysis';
+  }
+
+  function showFallback() {
+    var hint = document.querySelector('.refresh-hint');
+    if (hint) hint.innerHTML = 'Analysis complete — <a href="" onclick="location.reload();return false" style="color:var(--blue)">refresh to see updated signals</a>';
+  }
+
+  function startPipeline() {
+    // Fire API and animation concurrently.
+    // Modal stays open (spinner) until the API responds — then resolveAgentAnimation closes it.
+    fetch(API_URL + '?mode=run-agents', { method: 'POST' })
+      .then(function(r) {
+        var ok = r.ok;
+        window.resolveAgentAnimation(ok, function() {
+          unlockButtons();
+          if (ok) { loadSignals(); } else { showFallback(); }
+        });
+      })
+      .catch(function() {
+        window.resolveAgentAnimation(false, function() {
+          unlockButtons();
+          showFallback();
+        });
+      });
+
+    window.runAgentAnimation();
+  }
+
+  runBtn.addEventListener('click', function() {
+    if (runBtn.disabled) return;
+    lockButtons();
+    startPipeline();
+  });
+
+  resetBtn.addEventListener('click', function() {
+    if (resetBtn.disabled) return;
+    if (!confirm('Clear cache and memory?\n\nThe page will reload to the empty state. You can then click "Run Analysis" to generate fresh signals.')) return;
+    lockButtons('Clearing…');
+    fetch(API_URL + '?mode=clear-cache', { method: 'POST' })
+      .then(function() { window.location.reload(); })
+      .catch(function() { unlockButtons(); alert('Clear failed — check console.'); });
+  });
+})();
 </script>
 </body>
 </html>

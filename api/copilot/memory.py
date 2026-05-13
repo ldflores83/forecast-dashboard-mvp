@@ -141,3 +141,21 @@ def save_week(result: dict, fiscal_quarter: int) -> None:
             print(f"[memory] Saved week {rows[0]['week_key']} to signals_history (q={fiscal_quarter})")
     except Exception as e:
         print(f"[memory] SAVE ERROR: {e} — non-fatal")
+
+
+def clear(fiscal_quarter: int = None) -> None:
+    """
+    Clears signals_history entries.
+    If fiscal_quarter is None, clears all entries.
+    """
+    if fiscal_quarter is not None:
+        sql = f"DELETE FROM `{FULL_TABLE}` WHERE fiscal_quarter = {fiscal_quarter}"
+        scope = f"q={fiscal_quarter}"
+    else:
+        sql = f"DELETE FROM `{FULL_TABLE}` WHERE TRUE"
+        scope = "all"
+    try:
+        _bq().query(sql).result()
+        print(f"[memory] CLEARED — scope: {scope}")
+    except Exception as e:
+        print(f"[memory] CLEAR ERROR: {e}")

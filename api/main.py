@@ -11,6 +11,7 @@ To migrate to a different project:
 
 import json
 import functions_framework
+from datetime import datetime, timezone
 from google.cloud import bigquery
 
 PROJECT = "forecast-dashboard-mvp"
@@ -20,7 +21,7 @@ bq = bigquery.Client(project=PROJECT)
 
 CORS = {
     "Access-Control-Allow-Origin":  "*",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Content-Type": "application/json",
 }
@@ -39,9 +40,18 @@ def dashboard_api(request):
     try:
         if mode == "signals":
             payload = build_signals_payload(fiscal_quarter)
+        elif mode == "clear-cache":
+            from copilot import cache, memory
+            cache.clear()
+            memory.clear()
+            payload = {"status": "cleared", "timestamp": datetime.now(timezone.utc).isoformat()}
+        elif mode == "run-agents":
+            from copilot import orchestrator
+            result = orchestrator.run(fiscal_quarter=fiscal_quarter, force_refresh=True)
+            return (json.dumps(result, default=str), 200, CORS)
         else:
             payload = build_payload(fiscal_quarter)
-        return (json.dumps(payload), 200, CORS)
+        return (json.dumps(payload, default=str), 200, CORS)
     except Exception as e:
         return (json.dumps({"error": str(e)}), 500, CORS)
 

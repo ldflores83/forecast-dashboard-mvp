@@ -47,7 +47,7 @@ if ($all) {
         "--trigger-http",
         "--allow-unauthenticated",
         "--memory=512MB",
-        "--timeout=60s"
+        "--timeout=540s"
     )
     & gcloud @functionArgs
     if ($LASTEXITCODE -ne 0) {
