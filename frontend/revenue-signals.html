@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revenue Signals — QAD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── RESET + TOKENS ──────────────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'DM Mono',monospace;--r:10px;--r-sm:6px;--ease:.18s ease}
+[data-theme="dark"]{
+  --bg:#08090f;--bg2:#0e1018;--surf:#131622;--surf2:#1a1e2e;
+  --b:rgba(255,255,255,.06);--b2:rgba(255,255,255,.11);
+  --t:#dde3f0;--t2:#7a8499;--t3:#3d4459;
+  --blue:#4f8ef7;--blue-bg:rgba(79,142,247,.1);
+  --green:#2dd4a0;--green-bg:rgba(45,212,160,.1);
+  --purple:#a78bfa;--purple-bg:rgba(167,139,250,.1);
+  --amber:#fbbf24;--amber-bg:rgba(251,191,36,.1);
+  --red:#f87171;--red-bg:rgba(248,113,113,.1);
+  --shadow:0 2px 12px rgba(0,0,0,.4)
+}
+[data-theme="light"]{
+  --bg:#f2f4f8;--bg2:#e9ecf3;--surf:#fff;--surf2:#f8f9fc;
+  --b:rgba(0,0,0,.06);--b2:rgba(0,0,0,.12);
+  --t:#0d1018;--t2:#5a6070;--t3:#9aa0b0;
+  --blue:#2563eb;--blue-bg:rgba(37,99,235,.08);
+  --green:#059669;--green-bg:rgba(5,150,105,.08);
+  --purple:#7c3aed;--purple-bg:rgba(124,58,237,.08);
+  --amber:#d97706;--amber-bg:rgba(217,119,6,.08);
+  --red:#dc2626;--red-bg:rgba(220,38,38,.08);
+  --shadow:0 1px 4px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.05)
+}
+body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;line-height:1.5;transition:background var(--ease),color var(--ease)}
+
+/* ── TOPBAR ──────────────────────────────────────────────────────────────── */
+.topbar{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--b);height:52px;display:flex;align-items:center;padding:0 24px;gap:16px;transition:background var(--ease)}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.back-link{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t3);text-decoration:none;padding:4px 8px;border-radius:var(--r-sm);transition:all var(--ease);white-space:nowrap}
+.back-link:hover{color:var(--t2);background:var(--b)}
+.back-link svg{flex-shrink:0}
+.divider{width:1px;height:18px;background:var(--b2);flex-shrink:0}
+.brand-name{font-size:17px;font-weight:700;color:var(--t)}
+.brand-name em{font-style:normal;color:var(--blue)}
+.brand-sep{color:var(--t3);font-size:14px;margin:0 4px}
+.signals-title{font-size:15px;font-weight:600;color:var(--purple)}
+.brand-tag{font-family:var(--mono);font-size:10px;color:var(--t3);letter-spacing:1px;white-space:nowrap}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+#last-updated{font-family:var(--mono);font-size:10px;color:var(--t3);white-space:nowrap}
+.theme-btn{width:32px;height:32px;background:var(--surf);border:1px solid var(--b2);border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);transition:all var(--ease);flex-shrink:0}
+.theme-btn:hover{color:var(--t);border-color:var(--b2)}
+
+/* ── LAYOUT ──────────────────────────────────────────────────────────────── */
+.main{max-width:1400px;margin:0 auto;padding:20px 24px 48px}
+.sec{display:flex;align-items:center;gap:10px;margin-bottom:14px;margin-top:28px}
+.sec:first-child{margin-top:0}
+.sec-title{font-size:13px;font-weight:600;color:var(--t);white-space:nowrap}
+.sec-line{flex:1;height:1px;background:var(--b)}
+.sec-sub{font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;white-space:nowrap}
+
+/* ── SUMMARY CARDS ───────────────────────────────────────────────────────── */
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.sum-card{background:var(--surf);padding:16px 20px;position:relative}
+.sum-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--sc)}
+.sum-lbl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);margin-bottom:6px}
+.sum-val{font-size:26px;font-weight:600;color:var(--sc);letter-spacing:-0.5px;line-height:1}
+.sum-sub{font-size:11px;color:var(--t2);margin-top:4px}
+
+/* ── FILTER BAR ──────────────────────────────────────────────────────────── */
+.filter-bar{display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.fp{padding:3px 10px;border-radius:5px;font-size:11px;font-weight:500;font-family:var(--mono);background:transparent;border:1px solid var(--b);color:var(--t2);cursor:pointer;transition:all var(--ease)}
+.fp.on{background:var(--blue-bg);border-color:var(--blue);color:var(--blue)}
+.fp:hover:not(.on){border-color:var(--b2);color:var(--t)}
+.filter-count{font-family:var(--mono);font-size:10px;color:var(--t3);margin-left:auto}
+
+/* ── TABLE ───────────────────────────────────────────────────────────────── */
+.tbl-wrap{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--bg2);padding:9px 12px;text-align:left;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:var(--t3);border-bottom:1px solid var(--b);white-space:nowrap;cursor:pointer;user-select:none;transition:color var(--ease)}
+thead th:hover{color:var(--t2)}
+thead th.sort-asc::after{content:' ↑'}
+thead th.sort-desc::after{content:' ↓'}
+tbody tr{border-bottom:1px solid var(--b);transition:background var(--ease)}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surf2)}
+td{padding:10px 12px;vertical-align:middle;color:var(--t2)}
+td.primary{color:var(--t);font-weight:500;max-width:220px}
+td.primary .opp-name{color:var(--t);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;display:block}
+td.primary .acct-name{font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;display:block;margin-top:1px}
+td.mono{font-family:var(--mono);font-size:11px}
+td.right{text-align:right}
+.no-data{padding:40px;text-align:center;color:var(--t3);font-size:13px}
+
+/* ── BU CHIP ─────────────────────────────────────────────────────────────── */
+.bu-chip{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:4px;letter-spacing:.5px;white-space:nowrap}
+.bu-erp{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(79,142,247,.2)}
+.bu-sc{background:var(--purple-bg);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.bu-rz{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(251,191,36,.2)}
+
+/* ── MOTION CHIP ─────────────────────────────────────────────────────────── */
+.motion-chip{display:inline-block;font-size:10px;font-weight:500;padding:2px 8px;border-radius:4px;white-space:nowrap}
+.motion-renewal{background:var(--amber-bg);color:var(--amber)}
+.motion-netnew{background:var(--green-bg);color:var(--green)}
+.motion-expansion{background:var(--blue-bg);color:var(--blue)}
+.motion-migration{background:var(--purple-bg);color:var(--purple)}
+.motion-other{background:var(--b);color:var(--t3)}
+
+/* ── FLAG CHIPS ──────────────────────────────────────────────────────────── */
+.flags{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.flag{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:4px;white-space:nowrap;border:1px solid}
+.flag.critical{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.25)}
+.flag.warning{background:var(--amber-bg);color:var(--amber);border-color:rgba(251,191,36,.25)}
+.flag.info{background:var(--b);color:var(--t3);border-color:var(--b)}
+.flag-more{font-size:9px;font-family:var(--mono);color:var(--t3)}
+
+/* ── RISK BADGE ──────────────────────────────────────────────────────────── */
+.risk-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px}
+.risk-high{background:var(--red-bg);color:var(--red);border:1px solid rgba(248,113,113,.25)}
+.risk-medium{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(251,191,36,.25)}
+.risk-low{background:var(--green-bg);color:var(--green);border:1px solid rgba(45,212,160,.2)}
+
+/* ── TICKET CELL ─────────────────────────────────────────────────────────── */
+.ticket-cell{display:flex;align-items:center;gap:6px}
+.t-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.t-dot.p1{background:var(--red)}
+.t-dot.p2{background:var(--amber)}
+.t-dot.ok{background:var(--t3)}
+
+/* ── EMPTY STATE ─────────────────────────────────────────────────────────── */
+.empty-state{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:48px 24px;text-align:center;box-shadow:var(--shadow)}
+.empty-icon{width:40px;height:40px;border-radius:50%;background:var(--green-bg);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.empty-title{font-size:15px;font-weight:600;color:var(--t);margin-bottom:6px}
+.empty-sub{font-size:13px;color:var(--t2)}
+
+/* ── LOADING ─────────────────────────────────────────────────────────────── */
+.loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:48px;color:var(--t3);font-size:13px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:16px;height:16px;border:2px solid var(--b2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
+@media(max-width:900px){
+  .summary-grid{grid-template-columns:1fr 1fr}
+  .topbar{padding:0 16px}
+  .main{padding:16px 16px 40px}
+  table{font-size:11px}
+  td{padding:8px 10px}
+}
+@media(max-width:600px){
+  .summary-grid{grid-template-columns:1fr 1fr}
+  .brand-sep,.signals-title{display:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="topbar">
+    <div class="topbar-left">
+      <a class="back-link" href="revenue-intelligence.html">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13 8H3M7 4l-4 4 4 4"/></svg>
+        Back
+      </a>
+      <div class="divider"></div>
+      <div>
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <span class="brand-name">Revenue <em>Intelligence</em></span>
+          <span class="brand-sep">·</span>
+          <span class="signals-title">Revenue Signals</span>
+        </div>
+        <div class="brand-tag" id="brand-tag">FY2027 · ERP, Supply Chain & Redzone</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span id="last-updated">Loading...</span>
+      <button class="theme-btn" id="theme-btn" title="Toggle theme">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><line x1="8" y1="1" x2="8" y2="2.5"/><line x1="8" y1="13.5" x2="8" y2="15"/><line x1="1" y1="8" x2="2.5" y2="8"/><line x1="13.5" y1="8" x2="15" y2="8"/><line x1="3.05" y1="3.05" x2="4.1" y2="4.1"/><line x1="11.9" y1="11.9" x2="12.95" y2="12.95"/><line x1="12.95" y1="3.05" x2="11.9" y2="4.1"/><line x1="4.1" y1="11.9" x2="3.05" y2="12.95"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+
+<!-- LOADING STATE -->
+<div id="loading-state" class="loading">
+  <div class="spinner"></div>
+  <span>Loading signals...</span>
+</div>
+
+<!-- CONTENT (hidden until data loads) -->
+<div id="content" style="display:none">
+
+  <!-- SUMMARY CARDS -->
+  <div class="summary-grid" id="summary-grid">
+    <div class="sum-card" style="--sc:var(--amber)">
+      <div class="sum-lbl">Warnings</div>
+      <div class="sum-val" id="sum-warnings">—</div>
+      <div class="sum-sub">High risk · renewal ≤ 90d</div>
+    </div>
+    <div class="sum-card" style="--sc:var(--red)">
+      <div class="sum-lbl">Critical</div>
+      <div class="sum-val" id="sum-critical">—</div>
+      <div class="sum-sub">P1 open · renewal ≤ 60d</div>
+    </div>
+    <div class="sum-card" style="--sc:var(--blue)">
+      <div class="sum-lbl">Flagged deals</div>
+      <div class="sum-val" id="sum-flagged">—</div>
+      <div class="sum-sub">Open pipeline · active signals</div>
+    </div>
+    <div class="sum-card" style="--sc:var(--red)">
+      <div class="sum-lbl">ATR at risk</div>
+      <div class="sum-val" id="sum-atr">—</div>
+      <div class="sum-sub">High risk accounts</div>
+    </div>
+  </div>
+
+  <!-- PIPELINE FLAGS -->
+  <div class="sec" style="margin-top:28px">
+    <div class="sec-title">Pipeline flags</div>
+    <div class="sec-line"></div>
+    <div class="sec-sub">OPEN DEALS · ACTIVE SIGNALS</div>
+  </div>
+
+  <div class="filter-bar" id="deals-filter-bar">
+    <button class="fp on" data-filter="all">All</button>
+    <button class="fp" data-filter="Renewal">Renewal</button>
+    <button class="fp" data-filter="Net New">Net New</button>
+    <button class="fp" data-filter="Expansion">Expansion</button>
+    <button class="fp" data-filter="Migration">Migration</button>
+    <span class="filter-count" id="deals-count"></span>
+  </div>
+
+  <div class="tbl-wrap" id="deals-table-wrap">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
+
+  <!-- AT-RISK ACCOUNTS -->
+  <div class="sec" style="margin-top:32px">
+    <div class="sec-title">At-risk accounts</div>
+    <div class="sec-line"></div>
+    <div class="sec-sub">HIGH RISK TIER · RENEWAL PIPELINE</div>
+  </div>
+
+  <div class="tbl-wrap" id="accounts-table-wrap">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
+
+</div><!-- /content -->
+
+</main>
+
+<script>
+const API_URL = 'https://us-central1-forecast-dashboard-mvp.cloudfunctions.net/dashboard-api';
+
+// ── STATE ──
+var _deals       = [];
+var _activeFilter = 'all';
+var _dealsSortCol = 'atr_value';
+var _dealsSortDir = 'desc';
+
+// ── THEME ──
+const html = document.documentElement;
+const savedTheme = localStorage.getItem('theme') || 'dark';
+html.dataset.theme = savedTheme;
+document.getElementById('theme-btn').addEventListener('click', function() {
+  html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', html.dataset.theme);
+});
+
+// ── FORMATTERS ──
+function fmt(v) {
+  if (!v || v === 0) return '$—';
+  if (v >= 1e6) return '$' + (v/1e6).toFixed(1) + 'M';
+  if (v >= 1e3) return '$' + Math.round(v/1e3) + 'K';
+  return '$' + Math.round(v);
+}
+function fmtDate(s) {
+  if (!s) return '—';
+  try {
+    var d = new Date(s);
+    return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  } catch(e) { return s; }
+}
+function daysSince(s) {
+  if (!s) return null;
+  var d = new Date(s);
+  var diff = Math.round((Date.now() - d) / 86400000);
+  return diff;
+}
+function buChip(bu) {
+  if (!bu) return '';
+  var cls = bu.includes('ERP') ? 'bu-erp' : bu.includes('Supply') ? 'bu-sc' : 'bu-rz';
+  var lbl = bu.replace(' BU','');
+  return '<span class="bu-chip ' + cls + '">' + lbl + '</span>';
+}
+function motionChip(m) {
+  var map = {
+    'Renewal':'renewal','Net New':'netnew',
+    'Expansion':'expansion','Migration':'migration'
+  };
+  var cls = map[m] || 'other';
+  return '<span class="motion-chip motion-' + cls + '">' + (m||'—') + '</span>';
+}
+function flagsHtml(flags) {
+  if (!flags || !flags.length) return '<span style="color:var(--t3);font-size:11px">—</span>';
+  var show  = flags.slice(0, 2);
+  var extra = flags.length - 2;
+  var html  = show.map(function(f) {
+    return '<span class="flag ' + f.severity + '">' + f.label + '</span>';
+  }).join('');
+  if (extra > 0) html += '<span class="flag-more">+' + extra + '</span>';
+  return '<div class="flags">' + html + '</div>';
+}
+
+// ── RENDER SUMMARY ──
+function renderSummary(s) {
+  document.getElementById('sum-warnings').textContent = s.warnings || 0;
+  document.getElementById('sum-critical').textContent = s.critical || 0;
+  document.getElementById('sum-flagged').textContent  = s.flagged_deals || 0;
+  document.getElementById('sum-atr').textContent      = fmt(s.total_atr_at_risk);
+}
+
+// ── RENDER DEALS TABLE ──
+function renderDealsTable() {
+  var filtered = _activeFilter === 'all'
+    ? _deals
+    : _deals.filter(function(d) { return d.sales_motion === _activeFilter; });
+
+  // Sort
+  filtered = filtered.slice().sort(function(a, b) {
+    var av = a[_dealsSortCol] || 0;
+    var bv = b[_dealsSortCol] || 0;
+    if (typeof av === 'string') av = av.toLowerCase();
+    if (typeof bv === 'string') bv = bv.toLowerCase();
+    if (av < bv) return _dealsSortDir === 'asc' ? -1 : 1;
+    if (av > bv) return _dealsSortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  document.getElementById('deals-count').textContent = filtered.length + ' deals';
+
+  var wrap = document.getElementById('deals-table-wrap');
+
+  if (!filtered.length) {
+    wrap.innerHTML = '<div class="no-data">No flagged deals for this filter.</div>';
+    return;
+  }
+
+  var cols = [
+    {key:'opp_name',   label:'Opportunity',    sortable:true},
+    {key:'bu',         label:'BU',             sortable:true},
+    {key:'sales_motion',label:'Motion',        sortable:true},
+    {key:'atr_value',  label:'ATR / ACV',      sortable:true},
+    {key:'pced',       label:'Renewal Date',   sortable:true},
+    {key:'push_count', label:'Pushes',         sortable:true},
+    {key:'last_activity',label:'Last Activity',sortable:true},
+    {key:'flags',      label:'Signals',        sortable:false},
+  ];
+
+  var thead = cols.map(function(c) {
+    var cls = '';
+    if (c.sortable) {
+      if (_dealsSortCol === c.key) cls = _dealsSortDir === 'asc' ? 'sort-asc' : 'sort-desc';
+    }
+    var onclick = c.sortable ? 'onDealsSort("' + c.key + '")' : '';
+    return '<th class="' + cls + '" ' + (onclick ? 'onclick="' + onclick + '"' : '') + '>' + c.label + '</th>';
+  }).join('');
+
+  var tbody = filtered.map(function(d) {
+    var acv      = d.sales_motion === 'Renewal' ? d.atr_value : d.acv;
+    var dateVal  = d.sales_motion === 'Renewal' ? d.pced : d.close_date;
+    var activity = d.last_activity ? daysSince(d.last_activity) + 'd ago' : '—';
+    var pushes   = d.push_count > 0
+      ? '<span style="color:' + (d.push_count >= 5 ? 'var(--red)' : 'var(--t2)') + ';font-family:var(--mono)">' + d.push_count + 'x</span>'
+      : '<span style="color:var(--t3)">—</span>';
+
+    return '<tr>' +
+      '<td class="primary"><span class="opp-name" title="' + d.opp_name + '">' + d.opp_name + '</span><span class="acct-name">' + d.account_name + '</span></td>' +
+      '<td>' + buChip(d.bu) + '</td>' +
+      '<td>' + motionChip(d.sales_motion) + '</td>' +
+      '<td class="mono right">' + fmt(acv) + '</td>' +
+      '<td class="mono">' + fmtDate(dateVal) + '</td>' +
+      '<td class="right">' + pushes + '</td>' +
+      '<td class="mono">' + activity + '</td>' +
+      '<td>' + flagsHtml(d.flags) + '</td>' +
+      '</tr>';
+  }).join('');
+
+  wrap.innerHTML = '<table><thead><tr>' + thead + '</tr></thead><tbody>' + tbody + '</tbody></table>';
+}
+
+function onDealsSort(col) {
+  if (_dealsSortCol === col) {
+    _dealsSortDir = _dealsSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    _dealsSortCol = col;
+    _dealsSortDir = col === 'opp_name' || col === 'bu' ? 'asc' : 'desc';
+  }
+  renderDealsTable();
+}
+
+// ── FILTER BUTTONS ──
+document.getElementById('deals-filter-bar').addEventListener('click', function(e) {
+  var btn = e.target.closest('.fp');
+  if (!btn) return;
+  document.querySelectorAll('#deals-filter-bar .fp').forEach(function(b) { b.classList.remove('on'); });
+  btn.classList.add('on');
+  _activeFilter = btn.dataset.filter;
+  renderDealsTable();
+});
+
+// ── RENDER ACCOUNTS TABLE ──
+function renderAccountsTable(accounts) {
+  var wrap = document.getElementById('accounts-table-wrap');
+
+  if (!accounts || !accounts.length) {
+    wrap.innerHTML = '<div class="empty-state">' +
+      '<div class="empty-icon"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round"><path d="M13 5L6.5 11.5 3 8"/></svg></div>' +
+      '<div class="empty-title">No high-risk accounts</div>' +
+      '<div class="empty-sub">All accounts are in Medium or Low risk tier</div>' +
+      '</div>';
+    return;
+  }
+
+  var thead = '<tr>' +
+    '<th>Account</th>' +
+    '<th>BU</th>' +
+    '<th>ATR at Risk</th>' +
+    '<th>Days to Renewal</th>' +
+    '<th>P1 Open</th>' +
+    '<th>Open Tickets</th>' +
+    '<th>Oldest Ticket</th>' +
+    '<th>Risk Score</th>' +
+    '</tr>';
+
+  var tbody = accounts.map(function(a) {
+    var daysColor = a.days_to_renewal <= 30 ? 'var(--red)' :
+                    a.days_to_renewal <= 60 ? 'var(--amber)' : 'var(--t2)';
+    var p1cell = a.p1_open > 0
+      ? '<div class="ticket-cell"><div class="t-dot p1"></div><span style="color:var(--red);font-family:var(--mono)">' + a.p1_open + '</span></div>'
+      : '<span style="color:var(--t3)">—</span>';
+    var tickets = a.open_tickets > 0
+      ? '<span style="font-family:var(--mono)">' + a.open_tickets + '</span>'
+      : '<span style="color:var(--t3)">—</span>';
+    var oldest = a.oldest_ticket_days > 0
+      ? '<span style="font-family:var(--mono);color:' + (a.oldest_ticket_days > 90 ? 'var(--red)' : 'var(--t2)') + '">' + a.oldest_ticket_days + 'd</span>'
+      : '<span style="color:var(--t3)">—</span>';
+
+    return '<tr>' +
+      '<td class="primary"><span class="opp-name">' + a.account_name + '</span>' +
+        (a.renewals_lost_hist > 0 ? '<span class="acct-name" style="color:var(--amber)">⚠ Prior churn history</span>' : '') +
+      '</td>' +
+      '<td>' + buChip(a.bu) + '</td>' +
+      '<td class="mono right" style="color:var(--red)">' + fmt(a.renewal_atr) + '</td>' +
+      '<td class="mono" style="color:' + daysColor + '">' + a.days_to_renewal + ' days</td>' +
+      '<td>' + p1cell + '</td>' +
+      '<td>' + tickets + '</td>' +
+      '<td>' + oldest + '</td>' +
+      '<td><span class="risk-badge risk-high">' + a.risk_score + ' High</span></td>' +
+      '</tr>';
+  }).join('');
+
+  wrap.innerHTML = '<table><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table>';
+}
+
+// ── LOAD ──
+function loadSignals() {
+  fetch(API_URL + '?mode=signals')
+    .then(function(r) {
+      if (!r.ok) throw new Error('API error: ' + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      if (data.error) throw new Error(data.error);
+
+      // Hide loading, show content
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+
+      // Render
+      renderSummary(data.summary || {});
+
+      _deals = data.flagged_deals || [];
+      renderDealsTable();
+      renderAccountsTable(data.at_risk_accounts || []);
+
+      // Update meta
+      var lu = document.getElementById('last-updated');
+      if (lu) lu.textContent = 'Updated ' + new Date().toLocaleTimeString();
+      if (data.meta && data.meta.week) {
+        document.getElementById('brand-tag').textContent = 'Week of ' + data.meta.week + ' · FY2027';
+      }
+    })
+    .catch(function(e) {
+      console.error('Signals load failed:', e);
+      document.getElementById('loading-state').innerHTML =
+        '<span style="color:var(--red)">Failed to load signals — ' + e.message + '</span>';
+    });
+}
+
+loadSignals();
+</script>
+</body>
+</html>

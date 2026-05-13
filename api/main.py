@@ -32,12 +32,15 @@ def dashboard_api(request):
     if request.method == "OPTIONS":
         return ("", 204, CORS)
 
-    # quarter param: 1-4 for specific quarter, absent = full year (fiscal_quarter = 0)
     q = request.args.get("q")
     fiscal_quarter = int(q) if q and q.isdigit() and 1 <= int(q) <= 4 else 0
+    mode = request.args.get("mode", "")
 
     try:
-        payload = build_payload(fiscal_quarter)
+        if mode == "signals":
+            payload = build_signals_payload(fiscal_quarter)
+        else:
+            payload = build_payload(fiscal_quarter)
         return (json.dumps(payload), 200, CORS)
     except Exception as e:
         return (json.dumps({"error": str(e)}), 500, CORS)
@@ -145,6 +148,7 @@ def build_payload(fiscal_quarter):
         "pipeline":  _shape_pipeline(pipe_rows),
         "lost_analysis": _shape_lost(lost_rows),
         "account_health": _shape_account_health(ah_rows),
+        "signals":        _shape_signals(ah_rows),
     }
 
 
@@ -316,6 +320,240 @@ def _shape_account_health(rows):
     result["total_atr_at_risk"] = sum(
         a["renewal_atr"] for a in result["high"] + result["medium"]
     )
+    return result
+
+
+def _shape_signals(ah_rows):
+    """
+    Derives signal counts from account_health data already in memory.
+    No extra BQ query needed.
+
+    warnings  = High-risk accounts with renewal <= 90 days
+    critical  = High-risk accounts with P1 open AND renewal <= 60 days
+
+    When the Revenue Signals page (agents) exists, it will write a
+    signals_meta table to BQ and this function will read from that instead.
+    For now, values are derived live from account health.
+    """
+    from datetime import datetime, timezone
+
+    warnings  = 0
+    critical  = 0
+
+    for r in ah_rows:
+        row      = dict(r)
+        tier     = (row.get("risk_tier") or "").lower()
+        days     = int(row.get("days_to_earliest_renewal") or 999)
+        p1_open  = int(row.get("p1_open") or 0)
+
+        if tier == "high":
+            if days <= 90:
+                warnings += 1
+            if p1_open > 0 and days <= 60:
+                critical += 1
+
+    now = datetime.now(timezone.utc)
+    # ISO week label: "May 4, 2026"
+    week_label = f"{now.day} {now.strftime('%b %Y')}"
+
+    return {
+        "week":         week_label,
+        "warnings":     warnings,
+        "critical":     critical,
+        "generated_at": now.isoformat(),
+        "source":       "derived",   # will change to "agents" once Revenue Signals page exists
+    }
+
+
+# ── SIGNALS MODE ──────────────────────────────────────────────────────────────
+
+def build_signals_payload(fiscal_quarter):
+    """
+    Payload for ?mode=signals — powers revenue-signals.html.
+    Query 1: flagged deals (open opps with strong signal flags)
+    Query 2: at-risk accounts (High tier from vw_account_health)
+
+    Flag priority logic:
+      STRONG flags (qualify deal for table): Pushed_5x, Overdue_Close,
+                                             No_Activity_7d, Touch_Back_Overdue
+      ADDITIVE flag (shown if present):      No_Next_Step
+      EXCLUDED from table criteria:          Stagnant_Stage (Days_In_Stage=0 placeholder)
+    """
+    from datetime import datetime, timezone
+
+    fq = fiscal_quarter
+    tbl = f"`{PROJECT}.{DATASET}.opportunities_fy2027`"
+
+    # Quarter filter — same PCED-based logic as main dashboard
+    # For signals we filter by FiscalQuarter column (already assigned in export)
+    fq_filter = f"AND FiscalQuarter = {fq}" if fq > 0 else ""
+
+    # ── FLAGGED DEALS ─────────────────────────────────────────────────────────
+    # Only open deals with at least one STRONG flag
+    # Ordered by ATR_Value desc (renewals first by risk $), then ACV desc
+    deal_rows = query(f"""
+        SELECT
+            Id                      AS opp_id,
+            Name                    AS opp_name,
+            Account_Name,
+            BU,
+            StageName               AS stage,
+            Sales_Motion,
+            ACV,
+            ATR_Value,
+            PCED,
+            CloseDate,
+            Owner_Name,
+            Push_Count,
+            Last_Activity_Date,
+            Last_Stage_Change_Date,
+            Next_Step,
+            Touch_Back_Date,
+            QAD_Status,
+            Opp_Age_Days,
+            Flag_Pushed_5x,
+            Flag_No_Activity_7d,
+            Flag_Overdue_Close,
+            Flag_Touch_Back_Overdue,
+            Flag_No_Next_Step,
+            Flag_Stagnant_Stage
+        FROM {tbl}
+        WHERE Is_Open = TRUE
+          AND (
+            Flag_Pushed_5x          = TRUE
+            OR Flag_No_Activity_7d  = TRUE
+            OR Flag_Overdue_Close   = TRUE
+            OR Flag_Touch_Back_Overdue = TRUE
+          )
+          {fq_filter}
+        ORDER BY
+            CASE WHEN Sales_Motion = 'Renewal' THEN 0 ELSE 1 END,
+            ATR_Value DESC,
+            ACV DESC
+        LIMIT 150
+    """)
+
+    # ── AT-RISK ACCOUNTS ──────────────────────────────────────────────────────
+    # High tier only, ordered by risk_score desc
+    ah_rows = query(f"""
+        SELECT
+            account_id,
+            account_name,
+            bu,
+            renewal_atr,
+            days_to_earliest_renewal,
+            earliest_renewal_date,
+            open_tickets,
+            p1_open,
+            p1_p2_open,
+            escalated_open,
+            stale_tickets_open,
+            oldest_open_ticket_days,
+            risk_score,
+            risk_tier,
+            has_ticket_data,
+            renewals_won_hist,
+            renewals_lost_hist
+        FROM `{PROJECT}.{DATASET}.vw_account_health`
+        WHERE risk_tier = 'High'
+        ORDER BY risk_score DESC, renewal_atr DESC
+        LIMIT 25
+    """)
+
+    deals        = _shape_flagged_deals(deal_rows)
+    at_risk      = _shape_at_risk_accounts(ah_rows)
+    now          = datetime.now(timezone.utc)
+    week_label   = now.strftime("%-d %b %Y").lstrip("0")
+
+    # Summary counts
+    warnings = sum(1 for a in at_risk if a["days_to_renewal"] <= 90)
+    critical = sum(1 for a in at_risk if a["p1_open"] > 0 and a["days_to_renewal"] <= 60)
+    total_atr_at_risk = sum(a["renewal_atr"] for a in at_risk)
+
+    return {
+        "meta": {
+            "mode":           "signals",
+            "fiscal_quarter": fq,
+            "week":           week_label,
+            "generated_at":   now.isoformat(),
+        },
+        "summary": {
+            "warnings":         warnings,
+            "critical":         critical,
+            "flagged_deals":    len(deals),
+            "total_atr_at_risk": total_atr_at_risk,
+        },
+        "flagged_deals":    deals,
+        "at_risk_accounts": at_risk,
+    }
+
+
+def _shape_flagged_deals(rows):
+    """Shape flagged deal rows into frontend-ready list."""
+    result = []
+    for r in rows:
+        row = dict(r)
+
+        # Build flags list — strong flags first, additive after
+        flags = []
+        if row.get("Flag_Pushed_5x"):
+            flags.append({"key": "pushed_5x",    "label": "Pushed 5+ qtrs", "severity": "critical"})
+        if row.get("Flag_Overdue_Close"):
+            flags.append({"key": "overdue_close", "label": "Close date past", "severity": "critical"})
+        if row.get("Flag_No_Activity_7d"):
+            flags.append({"key": "no_activity",   "label": "No activity 7d",  "severity": "warning"})
+        if row.get("Flag_Touch_Back_Overdue"):
+            flags.append({"key": "touch_back",    "label": "Follow-up overdue","severity": "warning"})
+        if row.get("Flag_No_Next_Step"):
+            flags.append({"key": "no_next_step",  "label": "No next step",     "severity": "info"})
+        if row.get("Flag_Stagnant_Stage"):
+            flags.append({"key": "stagnant",      "label": "Stagnant 30d",     "severity": "warning"})
+
+        result.append({
+            "opp_id":        row.get("opp_id", ""),
+            "opp_name":      row.get("opp_name", ""),
+            "account_name":  row.get("Account_Name", ""),
+            "bu":            row.get("BU", ""),
+            "stage":         row.get("stage", ""),
+            "sales_motion":  row.get("Sales_Motion", ""),
+            "acv":           _f(row.get("ACV")),
+            "atr_value":     _f(row.get("ATR_Value")),
+            "pced":          str(row.get("PCED") or ""),
+            "close_date":    str(row.get("CloseDate") or ""),
+            "owner_name":    row.get("Owner_Name", ""),
+            "push_count":    int(row.get("Push_Count") or 0),
+            "last_activity": str(row.get("Last_Activity_Date") or ""),
+            "next_step":     row.get("Next_Step") or "",
+            "opp_age_days":  int(row.get("Opp_Age_Days") or 0),
+            "flags":         flags,
+            "flag_count":    len(flags),
+        })
+    return result
+
+
+def _shape_at_risk_accounts(rows):
+    """Shape at-risk account rows."""
+    result = []
+    for r in rows:
+        row = dict(r)
+        result.append({
+            "account_id":       row.get("account_id", ""),
+            "account_name":     row.get("account_name", ""),
+            "bu":               row.get("bu", ""),
+            "renewal_atr":      _f(row.get("renewal_atr")),
+            "days_to_renewal":  int(row.get("days_to_earliest_renewal") or 0),
+            "renewal_date":     str(row.get("earliest_renewal_date") or ""),
+            "open_tickets":     int(row.get("open_tickets") or 0),
+            "p1_open":          int(row.get("p1_open") or 0),
+            "p1_p2_open":       int(row.get("p1_p2_open") or 0),
+            "escalated_open":   int(row.get("escalated_open") or 0),
+            "stale_tickets":    int(row.get("stale_tickets_open") or 0),
+            "oldest_ticket_days": int(row.get("oldest_open_ticket_days") or 0),
+            "risk_score":       int(row.get("risk_score") or 0),
+            "risk_tier":        row.get("risk_tier", "High"),
+            "has_ticket_data":  bool(row.get("has_ticket_data", False)),
+            "renewals_lost_hist": int(row.get("renewals_lost_hist") or 0),
+        })
     return result
 
 

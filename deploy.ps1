@@ -11,7 +11,7 @@ param(
 )
 
 $BUCKET     = "gs://forecast-dashboard-mvp-frontend"
-$FRONTEND   = "frontend\revenue-intelligence.html"
+$FRONTEND   = "frontend"
 $DEPLOY_URL = "https://storage.googleapis.com/forecast-dashboard-mvp-frontend/revenue-intelligence.html"
 $API_URL    = "https://us-central1-forecast-dashboard-mvp.cloudfunctions.net/dashboard-api"
 
@@ -65,16 +65,25 @@ Write-Host "  [3/3] Uploading frontend..." -ForegroundColor Yellow
 
 if (-not (Test-Path $FRONTEND)) {
     Write-Host "  FAILED - $FRONTEND not found." -ForegroundColor Red
-    Write-Host "  Make sure revenue-intelligence.html is in the frontend\ folder." -ForegroundColor Red
+    Write-Host "  Make sure HTML files are in the frontend\ folder." -ForegroundColor Red
     exit 1
 }
 
-$storageArgs = @(
-    "storage", "cp", $FRONTEND,
-    "$BUCKET/revenue-intelligence.html",
-    "--cache-control=no-cache, no-store, max-age=0"
-)
-& gcloud @storageArgs
+# Upload all HTML files in frontend/ folder
+Get-ChildItem "$FRONTEND\*.html" | ForEach-Object {
+    $fileName = $_.Name
+    $storageArgs = @(
+        "storage", "cp", $_.FullName,
+        "$BUCKET/$fileName",
+        "--cache-control=no-cache, no-store, max-age=0"
+    )
+    Write-Host "  Copying $fileName..." -ForegroundColor DarkGray
+    & gcloud @storageArgs
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "  FAILED - $fileName not uploaded." -ForegroundColor Red
+        exit 1
+    }
+}
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "  FAILED - Frontend not uploaded." -ForegroundColor Red

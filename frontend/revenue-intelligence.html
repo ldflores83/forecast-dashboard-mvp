@@ -61,6 +61,24 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 .demo-banner-close{background:none;border:none;cursor:pointer;color:var(--t3);padding:2px;flex-shrink:0;transition:color var(--ease)}
 .demo-banner-close:hover{color:var(--t)}
 
+/* ── SIGNALS BANNER ── */
+.signals-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--purple-bg);border:1px solid rgba(167,139,250,.3);border-radius:var(--r);padding:10px 16px;transition:background var(--ease)}
+.signals-banner.has-critical{background:var(--red-bg);border-color:rgba(248,113,113,.35)}
+.sb-left{display:flex;align-items:center;gap:10px}
+.sb-pulse{width:7px;height:7px;border-radius:50%;background:var(--purple);flex-shrink:0;animation:pulse 2s ease-in-out infinite}
+.signals-banner.has-critical .sb-pulse{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sb-text{font-size:12px;color:var(--t2)}
+.sb-text strong{color:var(--t);font-weight:600}
+.sb-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.sb-chip{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid}
+.sb-chip.warn{background:var(--amber-bg);color:var(--amber);border-color:rgba(251,191,36,.35)}
+.sb-chip.crit{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.35)}
+.sb-cta{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--purple);text-decoration:none;padding:4px 10px;border:1px solid rgba(167,139,250,.4);border-radius:var(--r-sm);transition:all var(--ease)}
+.sb-cta:hover{background:var(--purple);color:#fff;border-color:var(--purple)}
+.signals-banner.has-critical .sb-cta{color:var(--red);border-color:rgba(248,113,113,.4)}
+.signals-banner.has-critical .sb-cta:hover{background:var(--red);color:#fff;border-color:var(--red)}
+
 /* ── PLACEHOLDER BADGE ── */
 .ph-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono);padding:3px 8px;border-radius:4px;background:var(--amber-bg);color:var(--amber);border:1px solid rgba(251,191,36,.3);letter-spacing:.5px}
 
@@ -189,23 +207,6 @@ tbody tr:hover{background:var(--bg2)}
 .tags{display:flex;flex-wrap:wrap;gap:4px}
 .tag{font-size:10px;padding:2px 7px;border-radius:3px;background:var(--surf);border:1px solid var(--b);color:var(--t2);font-family:var(--mono)}
 
-/* ── AI PANEL ── */
-.ai-panel{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
-.ai-header{padding:14px 20px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;background:var(--bg2)}
-.ai-title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
-.ai-badge{font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:10px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue);letter-spacing:1px;text-transform:uppercase}
-.ai-body{padding:20px;display:flex;flex-direction:column;gap:12px}
-.ai-insight{background:var(--bg2);border:1px solid var(--b);border-left:2px solid var(--ic,var(--blue));border-radius:0 var(--r-sm) var(--r-sm) 0;padding:12px 16px}
-.ai-lbl{font-size:9px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);margin-bottom:5px}
-.ai-text{font-size:13px;line-height:1.6;color:var(--t)}
-.ai-text strong{color:var(--ic,var(--blue));font-weight:600}
-.ai-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:10px;background:var(--blue-bg);border:1px dashed var(--blue);border-radius:var(--r-sm);color:var(--blue);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;transition:all var(--ease)}
-.ai-btn:hover{background:var(--blue);color:#fff}
-.ai-loading{display:none;align-items:center;gap:8px;font-size:12px;color:var(--t2);font-family:var(--mono)}
-.ai-loading.show{display:flex}
-@keyframes spin{to{transform:rotate(360deg)}}
-.spinner{width:13px;height:13px;border:1.5px solid var(--b);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
-
 /* ── PLACEHOLDER SECTION ── */
 .ph-section{background:var(--surf);border:1px dashed var(--amber);border-radius:var(--r);padding:20px;position:relative}
 .ph-overlay{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:16px 0}
@@ -297,6 +298,22 @@ tbody tr:hover{background:var(--bg2)}
   <div class="sec-title">Revenue health</div>
   <div class="sec-line"></div>
   <div class="sec-sub">NET REVENUE · CS VS SALES</div>
+</div>
+
+<!-- SIGNALS BANNER -->
+<div class="signals-banner" id="signals-banner" style="display:none">
+  <div class="sb-left">
+    <div class="sb-pulse"></div>
+    <div class="sb-text"><strong>Revenue Signals</strong> — <span id="signals-week">—</span> · <span id="signals-summary">loading...</span></div>
+  </div>
+  <div class="sb-right">
+    <span class="sb-chip warn" id="signals-warn-chip" style="display:none"></span>
+    <span class="sb-chip crit" id="signals-crit-chip" style="display:none"></span>
+    <a class="sb-cta" href="revenue-signals.html" id="signals-cta">
+      View analysis
+      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+    </a>
+  </div>
 </div>
 
 <div class="hero-grid">
@@ -786,43 +803,15 @@ tbody tr:hover{background:var(--bg2)}
   </div>
 </div>
 
-<!-- ── AI INSIGHTS ── -->
-<div class="sec">
-  <div class="sec-title">Revenue intelligence</div>
-  <div class="sec-line"></div>
-  <div class="sec-sub">POWERED BY CLAUDE API</div>
-</div>
-<div class="ai-panel">
-  <div class="ai-header">
-    <div class="ai-title">
-      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5l3.5-.5z"/></svg>
-      Analysis
-      <span class="ai-badge">Claude API</span>
-    </div>
-    <div class="ai-loading" id="ai-loading"><div class="spinner"></div><span>Analyzing...</span></div>
-  </div>
-  <div class="ai-body" id="ai-body">
-    <div class="ai-insight" style="--ic:var(--t3)">
-      <div class="ai-lbl">Waiting for data</div>
-      <div class="ai-text">Connect to the API or upload a CSV to generate AI-powered insights based on real QAD data.</div>
-    </div>
-    <button class="ai-btn" id="ai-btn" onclick="generateInsights()">
-      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13 8A5 5 0 1 1 8 3"/><path d="M13 3v5h-5"/></svg>
-      Generate analysis with current data
-    </button>
-  </div>
-</div>
 
 </main>
 
 <script>
 const API_URL = 'https://us-central1-forecast-dashboard-mvp.cloudfunctions.net/dashboard-api';
-const ANTHROPIC_API_KEY = 'YOUR_CLAUDE_API_KEY_HERE';
 
 // ── STATE ──
 let activeQ = 'FY';
 let wfChart;
-let _aiContext = '';
 
 // ── THEME ──
 const html = document.documentElement;
@@ -936,7 +925,9 @@ function renderFromAPI(d, q) {
     gc.style.background = netGrowth >= 0 ? 'var(--green-bg)' : 'var(--red-bg)';
     ng.style.color      = netGrowth >= 0 ? 'var(--green)'    : 'var(--red)';
   }
-  buildWaterfallChart((wf.net_new||0)/1e6, (wf.expansion||0)/1e6, (wf.migration||0)/1e6, -(churnACV/1e6), c);
+  var wfNN = (wf.net_new||0)/1e6, wfExp = (wf.expansion||0)/1e6, wfMig = (wf.migration||0)/1e6, wfChurn = -(churnACV/1e6);
+  console.log('Waterfall components (M):', {net_new: wfNN, expansion: wfExp, migration: wfMig, churn: wfChurn});
+  buildWaterfallChart(wfNN, wfExp, wfMig, wfChurn, c);
 
   // ── REVENUE DYNAMICS ───────────────────────────────────────────────────────
   var totalSales = 0, totalChurn = 0;
@@ -1203,22 +1194,8 @@ function renderFromAPI(d, q) {
     }).join('');
   }
 
-  // ── AI CONTEXT ────────────────────────────────────────────────────────────
-  _aiContext = 'Revenue Intelligence FY2027 '+q+': ' +
-    'Total '+mt.total_opps+' opps. Won: '+mt.won_opps+', Lost: '+mt.lost_opps+', Open: '+mt.open_opps+'. ' +
-    'Renewal win rate: '+fmtPct(rh.renewal_win_rate||0)+'. ' +
-    'Solutions Direct coverage: '+fmtPct(rh.coverage_all_sales||0)+
-    ' ('+fmt(rh.sales_won_acv||0)+' sales / '+fmt(rh.renewal_lost_acv||0)+' churn). ' +
-    'Channel won: '+fmt(rh.channel_won_acv||0)+'. Services won: '+fmt(rh.services_won_acv||0)+'. ' +
-    'Open pipeline: '+fmt(rh.total_open_acv||0)+'. ' +
-    'ERP BU: renewal WR '+fmtPct((dbu['ERP BU']||{}).win_rate||0)+
-    ', coverage '+fmtPct((dbu['ERP BU']||{}).sales_coverage_pct||0)+'. ' +
-    'Supply Chain BU: renewal WR '+fmtPct((dbu['Supply Chain BU']||{}).win_rate||0)+
-    ', coverage '+fmtPct((dbu['Supply Chain BU']||{}).sales_coverage_pct||0)+'. ' +
-    'Redzone BU: renewal WR '+fmtPct((dbu['Redzone BU']||{}).win_rate||0)+
-    ', coverage '+fmtPct((dbu['Redzone BU']||{}).sales_coverage_pct||0)+'. ' +
-    'Top loss reason: '+(la.peak_reason||'—')+' ('+(la.peak_count||0)+' deals). ' +
-    'High risk accounts: '+(ah.high_count||0)+', ATR at risk: '+fmt(ah.total_atr_at_risk||0)+'.';
+  // ── SIGNALS BANNER ────────────────────────────────────────────────────────
+  if (d.signals) renderSignalsBanner(d.signals);
 }
 
 
@@ -1320,48 +1297,42 @@ function updateChartTheme() {
   wfChart.update();
 }
 
-document.fonts.ready.then(function() {
-  var c = getChartColors();
-  buildWaterfallChart(7.2, 6.2, 2.4, -16.2, c);
-});
 
-// ── AI INSIGHTS ──
-function generateInsights() {
-  var btn = document.getElementById('ai-btn');
-  var loading = document.getElementById('ai-loading');
-  var body = document.getElementById('ai-body');
-  btn.style.display = 'none';
-  loading.classList.add('show');
+// ── SIGNALS BANNER ──
+function renderSignalsBanner(signals) {
+  var banner   = document.getElementById('signals-banner');
+  var weekEl   = document.getElementById('signals-week');
+  var summEl   = document.getElementById('signals-summary');
+  var warnChip = document.getElementById('signals-warn-chip');
+  var critChip = document.getElementById('signals-crit-chip');
 
-  fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1200,
-      system: 'You are a revenue intelligence analyst for a PE-backed manufacturing ERP SaaS. Return exactly 3 insights as a JSON array: [{"label":"...","type":"warning|success|info|danger","text":"..."}]. Each 2-3 sentences, specific numbers, actionable. Focus on the Sales vs CS revenue dynamic and renewal health. No preamble, just the JSON array.',
-      messages: [{role:'user', content:'Analyze and return 3 insights:\n' + _aiContext}]
-    })
-  }).then(function(r) { return r.json(); }).then(function(d) {
-    var text = d.content[0].text.replace(/```json|```/g,'').trim();
-    var insights = JSON.parse(text);
-    var cm = {warning:'var(--amber)', success:'var(--green)', info:'var(--blue)', danger:'var(--red)'};
-    body.innerHTML = insights.map(function(i) {
-      return '<div class="ai-insight" style="--ic:' + (cm[i.type]||'var(--blue)') + '">' +
-        '<div class="ai-lbl">' + i.label + '</div>' +
-        '<div class="ai-text">' + i.text + '</div>' +
-        '</div>';
-    }).join('') +
-    '<button class="ai-btn" id="ai-btn" onclick="generateInsights()">' +
-    '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13 8A5 5 0 1 1 8 3"/><path d="M13 3v5h-5"/></svg>' +
-    'Regenerate analysis</button>';
-  }).catch(function(e) {
-    console.error(e);
-    loading.classList.remove('show');
-    btn.style.display = 'flex';
-  }).finally(function() {
-    loading.classList.remove('show');
-  });
+  if (!banner || !signals) return;
+
+  var warnings = signals.warnings || 0;
+  var critical = signals.critical || 0;
+  var total    = warnings + critical;
+
+  weekEl.textContent = 'Week of ' + (signals.week || '—');
+
+  if (total === 0) {
+    summEl.textContent = 'No active flags';
+    banner.style.display = 'flex';
+    return;
+  }
+
+  summEl.textContent = total + ' active flag' + (total > 1 ? 's' : '');
+
+  if (warnings > 0) {
+    warnChip.textContent = warnings + ' warning' + (warnings > 1 ? 's' : '');
+    warnChip.style.display = 'inline-flex';
+  }
+  if (critical > 0) {
+    critChip.textContent = critical + ' critical';
+    critChip.style.display = 'inline-flex';
+    banner.classList.add('has-critical');
+  }
+
+  banner.style.display = 'flex';
 }
 </script>
 </body>
