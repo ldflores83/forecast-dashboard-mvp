@@ -39,7 +39,7 @@ SESSION_ID   = os.environ.get("SALESFORCE_SESSION_ID", "")
 INSTANCE     = "qad.my.salesforce.com"
 
 # -- CONFIG --------------------------------------------------------------------
-FISCAL_YEAR  = 2027
+FISCAL_YEARS = (2026, 2027)
 OUTPUT_FILE  = "dashboard_export.csv"
 GCP_PROJECT  = "forecast-dashboard-mvp"
 BQ_DATASET   = "forecast_data"
@@ -106,6 +106,8 @@ STAGE_GROUP = {
 #   Days_In_Stage__c       — days in current stage (stagnant stage detection)
 #                            Note: SF standard STAGE_DURATION report field maps
 #                            to Age formula — using Days_In_Stage__c custom field
+FISCAL_YEAR_FILTER = ", ".join(str(year) for year in FISCAL_YEARS)
+
 SOQL = f"""
 SELECT
     Id,
@@ -119,6 +121,10 @@ SELECT
     Account.SC_Customer_Base__c,
     Account.Global_HQ_18_ID__c,
     Account.Site_Type__c,
+    Account.Primary_Vertical__c,
+    Account.Primary_Sub_Vertical__c,
+    Account.AnnualRevenue,
+    Account.No_of_Employees__c,
 
     StageName,
     Type,
@@ -128,8 +134,11 @@ SELECT
     IsClosed,
     IsWon,
     Probability,
+    ForecastCategoryName,
     LeadSource,
     CreatedDate,
+    LastStageChangeInDays,
+    HasOverdueTask,
 
     Prior_Contract_End_Date__c,
     ATR_Value__c,
@@ -140,6 +149,9 @@ SELECT
     Reason_LQ_Q__c,
     Reason_LQ_Q_Description__c,
     Cancellation_Reason__c,
+    VP_Forecast__c,
+    At_Power__c,
+    Escalation__c,
 
     NextStep,
     Description,
@@ -153,7 +165,7 @@ SELECT
     Owner.Business_Unit__c
 
 FROM Opportunity
-WHERE FiscalYear = {FISCAL_YEAR}
+WHERE FiscalYear IN ({FISCAL_YEAR_FILTER})
 ORDER BY CloseDate ASC
 """
 
@@ -251,6 +263,10 @@ def transform(df, fx_rates=None):
         "Account_SC_Customer_Base__c": "Account_SC",
         "Account_Global_HQ_18_ID__c":  "HQ_ID",
         "Account_Site_Type__c":        "SiteType",
+        "Account_Primary_Vertical__c": "Primary_Vertical",
+        "Account_Primary_Sub_Vertical__c": "Primary_Sub_Vertical",
+        "Account_AnnualRevenue":       "Account_Annual_Revenue",
+        "Account_No_of_Employees__c":  "Account_No_of_Employees",
         "Owner_Name":                  "Owner_Name",
         "Owner_Business_Unit__c":      "Owner_BU",
         # Custom fields — strip __c suffix for cleaner names
@@ -263,10 +279,14 @@ def transform(df, fx_rates=None):
         "Reason_LQ_Q__c":              "Loss_Reason",
         "Reason_LQ_Q_Description__c":  "Loss_Details",
         "Cancellation_Reason__c":      "Cancellation_Reason",
+        "VP_Forecast__c":              "VP_Forecast",
+        "At_Power__c":                 "At_Power",
+        "Escalation__c":               "Escalation",
         # Signal fields (new)
         "NextStep":                    "Next_Step",
         "LastActivityDate":            "Last_Activity_Date",
         "LastStageChangeDate":         "Last_Stage_Change_Date",
+        "LastStageChangeInDays":       "Last_Stage_Change_Days",
         "Push_Count_FQ__c":            "Push_Count",
         "Touch_Back_Date__c":          "Touch_Back_Date",
         "QAD_Status__c":               "QAD_Status",
@@ -447,7 +467,7 @@ def upload_bq(df):
 # -- MAIN ----------------------------------------------------------------------
 def main():
     print("=" * 60)
-    print(f"  Revenue Intelligence Export — FY{FISCAL_YEAR} (full year)")
+    print(f"  Revenue Intelligence Export — FY{', FY'.join(str(year) for year in FISCAL_YEARS)}")
     print(f"  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
 
