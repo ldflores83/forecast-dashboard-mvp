@@ -10,6 +10,9 @@ Design rules:
   - All counts are ints.
   - NULL handling: NULLs are kept as None in the output dict and documented
     in the dict so agents and prompts can handle them correctly.
+  - New flags (Flag_Stagnant_Stage, Flag_No_Economic_Buyer, Flag_No_Gong_Activity)
+    are computed in Python using deterministic business rules.
+    Contact roles are joined for flagged deals only (max 25 IDs).
 """
 
 import os
@@ -45,6 +48,24 @@ def _tbl(name: str) -> str:
     return f"`{PROJECT}.{DATASET}.{name}`"
 
 
+# ── STAGE THRESHOLDS for Flag_Stagnant_Stage ──────────────────────────────────
+# Uses actual Salesforce stage names (queried from opportunities table).
+# Days_In_Stage field in BQ is a placeholder (always 0); stagnant detection
+# falls back to DATE_DIFF(today, Last_Stage_Change_Date) when Days_In_Stage=0.
+STAGE_MAX_DAYS = {
+    "Development":            30,
+    "Qualifying":             30,
+    "Sales Ready":            30,
+    "Solution Exploration":   45,
+    "Evaluation & Alignment": 45,
+    "Proposal & Negotiation": 60,
+    "Awaiting Signature":     60,
+}
+
+# Stages where missing economic buyer is a MEDDPICC gap
+_LATE_STAGES = {"Evaluation & Alignment", "Proposal & Negotiation", "Awaiting Signature"}
+
+
 # ── TOOL 1: get_flagged_deals ─────────────────────────────────────────────────
 
 def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
@@ -68,9 +89,12 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
     documents this so agents can handle it correctly in prompts.
     NULL is NOT assumed to mean "no activity" — it means "data missing."
 
-    NOTE on Flag_Stagnant_Stage: Days_In_Stage is currently a placeholder
-    (value = 0). This tool computes a proxy using Last_Stage_Change_Date:
-    DATE_DIFF(CURRENT_DATE, Last_Stage_Change_Date, DAY) > 30.
+    Python-computed flags (deterministic business rules, no LLM):
+        Flag_Stagnant_Stage     — Days_In_Stage > STAGE_MAX_DAYS[stage]
+        Flag_No_Economic_Buyer  — At_Power=False AND stage in Evaluation/Proposal/Contracts
+        Flag_No_Gong_Activity   — Gong_Count == 0
+
+    Contact roles are joined for the flagged deal set only (max 25 IDs).
 
     Args:
         fiscal_quarter: 0 = full year, 1-4 = specific quarter.
@@ -86,7 +110,7 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
             overdue_close_count   — int
             touch_back_count      — int
             null_activity_pct     — float (pct of open deals with NULL activity date)
-            stagnant_proxy_count  — int (deals with no stage change in 30+ days)
+            stagnant_proxy_count  — int (deals with Days_In_Stage > 30)
     """
     fq_filter = f"AND FiscalQuarter = {fiscal_quarter}" if fiscal_quarter > 0 else ""
     tbl = _tbl("opportunities")
@@ -110,17 +134,17 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
             Last_Stage_Change_Date,
             Next_Step,
             Opp_Age_Days,
+            Days_In_Stage,
+            VP_Forecast,
+            ForecastCategoryName,
+            At_Power,
+            Gong_Count,
+            Customer_Profile,
             Flag_Pushed_5x,
             Flag_No_Activity_7d,
             Flag_Overdue_Close,
             Flag_Touch_Back_Overdue,
-            Flag_No_Next_Step,
-            -- Stagnant stage proxy (Days_In_Stage is currently 0)
-            CASE
-                WHEN Last_Stage_Change_Date IS NOT NULL
-                AND DATE_DIFF(CURRENT_DATE(), DATE(Last_Stage_Change_Date), DAY) > 30
-                THEN TRUE ELSE FALSE
-            END AS Flag_Stagnant_Proxy
+            Flag_No_Next_Step
         FROM {tbl}
         WHERE Is_Open = TRUE
           AND (
@@ -203,29 +227,85 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
     """
 
     # ── Execute all queries ───────────────────────────────────────────────────
-    deals_rows   = _query(deals_sql)
-    by_bu_rows   = _query(by_bu_sql)
-    by_stage_rows= _query(by_stage_sql)
-    counts_rows  = _query(counts_sql)
+    deals_rows    = _query(deals_sql)
+    by_bu_rows    = _query(by_bu_sql)
+    by_stage_rows = _query(by_stage_sql)
+    counts_rows   = _query(counts_sql)
 
     counts = counts_rows[0] if counts_rows else {}
-    total_open       = safe_int(counts.get("total_open"))
-    null_act_count   = safe_int(counts.get("null_activity_count"))
+    total_open        = safe_int(counts.get("total_open"))
+    null_act_count    = safe_int(counts.get("null_activity_count"))
     null_activity_pct = round(null_act_count / total_open * 100, 1) if total_open > 0 else 0.0
+
+    # ── Compute deterministic Python flags on raw rows ────────────────────────
+    today = date.today()
+    for r in deals_rows:
+        stage    = str(r.get("stage", ""))
+        days     = safe_int(r.get("Days_In_Stage")) or 0
+        max_days = STAGE_MAX_DAYS.get(stage)
+        at_power = r.get("At_Power")
+        gong     = safe_int(r.get("Gong_Count")) or 0
+
+        # Days_In_Stage is a placeholder (always 0) — fall back to Last_Stage_Change_Date
+        if days == 0:
+            last_change = r.get("Last_Stage_Change_Date")
+            if last_change is not None:
+                try:
+                    if hasattr(last_change, "date"):
+                        last_change = last_change.date()
+                    elif isinstance(last_change, str):
+                        from datetime import datetime as _dt
+                        last_change = _dt.fromisoformat(last_change[:10]).date()
+                    days = (today - last_change).days
+                except Exception:
+                    days = 0
+
+        r["Flag_Stagnant_Stage"]    = bool(max_days and days > 0 and days > max_days)
+        r["Flag_No_Economic_Buyer"] = (
+            at_power is False
+            and stage in _LATE_STAGES
+        )
+        r["Flag_No_Gong_Activity"]  = (gong == 0)
+
+    # ── Fetch contact roles for flagged deal IDs only ─────────────────────────
+    contact_map: dict = {}
+    opp_ids = [str(r["opp_id"]) for r in deals_rows if r.get("opp_id")]
+    if opp_ids:
+        cr_tbl = _tbl("contact_roles")
+        for i in range(0, len(opp_ids), 150):
+            batch  = opp_ids[i:i + 150]
+            ids_in = ", ".join(f"'{oid}'" for oid in batch)
+            cr_sql = f"""
+                SELECT opportunityid, contact_name, contact_title, role, isprimary
+                FROM {cr_tbl}
+                WHERE opportunityid IN ({ids_in})
+            """
+            for row in _query(cr_sql):
+                oid = str(row.get("opportunityid", ""))
+                contact_map.setdefault(oid, []).append({
+                    "name":  str(row.get("contact_name", "") or ""),
+                    "title": str(row.get("contact_title", "") or ""),
+                    "role":  str(row.get("role", "") or ""),
+                })
 
     # ── Shape deals list ──────────────────────────────────────────────────────
     flagged_deals = []
     for r in deals_rows:
+        opp_id   = str(r.get("opp_id", ""))
+        contacts = contact_map.get(opp_id, [])
+
         flags = []
-        if r.get("Flag_Pushed_5x"):        flags.append({"key": "pushed_5x",    "label": "Pushed 5+ qtrs",    "severity": "critical"})
-        if r.get("Flag_Overdue_Close"):     flags.append({"key": "overdue_close","label": "Close date past",   "severity": "critical"})
-        if r.get("Flag_No_Activity_7d"):    flags.append({"key": "no_activity",  "label": "No activity 7d",    "severity": "warning"})
-        if r.get("Flag_Touch_Back_Overdue"):flags.append({"key": "touch_back",   "label": "Follow-up overdue", "severity": "warning"})
-        if r.get("Flag_No_Next_Step"):      flags.append({"key": "no_next_step", "label": "No next step",      "severity": "info"})
-        if r.get("Flag_Stagnant_Proxy"):    flags.append({"key": "stagnant",     "label": "Stagnant 30d+",     "severity": "warning"})
+        if r.get("Flag_Pushed_5x"):           flags.append({"key": "pushed_5x",       "label": "Pushed 5+ qtrs",     "severity": "critical"})
+        if r.get("Flag_Overdue_Close"):        flags.append({"key": "overdue_close",    "label": "Close date past",    "severity": "critical"})
+        if r.get("Flag_No_Economic_Buyer"):    flags.append({"key": "no_econ_buyer",    "label": "No economic buyer",  "severity": "critical"})
+        if r.get("Flag_No_Activity_7d"):       flags.append({"key": "no_activity",      "label": "No activity 7d",     "severity": "warning"})
+        if r.get("Flag_Touch_Back_Overdue"):   flags.append({"key": "touch_back",       "label": "Follow-up overdue",  "severity": "warning"})
+        if r.get("Flag_Stagnant_Stage"):       flags.append({"key": "stagnant_stage",   "label": "Stagnant in stage",  "severity": "warning"})
+        if r.get("Flag_No_Gong_Activity"):     flags.append({"key": "no_gong",          "label": "Zero Gong activity", "severity": "warning"})
+        if r.get("Flag_No_Next_Step"):         flags.append({"key": "no_next_step",     "label": "No next step",       "severity": "info"})
 
         flagged_deals.append({
-            "opp_id":        str(r.get("opp_id", "")),
+            "opp_id":        opp_id,
             "opp_name":      str(r.get("opp_name", "")),
             "account_name":  str(r.get("Account_Name", "")),
             "bu":            str(r.get("BU", "")),
@@ -240,23 +320,39 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
             "last_activity": str(r.get("Last_Activity_Date") or ""),
             "next_step":     str(r.get("Next_Step") or ""),
             "opp_age_days":  safe_int(r.get("Opp_Age_Days")),
+            "days_in_stage": safe_int(r.get("Days_In_Stage")),
+            "vp_forecast":   str(r.get("VP_Forecast") or ""),
+            "forecast_category": str(r.get("ForecastCategoryName") or ""),
+            "at_power":      bool(r.get("At_Power", False)),
+            "gong_count":    safe_int(r.get("Gong_Count")),
+            "customer_profile": str(r.get("Customer_Profile") or ""),
+            "Flag_Stagnant_Stage":    bool(r.get("Flag_Stagnant_Stage")),
+            "Flag_No_Economic_Buyer": bool(r.get("Flag_No_Economic_Buyer")),
+            "Flag_No_Gong_Activity":  bool(r.get("Flag_No_Gong_Activity")),
+            "has_economic_buyer":     any(c["role"] == "Economic Buyer" for c in contacts),
+            "has_decision_maker":     any(c["role"] == "Decision Maker"  for c in contacts),
+            "contact_roles_summary":  contacts,
             "flags":         flags,
             "flag_count":    len(flags),
         })
 
     return {
-        "flagged_deals":       flagged_deals,
-        "pipeline_by_bu":      [{"bu": r["BU"], "open_sales_acv": safe_float(r["open_sales_acv"]),
-                                  "open_sales_count": safe_int(r["open_sales_count"])} for r in by_bu_rows],
-        "pipeline_by_stage":   [{"stage": r["stage"], "open_acv": safe_float(r["open_acv"]),
-                                  "deal_count": safe_int(r["deal_count"])} for r in by_stage_rows],
-        "total_open_sales_acv":safe_float(counts.get("total_open_sales_acv")),
-        "pushed_5x_count":     safe_int(counts.get("pushed_5x_count")),
-        "no_activity_count":   safe_int(counts.get("no_activity_count")),
-        "overdue_close_count": safe_int(counts.get("overdue_close_count")),
-        "touch_back_count":    safe_int(counts.get("touch_back_count")),
-        "null_activity_pct":   null_activity_pct,
-        "stagnant_proxy_count":safe_int(counts.get("stagnant_proxy_count")),
+        "flagged_deals":           flagged_deals,
+        "pipeline_by_bu":          [{"bu": r["BU"], "open_sales_acv": safe_float(r["open_sales_acv"]),
+                                      "open_sales_count": safe_int(r["open_sales_count"])} for r in by_bu_rows],
+        "pipeline_by_stage":       [{"stage": r["stage"], "open_acv": safe_float(r["open_acv"]),
+                                      "deal_count": safe_int(r["deal_count"])} for r in by_stage_rows],
+        "total_open_sales_acv":    safe_float(counts.get("total_open_sales_acv")),
+        "pushed_5x_count":         safe_int(counts.get("pushed_5x_count")),
+        "no_activity_count":       safe_int(counts.get("no_activity_count")),
+        "overdue_close_count":     safe_int(counts.get("overdue_close_count")),
+        "touch_back_count":        safe_int(counts.get("touch_back_count")),
+        "null_activity_pct":       null_activity_pct,
+        "stagnant_proxy_count":    safe_int(counts.get("stagnant_proxy_count")),
+        # Counts from flagged set (top 25) for prompt context
+        "stagnant_stage_count":    sum(1 for d in flagged_deals if d["Flag_Stagnant_Stage"]),
+        "no_econ_buyer_count":     sum(1 for d in flagged_deals if d["Flag_No_Economic_Buyer"]),
+        "no_gong_count":           sum(1 for d in flagged_deals if d["Flag_No_Gong_Activity"]),
     }
 
 

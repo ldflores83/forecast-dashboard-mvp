@@ -39,17 +39,35 @@ You analyze open sales pipeline signals to identify what needs urgent attention 
 Your job:
 1. Review the flagged deals and pipeline data provided.
 2. Identify the 3-5 deals most critical to address this week, ranked by revenue impact.
-3. Identify any patterns (BU concentration, stage stalls, owner patterns).
+3. Identify any patterns (BU concentration, stage stalls, forecast misalignment, MEDDPICC gaps).
 4. Assess whether pipeline coverage is healthy relative to the ARR base.
 5. Provide ONE specific, actionable recommendation for Sales leadership.
 
 Important rules:
 - Reason ONLY from the data provided. Do not invent deal names, values, or signals.
 - Last_Activity_Date is NULL for many deals. NULL means DATA IS MISSING, not that no activity occurred. Do NOT infer risk from NULL values — only flag deals with confirmed signal flags.
-- Flag_Stagnant_Proxy is a computed proxy (no stage change in 30+ days) — treat it as a supporting signal, not a primary flag.
+- VP_Forecast and ForecastCategoryName are both automatically derived from StageName — they are NOT independent signals. Do NOT compare them, do NOT flag any difference between them as a forecast accuracy issue or misalignment. Treat them as read-only context only.
 - Keep headlines under 150 characters.
 - top_risks must contain at most 5 items.
 - Each top_risk item must include: deal_name, account_name, bu, acv_formatted, flags (list of flag labels), reason (why this deal needs attention).
+
+New flag guidance — surface these when present:
+
+Flag_Stagnant_Stage: Deal has exceeded the maximum expected days in its current stage
+(Prospecting/Discovery: 30d, Scoping/Evaluation: 45d, Proposal/Contracts: 60d).
+Surface this as a stage velocity risk, especially on high-ACV deals.
+
+Flag_No_Economic_Buyer: At_Power = False and deal is in Evaluation, Proposal, or Contracts.
+This is a MEDDPICC gap — no confirmed access to the economic buyer in a late-stage deal.
+Surface as a qualification risk; deals without an economic buyer in late stages rarely close.
+
+Flag_No_Gong_Activity: Zero recorded Gong calls on this deal.
+On high-ACV deals this signals low engagement or deals managed entirely offline.
+Note this as an engagement risk, especially if close date is near.
+
+Customer_Profile context: ICP = Ideal Customer Profile (strongest fit), ACP = Acceptable,
+UCP = Unqualified Customer Profile. When a critical deal (high ACV, late stage) is UCP,
+note this as a qualification concern — UCP deals have materially lower win rates.
 
 Return ONLY valid JSON. No preamble, no explanation, no markdown code fences.
 
@@ -80,11 +98,16 @@ Required JSON schema:
         "pipeline_by_bu":        pipeline_data.get("pipeline_by_bu", []),
         "pipeline_by_stage":     pipeline_data.get("pipeline_by_stage", []),
         "total_open_sales_acv":  fmt_currency(pipeline_data.get("total_open_sales_acv")),
+        # Existing flag counts (all open deals)
         "pushed_5x_count":       pipeline_data.get("pushed_5x_count", 0),
         "no_activity_count":     pipeline_data.get("no_activity_count", 0),
         "overdue_close_count":   pipeline_data.get("overdue_close_count", 0),
         "stagnant_proxy_count":  pipeline_data.get("stagnant_proxy_count", 0),
         "null_activity_pct":     pipeline_data.get("null_activity_pct", 0),
+        # New flag counts (from top-25 flagged set)
+        "stagnant_stage_count":  pipeline_data.get("stagnant_stage_count", 0),
+        "no_econ_buyer_count":   pipeline_data.get("no_econ_buyer_count", 0),
+        "no_gong_count":         pipeline_data.get("no_gong_count", 0),
         "data_note":             f"{pipeline_data.get('null_activity_pct', 0)}% of open deals have NULL Last_Activity_Date. This means data is missing, not that no activity occurred.",
     }
 

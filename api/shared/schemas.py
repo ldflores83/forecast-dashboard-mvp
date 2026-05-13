@@ -14,11 +14,65 @@ Design rules:
 from typing import Any
 
 
+# ── FLAGGED DEAL FIELDS (tool output shape — not agent output) ────────────────
+# Documents the fields in each dict within pipeline_data["flagged_deals"].
+# These are inputs to the Pipeline Sentinel prompt, not validated by schemas.py.
+FLAGGED_DEAL_FIELDS = {
+    # Identity
+    "opp_id":               str,
+    "opp_name":             str,
+    "account_name":         str,
+    "bu":                   str,
+    "stage":                str,
+    "sales_motion":         str,
+    "owner_name":           str,
+    # Financials
+    "acv":                  float,
+    "atr_value":            float,
+    # Timeline
+    "close_date":           str,
+    "pced":                 str,
+    "last_activity":        str,
+    "opp_age_days":         int,
+    "days_in_stage":        int,
+    # Engagement
+    "gong_count":           int,
+    "next_step":            str,
+    "push_count":           int,
+    # Forecast alignment
+    "vp_forecast":          str,   # VP_Forecast__c: Commit/Upside/Best Case/Omit
+    "forecast_category":    str,   # AE ForecastCategoryName
+    # MEDDPICC signal
+    "at_power":             bool,  # whether AE has access to economic buyer
+    "customer_profile":     str,   # ICP/ACP/UCP tier
+    # Contact roles (joined from contact_roles table)
+    "has_economic_buyer":   bool,
+    "has_decision_maker":   bool,
+    "contact_roles_summary": list, # [{name, title, role}]
+    # Existing BQ flags (from Salesforce)
+    "Flag_Pushed_5x":           bool,
+    "Flag_No_Activity_7d":      bool,
+    "Flag_Overdue_Close":       bool,
+    "Flag_Touch_Back_Overdue":  bool,
+    "Flag_No_Next_Step":        bool,
+    # Python-computed flags (deterministic business rules)
+    "Flag_Stagnant_Stage":      bool,  # Days_In_Stage > stage threshold
+    "Flag_No_Economic_Buyer":   bool,  # At_Power=False AND late stage
+    "Flag_No_Gong_Activity":    bool,  # Gong_Count == 0
+    # Summary
+    "flags":        list,  # [{key, label, severity}]
+    "flag_count":   int,
+}
+
+
 # ── AGENT SCHEMAS ─────────────────────────────────────────────────────────────
 
 PIPELINE_SCHEMA = {
     # Agent 1: Pipeline Sentinel
     # Focuses on open Sales pipeline (Net New, Expansion, Migration).
+    # Input deals include: Flag_Stagnant_Stage, Flag_No_Economic_Buyer,
+    # Flag_No_Gong_Activity, customer_profile, days_in_stage, gong_count,
+    # vp_forecast, forecast_category (context only), has_economic_buyer.
     "headline":         (str,  "1 sentence, max 150 chars — what is the key pipeline signal this week"),
     "top_risks":        (list, "List of up to 5 dicts: {deal_name, account_name, bu, acv, flags, reason}"),
     "pattern":          (str,  "Pattern observed across flagged deals — BU concentration, stage stall, etc."),
