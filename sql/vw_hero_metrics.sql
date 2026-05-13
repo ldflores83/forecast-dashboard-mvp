@@ -39,7 +39,7 @@ WITH base AS (
     COUNTIF(Is_Lost) AS lost_opps,
     COUNTIF(Is_Open) AS open_opps
 
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND Name NOT LIKE '%Amendment%'
@@ -70,7 +70,7 @@ fy AS (
     COUNTIF(Is_Won)  AS won_opps,
     COUNTIF(Is_Lost) AS lost_opps,
     COUNTIF(Is_Open) AS open_opps
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND Name NOT LIKE '%Amendment%'

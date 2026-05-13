@@ -13,7 +13,7 @@ CREATE OR REPLACE VIEW `forecast-dashboard-mvp.forecast_data.vw_waterfall` AS
 
 WITH base_filter AS (
   SELECT *
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND Name NOT LIKE '%Amendment%'

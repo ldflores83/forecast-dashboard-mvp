@@ -43,7 +43,7 @@ FISCAL_YEARS = (2026, 2027)
 OUTPUT_FILE  = "dashboard_export.csv"
 GCP_PROJECT  = "forecast-dashboard-mvp"
 BQ_DATASET   = "forecast_data"
-BQ_TABLE     = "opportunities_fy2027"
+BQ_TABLE     = "opportunities"
 
 # Substages and name patterns to exclude (inflate lost renewals otherwise)
 EXCL_SUBSTAGE = ['Combined', 'Credited', 'Closed-Duplicate', 'Junk']

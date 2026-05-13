@@ -8,7 +8,7 @@
 --   2. CS risk prioritization — which accounts need attention NOW
 --   3. Pulzio Mode 2 — Mini CSP health scoring foundation
 --
--- Join key: opportunities_fy2027.AccountId = jira_tickets.salesforce_account_id
+-- Join key: opportunities.AccountId = jira_tickets.salesforce_account_id
 -- ============================================================
 CREATE OR REPLACE VIEW `forecast-dashboard-mvp.forecast_data.vw_account_health` AS
 
@@ -27,7 +27,7 @@ open_renewals AS (
     DATE_DIFF(PARSE_DATE('%Y-%m-%d', MIN(PCED)), CURRENT_DATE(), DAY) AS days_to_earliest_renewal,
     MAX(PCED)                                     AS latest_renewal_date
 
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Is_Open = TRUE
     AND Sales_Motion = 'Renewal'
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
@@ -106,7 +106,7 @@ renewal_history AS (
     COUNTIF(Is_Lost = TRUE)                       AS renewals_lost_hist,
     COALESCE(SUM(CASE WHEN Is_Lost = TRUE
       THEN ATR_Value_USD ELSE 0 END), 0)          AS historical_churn_acv
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Sales_Motion = 'Renewal'
     AND IsClosed = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')

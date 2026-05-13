@@ -1,13 +1,14 @@
 """
 scripts/run_agents.py
-Standalone script entrypoint for the Weekly Revenue Signals pipeline.
+Standalone script entrypoint for the agentic pipeline.
 
 Usage:
-    python scripts/run_agents.py                # full year, use cache
-    python scripts/run_agents.py --q 1          # Q1 only
-    python scripts/run_agents.py --force        # bypass cache, re-run agents
-    python scripts/run_agents.py --debug        # include timing in output
-    python scripts/run_agents.py --dry-run      # run tools only, skip LLM
+    python scripts/run_agents.py                        # full year, use cache
+    python scripts/run_agents.py --q 1                  # Q1 only
+    python scripts/run_agents.py --force                # bypass cache, re-run agents
+    python scripts/run_agents.py --debug                # include timing in output
+    python scripts/run_agents.py --dry-run              # run tools only, skip LLM
+    python scripts/run_agents.py --team signals         # explicit team (default)
 
 Weekly workflow:
     python scripts/sf_export_dashboard.py       # 1. Export Salesforce → BQ
@@ -17,7 +18,7 @@ Prerequisites:
     1. .env file with:
          ANTHROPIC_API_KEY=sk-ant-...
          GOOGLE_APPLICATION_CREDENTIALS=credentials/forecast-dashboard-mvp-xxxxx.json
-    2. BQ table opportunities_fy2027 populated (sf_export_dashboard.py)
+    2. BQ table opportunities populated (sf_export_dashboard.py)
     3. BQ views vw_account_health and vw_revenue_dynamics exist (setup_views.py)
 """
 
@@ -27,7 +28,7 @@ import os
 import sys
 
 # ── Ensure the api/ package is on the path when running from project root ──────
-script_dir  = os.path.dirname(os.path.abspath(__file__))
+script_dir   = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(script_dir)
 api_dir      = os.path.join(project_root, "api")
 
@@ -36,10 +37,20 @@ if api_dir not in sys.path:
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
+# ── Team registry — maps --team flag to orchestrator module path ───────────────
+TEAM_REGISTRY = {
+    "signals": "teams.revenue_signals.orchestrator",
+}
+
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Run the Revenue Signals agentic pipeline."
+        description="Run an agentic pipeline team."
+    )
+    parser.add_argument(
+        "--team", type=str, default="signals",
+        choices=list(TEAM_REGISTRY.keys()),
+        help="Which team pipeline to run (default: signals)"
     )
     parser.add_argument(
         "--q", type=int, default=0, choices=[0, 1, 2, 3, 4],
@@ -67,11 +78,11 @@ def main():
     # ── Dry run: tools only ────────────────────────────────────────────────────
     if args.dry_run:
         print("=" * 60)
-        print("DRY RUN — Tools only (no LLM calls)")
+        print(f"DRY RUN — Tools only (no LLM calls) — team: {args.team}")
         print("=" * 60)
-        from copilot.tools  import get_flagged_deals, get_renewal_health, get_winloss_data
-        from copilot.utils  import build_context, source_hash
-        from copilot.state  import SharedState
+        from teams.revenue_signals.tools import get_flagged_deals, get_renewal_health, get_winloss_data
+        from shared.utils  import build_context, source_hash
+        from shared.state  import SharedState
 
         state = SharedState()
         state.context       = build_context(args.q)
@@ -88,22 +99,24 @@ def main():
         print(f"Overdue close:    {state.pipeline_data.get('overdue_close_count', 0)}")
         print(f"High risk accts:  {len(state.renewal_data.get('high_risk_accounts', []))}")
         print(f"ATR at risk:      ${state.renewal_data.get('total_atr_at_risk', 0)/1e6:.1f}M")
-        print(f"Closed last 90d:  {state.winloss_data.get('total_closed_count', 0)} deals")
+        print(f"Closed FY2027:    {state.winloss_data.get('total_closed_count', 0)} deals")
         print(f"Top loss reason:  {state.winloss_data.get('top_loss_reason', '—')}")
         print(f"\n[OK] Dry run complete - BQ connectivity confirmed")
         return
 
     # ── Full run ───────────────────────────────────────────────────────────────
-    from copilot.orchestrator import run
+    import importlib
+    module_path = TEAM_REGISTRY[args.team]
+    orchestrator = importlib.import_module(module_path)
 
     try:
-        result = run(
+        result = orchestrator.run(
             fiscal_quarter=args.q,
             force_refresh=args.force,
             debug=args.debug,
         )
 
-        print(f"\n[OK] Pipeline complete")
+        print(f"\n[OK] Pipeline complete — team: {args.team}")
         print(f"  Week:         {result['meta']['week']}")
         print(f"  Reviewer:     {result['review']['status']}")
         print(f"  Corrections:  {len(result['review'].get('corrections', []))}")

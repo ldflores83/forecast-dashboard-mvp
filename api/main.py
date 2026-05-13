@@ -41,12 +41,18 @@ def dashboard_api(request):
         if mode == "signals":
             payload = build_signals_payload(fiscal_quarter)
         elif mode == "clear-cache":
-            from copilot import cache, memory
+            from shared import cache
+            from teams.revenue_signals import memory
+            from google.cloud import storage as _gcs
             cache.clear()
             memory.clear()
+            try:
+                _gcs.Client().bucket("forecast-dashboard-mvp-frontend").blob("signals_output.json").delete()
+            except Exception:
+                pass  # non-fatal: file may not exist yet
             payload = {"status": "cleared", "timestamp": datetime.now(timezone.utc).isoformat()}
         elif mode == "run-agents":
-            from copilot import orchestrator
+            from teams.revenue_signals import orchestrator
             result = orchestrator.run(fiscal_quarter=fiscal_quarter, force_refresh=True)
             return (json.dumps(result, default=str), 200, CORS)
         else:
@@ -392,7 +398,7 @@ def build_signals_payload(fiscal_quarter):
     from datetime import datetime, timezone
 
     fq = fiscal_quarter
-    tbl = f"`{PROJECT}.{DATASET}.opportunities_fy2027`"
+    tbl = f"`{PROJECT}.{DATASET}.opportunities`"
 
     # Quarter filter — same PCED-based logic as main dashboard
     # For signals we filter by FiscalQuarter column (already assigned in export)

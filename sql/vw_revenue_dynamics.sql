@@ -56,7 +56,7 @@ WITH by_quarter AS (
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Open
                       THEN ACV_USD END), 0)                                        AS renewal_open_acv
 
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND Name NOT LIKE '%Amendment%'
@@ -99,7 +99,7 @@ fy AS (
                       THEN ACV_USD END), 0)                                        AS sales_open_acv,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Open
                       THEN ACV_USD END), 0)                                        AS renewal_open_acv
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND Name NOT LIKE '%Amendment%'

@@ -25,7 +25,7 @@ WITH stage_pipeline AS (
     COALESCE(SUM(ACV_USD), 0) AS open_acv,
     COUNT(*)              AS open_count
 
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Is_Open = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
   GROUP BY FiscalQuarter, FiscalYear, StageName
@@ -46,7 +46,7 @@ stage_fy AS (
     END             AS stage_group,
     COALESCE(SUM(ACV_USD), 0) AS open_acv,
     COUNT(*)              AS open_count
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Is_Open = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
   GROUP BY FiscalYear, StageName
@@ -80,7 +80,7 @@ bu_summary AS (
       NULLIF(COUNTIF(Is_Won), 0)
     )                                                              AS avg_deal_won
 
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND Name NOT LIKE '%Amendment%'
@@ -106,7 +106,7 @@ bu_fy AS (
       SUM(CASE WHEN Is_Won THEN ACV_USD END),
       NULLIF(COUNTIF(Is_Won), 0)
     )                                                              AS avg_deal_won
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND Name NOT LIKE '%Amendment%'

@@ -896,7 +896,10 @@ loadSignals();
     if (!confirm('Clear cache and memory?\n\nThe page will reload to the empty state. You can then click "Run Analysis" to generate fresh signals.')) return;
     lockButtons('Clearing…');
     fetch(API_URL + '?mode=clear-cache', { method: 'POST' })
-      .then(function() { window.location.reload(); })
+      .then(function(r) {
+        if (!r.ok) throw new Error('http_' + r.status);
+        window.location.reload();
+      })
       .catch(function() { unlockButtons(); alert('Clear failed — check console.'); });
   });
 })();

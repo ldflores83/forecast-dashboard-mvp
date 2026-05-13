@@ -13,7 +13,7 @@ WITH lost_totals AS (
     COALESCE(SUM(ACV_USD), 0)   AS total_lost_acv,
     COUNT(*)                AS total_lost_count,
     SAFE_DIVIDE(SUM(ACV_USD), COUNT(*)) AS avg_deal_lost
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Is_Lost = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
   GROUP BY FiscalQuarter, FiscalYear
@@ -26,7 +26,7 @@ lost_totals_fy AS (
     COALESCE(SUM(ACV_USD), 0)   AS total_lost_acv,
     COUNT(*)                AS total_lost_count,
     SAFE_DIVIDE(SUM(ACV_USD), COUNT(*)) AS avg_deal_lost
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Is_Lost = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
   GROUP BY FiscalYear
@@ -40,7 +40,7 @@ lost_by_bu AS (
     BU,
     COALESCE(SUM(ACV_USD), 0) AS lost_acv,
     COUNT(*)              AS lost_count
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Is_Lost = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
   GROUP BY FiscalQuarter, FiscalYear, BU
@@ -53,7 +53,7 @@ lost_by_bu_fy AS (
     BU,
     COALESCE(SUM(ACV_USD), 0) AS lost_acv,
     COUNT(*)              AS lost_count
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Is_Lost = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
   GROUP BY FiscalYear, BU
@@ -72,7 +72,7 @@ loss_reasons AS (
       PARTITION BY FiscalQuarter, FiscalYear
       ORDER BY COUNT(*) DESC
     )               AS reason_rank
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Is_Lost = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
   GROUP BY FiscalQuarter, FiscalYear, Loss_Reason
@@ -89,7 +89,7 @@ loss_reasons_fy AS (
       PARTITION BY FiscalYear
       ORDER BY COUNT(*) DESC
     )               AS reason_rank
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Is_Lost = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
   GROUP BY FiscalYear, Loss_Reason
@@ -110,7 +110,7 @@ by_motion AS (
     COUNTIF(IsClosed)   AS closed_count,
     SAFE_DIVIDE(COUNTIF(Is_Won), NULLIF(COUNTIF(IsClosed), 0)) * 100 AS win_rate_pct,
     SAFE_DIVIDE(SUM(CASE WHEN Is_Won THEN ACV_USD END), NULLIF(COUNTIF(Is_Won), 0)) AS avg_deal_won
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND Name NOT LIKE '%Amendment%'
@@ -133,7 +133,7 @@ by_motion_fy AS (
     COUNTIF(IsClosed)   AS closed_count,
     SAFE_DIVIDE(COUNTIF(Is_Won), NULLIF(COUNTIF(IsClosed), 0)) * 100 AS win_rate_pct,
     SAFE_DIVIDE(SUM(CASE WHEN Is_Won THEN ACV_USD END), NULLIF(COUNTIF(Is_Won), 0)) AS avg_deal_won
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities_fy2027`
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND Name NOT LIKE '%Amendment%'
