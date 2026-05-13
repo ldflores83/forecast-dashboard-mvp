@@ -11,14 +11,21 @@ To point to a different project (e.g. QAD production):
 """
 
 import os
+from pathlib import Path
+from dotenv import load_dotenv
 from google.cloud import bigquery
+
+# Load .env from project root, then resolve credentials path to absolute
+_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(_ROOT / '.env')
+_creds = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', '')
+if _creds and not Path(_creds).is_absolute():
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = str(_ROOT / _creds)
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
 PROJECT   = "forecast-dashboard-mvp"
 DATASET   = "forecast_data"
 SQL_DIR   = os.path.join(os.path.dirname(__file__), "../sql")
-CREDS     = os.path.join(os.path.dirname(__file__),
-            "../credentials/forecast-dashboard-mvp-724e09b0b17a.json")
 
 VIEWS = [
     "vw_hero_metrics",
@@ -30,7 +37,6 @@ VIEWS = [
 ]
 # ─────────────────────────────────────────────────────────────────────────────
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = CREDS
 client = bigquery.Client(project=PROJECT)
 
 print(f"Creating views in {PROJECT}.{DATASET}")

@@ -1,7 +1,13 @@
-from google.cloud import bigquery
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+from google.cloud import bigquery
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = r"C:\Users\luisd\Documents\Python projects\forecast-dashboard-mvp\credentials\forecast-dashboard-mvp-724e09b0b17a.json"
+_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(_ROOT / '.env')
+_creds = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', '')
+if _creds and not Path(_creds).is_absolute():
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = str(_ROOT / _creds)
 
 client = bigquery.Client(project="forecast-dashboard-mvp")
 dataset_id = "forecast-dashboard-mvp.forecast_data"

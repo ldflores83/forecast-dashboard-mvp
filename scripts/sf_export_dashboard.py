@@ -20,13 +20,18 @@ Changes v2 (Apr 2026):
 """
 
 import os
+from pathlib import Path
 import pandas as pd
 from datetime import datetime
 from dotenv import load_dotenv
 from simple_salesforce import Salesforce
 from google.cloud import bigquery
 
-load_dotenv()
+_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(_ROOT / '.env')
+_creds = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', '')
+if _creds and not Path(_creds).is_absolute():
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = str(_ROOT / _creds)
 
 # ── AUTH ──────────────────────────────────────────────────────────────────────
 # Set SALESFORCE_SESSION_ID in .env (F12 → Application → Cookies → sid)
@@ -39,10 +44,6 @@ OUTPUT_FILE  = "dashboard_export.csv"
 GCP_PROJECT  = "forecast-dashboard-mvp"
 BQ_DATASET   = "forecast_data"
 BQ_TABLE     = "opportunities_fy2027"
-CREDENTIALS  = os.path.join(
-    os.path.dirname(__file__),
-    "../credentials/forecast-dashboard-mvp-724e09b0b17a.json"
-)
 
 # Substages and name patterns to exclude (inflate lost renewals otherwise)
 EXCL_SUBSTAGE = ['Combined', 'Credited', 'Closed-Duplicate', 'Junk']
@@ -152,7 +153,6 @@ SELECT
 
 FROM Opportunity
 WHERE FiscalYear = {FISCAL_YEAR}
-AND Primary_Opp_Value_Stream__c != 'Redzone'
 ORDER BY CloseDate ASC
 """
 
@@ -405,7 +405,6 @@ def save_csv(df):
 # ── UPLOAD TO BIGQUERY ────────────────────────────────────────────────────────
 def upload_bq(df):
     print("  Uploading to BigQuery...")
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = CREDENTIALS
     client    = bigquery.Client(project=GCP_PROJECT)
     table_ref = f"{GCP_PROJECT}.{BQ_DATASET}.{BQ_TABLE}"
 

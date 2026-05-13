@@ -10,17 +10,23 @@ Usage:
 """
 
 import os
+from pathlib import Path
+from dotenv import load_dotenv
 import pandas as pd
 from google.cloud import bigquery
 from datetime import datetime
+
+_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(_ROOT / '.env')
+_creds = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS', '')
+if _creds and not Path(_creds).is_absolute():
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = str(_ROOT / _creds)
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
 PROJECT     = "forecast-dashboard-mvp"
 DATASET     = "forecast_data"
 TABLE       = "jira_tickets"
 INPUT_FILE  = "jira_tickets_export.csv"
-CREDENTIALS = os.path.join(os.path.dirname(__file__),
-              "../credentials/forecast-dashboard-mvp-724e09b0b17a.json")
 # ─────────────────────────────────────────────────────────────────────────────
 
 print("Jira Tickets Upload → forecast-dashboard-mvp BQ")
@@ -52,7 +58,6 @@ print(f"  Unique accounts: {df['salesforce_account_id'].nunique():,}")
 print(f"\n[2/2] Uploading to {PROJECT}.{DATASET}.{TABLE}...")
 
 try:
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = CREDENTIALS
     bq_client  = bigquery.Client(project=PROJECT)
     table_ref  = f"{PROJECT}.{DATASET}.{TABLE}"
 
