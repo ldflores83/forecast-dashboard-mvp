@@ -58,6 +58,12 @@ Executive narrative rules:
   "Sales leadership should pressure-test Q3 commits in Industrial and Other verticals before board review — these segments show sub-12% close rates across 1,788 historical losses."
 - Use anti_icp.loss_patterns and anti_icp.low_win_rate_segments for supporting executive-ready bullets. These strings must also avoid field names and jargon.
 
+narrative field rules (structured bullets for the detailed analysis view):
+- narrative.where_we_win: 2-3 short bullets (one sentence each). State which verticals and revenue range win most, and the win rate advantage vs. company average. Be specific with numbers. No field names.
+- narrative.pipeline_risk: 2-3 short bullets. Key patterns from historical losses that put current pipeline at risk. Be specific. No field names.
+- narrative.highest_risk_segments: 2-3 short bullets. Verticals or customer segments with the lowest close rates or worst fit. Include the close rate. No field names.
+  All narrative bullets must be concise (under 20 words each) and executive-ready.
+
 Return ONLY valid JSON matching this exact schema:
 {
   "ERP BU": {
@@ -72,8 +78,13 @@ Return ONLY valid JSON matching this exact schema:
       "loss_patterns": ["<pattern1>", "<pattern2>"],
       "low_win_rate_segments": ["<segment - X%>", ...]
     },
+    "narrative": {
+      "where_we_win": ["<short bullet 1>", "<short bullet 2>"],
+      "pipeline_risk": ["<short bullet 1>", "<short bullet 2>"],
+      "highest_risk_segments": ["<short bullet 1>", "<short bullet 2>"]
+    },
     "sample_size": <int>,
-    "coverage_note": "<X% of deals have vertical data>"
+    "coverage_note": "<Executive action directive>"
   },
   "Supply Chain BU": { ... },
   "Redzone BU": { ... }

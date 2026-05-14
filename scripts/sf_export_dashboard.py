@@ -691,6 +691,13 @@ def apply_filters(df):
     for pattern in EXCL_NAME:
         df = df[~df["Name"].str.contains(pattern, case=False, na=False)]
 
+    # Only exclude negative ACV on Closed-Won deals.
+    # Open and Lost deals can legitimately have ACV = 0 or null.
+    negative_won_mask = (df["Is_Won"] == True) & (df["ACV_USD"] < 0)
+    excluded = df[negative_won_mask]
+    df = df[~negative_won_mask]
+    print(f"  Excluded {len(excluded)} Closed-Won deals with negative ACV_USD")
+
     after = len(df)
     print(f"  Filtered {before - after} rows -> {after} remaining")
     return df.copy()

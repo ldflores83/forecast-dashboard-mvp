@@ -31,6 +31,11 @@ def _bu_discovery_fallback(bu: str) -> dict:
             "avg_deal_size": 0.0,
         },
         "anti_icp": {"loss_patterns": [], "low_win_rate_segments": []},
+        "narrative": {
+            "where_we_win": [],
+            "pipeline_risk": [],
+            "highest_risk_segments": [],
+        },
         "sample_size": 0,
         "coverage_note": "Analysis unavailable for this cycle.",
     }
@@ -72,6 +77,7 @@ def _validate_discovery(raw: dict) -> dict:
             result[bu] = _bu_discovery_fallback(bu)
             continue
 
+        narrative = bu_data.get("narrative") or {}
         result[bu] = {
             "icp_profile": {
                 "top_verticals":            profile.get("top_verticals", []),
@@ -83,6 +89,11 @@ def _validate_discovery(raw: dict) -> dict:
             "anti_icp": {
                 "loss_patterns":         list(anti.get("loss_patterns") or []),
                 "low_win_rate_segments": list(anti.get("low_win_rate_segments") or []),
+            },
+            "narrative": {
+                "where_we_win":          list(narrative.get("where_we_win") or []),
+                "pipeline_risk":         list(narrative.get("pipeline_risk") or []),
+                "highest_risk_segments": list(narrative.get("highest_risk_segments") or []),
             },
             "sample_size":   int(bu_data.get("sample_size") or 0),
             "coverage_note": str(bu_data.get("coverage_note", "")),
@@ -139,11 +150,11 @@ def _compute_icp_alignment(discovery_output: dict, pipeline_data: dict) -> dict:
     """
     Deterministically computes ICP pipeline alignment per BU in Python.
 
-    A deal is ICP-aligned if ALL of:
-    - Primary_Vertical is non-null AND matches a BU top_vertical (case-insensitive)
-    - revenue_bucket is non-Unknown AND matches the BU revenue_range exactly
+    A deal is ICP-aligned if ANY of:
+    - Primary_Vertical matches a BU top_vertical (case-insensitive), regardless of revenue
+    - revenue_bucket matches the BU revenue_range exactly, regardless of vertical
 
-    If either field is null → not ICP-aligned (no partial credit).
+    Only excluded if BOTH vertical and revenue are null/Unknown, or BOTH explicitly mismatch.
 
     Returns:
         {bu: {icp_pipeline_acv, icp_pipeline_pct, icp_deal_count, total_pipeline_acv}}
@@ -170,10 +181,12 @@ def _compute_icp_alignment(discovery_output: dict, pipeline_data: dict) -> dict:
             vertical   = d.get("Primary_Vertical")
             rev_bucket = str(d.get("revenue_bucket", "") or "").strip()
 
-            if not vertical or rev_bucket in ("Unknown", ""):
-                continue  # null vertical or unknown revenue → not ICP
+            has_vertical_match = bool(vertical) and vertical.strip().lower() in top_verts
+            has_revenue_match  = rev_bucket not in ("Unknown", "") and rev_bucket == rev_range
 
-            if vertical.strip().lower() in top_verts and rev_bucket == rev_range:
+            # ICP aligned if vertical matches OR revenue matches (not BOTH required)
+            # Only excluded if both are null/Unknown or both explicitly mismatch
+            if has_vertical_match or has_revenue_match:
                 icp_acv   += acv
                 icp_count += 1
 

@@ -6,6 +6,8 @@
 --                     Direct only (Is_Channel = FALSE)
 -- Churn = ATR_Value of lost renewals (not ACV)
 -- Coverage = Solutions Direct / Churn ATR
+-- Accounting adjustment opportunities are excluded upstream in
+-- scripts/sf_export_dashboard.py by filtering out negative ACV_USD deals.
 -- ============================================================
 CREATE OR REPLACE VIEW `forecast-dashboard-mvp.forecast_data.vw_revenue_dynamics` AS
 

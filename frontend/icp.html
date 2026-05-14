@@ -13,7 +13,7 @@
 [data-theme="dark"]{
   --bg:#08090f;--bg2:#0e1018;--surf:#131622;--surf2:#1a1e2e;
   --b:rgba(255,255,255,.06);--b2:rgba(255,255,255,.11);
-  --t:#dde3f0;--t2:#7a8499;--t3:#3d4459;
+  --t:#dde3f0;--t2:#7a8499;--t3:#3d4459;--text-secondary:#7a8499;
   --blue:#4f8ef7;--blue-bg:rgba(79,142,247,.1);
   --green:#2dd4a0;--green-bg:rgba(45,212,160,.1);
   --purple:#a78bfa;--purple-bg:rgba(167,139,250,.1);
@@ -24,7 +24,7 @@
 [data-theme="light"]{
   --bg:#f2f4f8;--bg2:#e9ecf3;--surf:#fff;--surf2:#f8f9fc;
   --b:rgba(0,0,0,.06);--b2:rgba(0,0,0,.12);
-  --t:#0d1018;--t2:#5a6070;--t3:#9aa0b0;
+  --t:#0d1018;--t2:#5a6070;--t3:#9aa0b0;--text-secondary:#5a6070;
   --blue:#2563eb;--blue-bg:rgba(37,99,235,.08);
   --green:#059669;--green-bg:rgba(5,150,105,.08);
   --purple:#7c3aed;--purple-bg:rgba(124,58,237,.08);
@@ -118,14 +118,14 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 .icp-card-body{padding:16px 18px;flex:1;display:flex;flex-direction:column;gap:16px}
 
 /* ── ICP PROFILE SECTION ─────────────────────────────────────────────────── */
-.icp-section-lbl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);margin-bottom:9px;display:flex;align-items:center;gap:6px}
+.icp-section-lbl{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--t3);margin-bottom:9px;display:flex;align-items:center;gap:6px}
 .icp-section-lbl::after{content:'';flex:1;height:1px;background:var(--b)}
 .icp-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:4px 0}
 .icp-row-label{font-size:11px;color:var(--t3);white-space:nowrap;flex-shrink:0}
 .icp-row-value{font-size:12px;font-weight:700;color:var(--t);text-align:right}
 .vertical-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
 .v-pill{display:inline-block;font-size:10px;font-weight:500;padding:2px 9px;border-radius:20px;background:color-mix(in srgb,var(--bu-color) 10%,transparent);color:var(--bu-color);border:1px solid var(--bu-border)}
-.sample-note{font-size:max(13.5px,1em);color:var(--t2);font-style:italic;margin-top:2px;line-height:1.6}
+.sample-note{font-size:12.5px;font-weight:400;color:var(--text-secondary);font-style:normal;margin-top:2px;line-height:1.5}
 .low-conf{color:var(--amber)}
 
 /* ── PIPELINE EXPOSURE ───────────────────────────────────────────────────── */
@@ -143,37 +143,38 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 .non-icp-toggle.is-open svg{transform:rotate(180deg)}
 .non-icp-count{font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:4px;background:var(--surf2);color:var(--t2);border:1px solid var(--b2)}
 .non-icp-table-wrap{overflow:hidden;transition:max-height .3s ease;max-height:0}
-.non-icp-table-wrap.is-open{max-height:400px}
-.non-icp-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+.non-icp-table-wrap.is-open{max-height:280px;overflow-y:auto}
+.non-icp-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}
 .non-icp-table thead th{background:var(--bg2);padding:6px 8px;text-align:left;font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);border-bottom:1px solid var(--b)}
 .non-icp-table tbody tr{border-bottom:1px solid var(--b)}
 .non-icp-table tbody tr:last-child{border-bottom:none}
-.non-icp-table td{padding:7px 8px;color:var(--t2);vertical-align:top}
-.non-icp-acct{font-weight:500;color:var(--t);font-size:11px}
-.non-icp-deal{font-size:10px;color:var(--t3);margin-top:1px}
-.non-icp-reason{color:var(--t2);font-size:max(13.5px,1em);line-height:1.6;margin-top:2px}
+.non-icp-table td{padding:5px 6px;color:var(--t2);vertical-align:top}
+.non-icp-acct{font-weight:600;color:var(--t);font-size:13px}
+.non-icp-deal{font-size:11px;color:var(--t3);margin-top:1px}
+.non-icp-reason{color:var(--text-secondary);font-size:11.5px;font-weight:400;line-height:1.4;margin-top:2px}
 .non-icp-acv{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--t);white-space:nowrap}
 
 /* ── ANTI-ICP SIGNALS ────────────────────────────────────────────────────── */
 .anti-icp-list{display:flex;flex-direction:column;gap:5px}
-.anti-icp-item{display:flex;align-items:flex-start;gap:7px;font-size:max(13.5px,1em);color:var(--t2);line-height:1.6}
+.anti-icp-item{display:flex;align-items:flex-start;gap:7px;font-size:12.5px;font-weight:400;color:var(--text-secondary);line-height:1.5}
 .anti-icp-dot{width:5px;height:5px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:5px}
 
 /* ── WIN CALLOUT ─────────────────────────────────────────────────────────── */
 .win-callout{background:var(--bu-bg-alpha);border:1px solid var(--bu-border);border-radius:var(--r-sm);padding:10px 12px;display:flex;align-items:flex-start;gap:8px;margin-bottom:4px}
 .win-callout-icon{font-size:13px;flex-shrink:0;margin-top:1px}
-.win-callout-text{font-size:max(13.5px,1em);color:var(--t);line-height:1.6;font-weight:500}
+.win-callout-text{font-size:12.5px;color:var(--text-secondary);line-height:1.5;font-weight:400}
 
 /* ── RISK HERO ───────────────────────────────────────────────────────────── */
 .risk-hero{font-size:26px;font-weight:700;letter-spacing:-.5px;line-height:1;display:flex;align-items:baseline;gap:8px}
 .risk-hero-label{font-size:12px;font-weight:400;color:var(--t2);letter-spacing:0}
 .risk-subtitle{font-size:11px;color:var(--t3);margin-top:4px;margin-bottom:8px}
+.risk-hero+.risk-subtitle,.risk-hero+.risk-subtitle+.icp-progress-wrap{display:none}
 
 /* ── SO WHAT ─────────────────────────────────────────────────────────────── */
-.so-what{font-size:max(13.5px,1em);color:var(--t2);line-height:1.6;margin:8px 0 4px;padding:8px 10px;background:var(--surf2);border-radius:var(--r-sm);border-left:2px solid var(--amber)}
+.so-what{font-size:12.5px;font-weight:400;color:var(--text-secondary);line-height:1.5;margin:8px 0 4px;padding:8px 10px;background:var(--surf2);border-radius:var(--r-sm);border-left:2px solid var(--amber)}
 
 /* ── RISK BADGE ──────────────────────────────────────────────────────────── */
-.risk-badge{display:inline-flex;align-items:center;font-size:10px;white-space:nowrap;color:var(--t2);background:var(--surf2);border:1px solid var(--b2);border-radius:4px;padding:2px 6px}
+.risk-badge{display:inline-flex;align-items:center;font-size:10px;white-space:nowrap;color:var(--t2);background:var(--surf2);border:1px solid var(--b2);border-radius:4px;padding:1px 5px}
 .risk-badge.medium{background:var(--amber-bg);color:var(--amber);border-color:rgba(251,191,36,.25)}
 .risk-badge.high{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.25)}
 .win-rate-value,.pipeline-acv,.icp-acv,.icp-rate-value,.risk-hero,.summary-value{font-weight:700}
@@ -640,6 +641,7 @@ function buildCard(def, profile, valid) {
   var icpAcv      = parseFloat(v.icp_pipeline_acv)   || 0;
   var nonIcpAcv   = totalAcv - icpAcv;
   var nonIcpPct   = totalAcv > 0 ? (nonIcpAcv / totalAcv * 100) : 0;
+  var icpPct      = totalAcv > 0 ? (icpAcv / totalAcv * 100) : 0;
   var totalCount  = parseInt(v.total_pipeline_count)  || 0;
   var nonIcpDeals = v.non_icp_deals || [];
   var trend       = v.trend_vs_prior || '';
@@ -765,7 +767,15 @@ function buildCard(def, profile, valid) {
       '<div>' +
         '<div class="icp-section-lbl">Pipeline at Risk</div>' +
         (totalAcv > 0
-          ? '<div class="risk-hero" style="color:' + riskColor + '">' + fmtM(nonIcpAcv) + '<span class="risk-hero-label">outside ICP</span></div>' +
+          ? '<div class="icp-row"><span class="icp-row-label">Total Pipeline</span><span class="icp-row-value">' + esc(fmtM(totalAcv)) + ' · ' + totalCount.toLocaleString() + ' deals</span></div>' +
+            '<div class="icp-progress-wrap">' +
+              '<div class="icp-progress-bar"><div class="icp-progress-fill" style="width:' + Math.min(icpPct, 100).toFixed(1) + '%"></div></div>' +
+              '<div class="icp-progress-labels">' +
+                '<span class="icp-progress-pct">ICP Aligned: ' + fmtPct(icpPct) + '</span>' +
+                '<span class="icp-progress-total">' + fmtM(icpAcv) + '</span>' +
+              '</div>' +
+            '</div>' +
+            '<div class="risk-hero" style="color:' + riskColor + '">' + fmtM(nonIcpAcv) + '<span class="risk-hero-label">outside ICP</span></div>' +
             '<div class="risk-subtitle">' + nonIcpPct.toFixed(0) + '% of ' + fmtM(totalAcv) + ' total pipeline · ' + totalCount.toLocaleString() + ' deals</div>' +
             '<div class="icp-progress-wrap">' +
               '<div class="icp-progress-bar"><div class="icp-progress-fill" style="width:' + Math.min(nonIcpPct, 100).toFixed(0) + '%;background:' + riskColor + '"></div></div>' +
@@ -835,23 +845,26 @@ function renderDetail(icpProfile, validation) {
     hasContent = true;
     var ip   = (p || {}).icp_profile || {};
     var anti = (p || {}).anti_icp   || {};
+    var narr = (p || {}).narrative   || {};
 
-    // WHERE WE WIN
-    var whereWin = [];
-    if (ip.top_verticals && ip.top_verticals.length) {
-      whereWin.push(ip.top_verticals.join(', ') + ' — ' + (ip.revenue_range || '—') + ' revenue');
-    }
-    if (ip.icp_segment_win_rate_pct != null && ip.bu_overall_win_rate_pct != null) {
-      whereWin.push('Win rate ' + fmtPct(ip.icp_segment_win_rate_pct) + ' in ICP vs ' +
-                    fmtPct(ip.bu_overall_win_rate_pct) + ' company-wide');
-    }
-    if (ip.avg_deal_size) {
-      whereWin.push('Avg deal won: ' + fmtM(ip.avg_deal_size));
+    // WHERE WE WIN — prefer LLM-provided structured bullets, fall back to computed
+    var whereWin = (narr.where_we_win || []).filter(Boolean);
+    if (!whereWin.length) {
+      if (ip.top_verticals && ip.top_verticals.length) {
+        whereWin.push(ip.top_verticals.join(', ') + ' — ' + (ip.revenue_range || '—') + ' revenue');
+      }
+      if (ip.icp_segment_win_rate_pct != null && ip.bu_overall_win_rate_pct != null) {
+        whereWin.push('Win rate ' + fmtPct(ip.icp_segment_win_rate_pct) + ' in ICP vs ' +
+                      fmtPct(ip.bu_overall_win_rate_pct) + ' company-wide');
+      }
+      if (ip.avg_deal_size) {
+        whereWin.push('Avg deal won: ' + fmtM(ip.avg_deal_size));
+      }
     }
 
-    // PIPELINE RISK
-    var pipeRisk = [];
-    if (v) {
+    // PIPELINE RISK — prefer LLM-provided structured bullets, fall back to computed
+    var pipeRisk = (narr.pipeline_risk || []).filter(Boolean);
+    if (!pipeRisk.length && v) {
       var totalAcv  = parseFloat(v.total_pipeline_acv) || 0;
       var icpAcv    = parseFloat(v.icp_pipeline_acv)   || 0;
       var nonIcpAcv = totalAcv - icpAcv;
@@ -865,20 +878,16 @@ function renderDetail(icpProfile, validation) {
         if (topRisk.reason) riskStr += ' — ' + topRisk.reason;
         pipeRisk.push(riskStr);
       }
-      if (v.trend_vs_prior && v.trend_vs_prior !== 'No prior week data.') {
-        pipeRisk.push(v.trend_vs_prior);
-      }
-    }
-    var coverageNote = (p || {}).coverage_note || '';
-    if (coverageNote && coverageNote !== 'Analysis unavailable for this cycle.') {
-      pipeRisk.push(coverageNote);
     }
 
-    // HIGHEST-RISK SEGMENTS
-    var riskSegs = (anti.loss_patterns || [])
-      .concat(anti.low_win_rate_segments || [])
-      .filter(Boolean)
-      .slice(0, 4);
+    // HIGHEST-RISK SEGMENTS — prefer LLM-provided structured bullets, fall back to computed
+    var riskSegs = (narr.highest_risk_segments || []).filter(Boolean);
+    if (!riskSegs.length) {
+      riskSegs = (anti.loss_patterns || [])
+        .concat(anti.low_win_rate_segments || [])
+        .filter(Boolean)
+        .slice(0, 4);
+    }
 
     var sections = [];
     if (whereWin.length) {
