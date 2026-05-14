@@ -192,15 +192,17 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
     <!-- Webhook URL -->
     <div class="field-row">
       <div class="field-label">Slack Webhook URL</div>
-      <input
-        type="password"
-        id="webhook-input"
-        class="text-input"
-        placeholder="https://hooks.slack.com/services/..."
-        autocomplete="off"
-        oninput="saveWebhook()"
-      >
-      <div class="field-hint">Saved locally in your browser. Never sent to any server except Slack.</div>
+      <div style="display:flex;gap:8px">
+        <input
+          type="password"
+          id="webhook-input"
+          class="text-input"
+          placeholder="https://hooks.slack.com/services/..."
+          autocomplete="off"
+        >
+        <button id="save-config-btn" class="action-btn copy" style="flex-shrink:0;height:42px;padding:0 18px;white-space:nowrap" onclick="saveConfig()">Save</button>
+      </div>
+      <div class="field-hint">Saved to cloud config · never sent anywhere except Slack.</div>
     </div>
 
     <!-- Audience -->
@@ -254,13 +256,7 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
       </div>
     </div>
 
-    <!-- Callout: endpoint not live yet -->
-    <div class="callout">
-      <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <div class="callout-text">
-        <strong>Note:</strong> The <code>?mode=digest</code> Cloud Function endpoint is not yet deployed. The Generate &amp; Send button is wired up and ready — run <code>python scripts/digest.py</code> locally in the meantime.
-      </div>
-    </div>
+    <div style="font-size:11px;color:var(--t3);margin-top:4px">Powered by Cloud Function · data refreshed on agent run</div>
 
     <!-- Generate Button -->
     <button class="gen-btn" id="gen-btn" onclick="generate()">
@@ -306,7 +302,7 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
     <div class="card-title">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       Send History
-      <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--t3);font-weight:400">last 5 · stored locally</span>
+      <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--t3);font-weight:400" id="history-subtitle">last 10 · loading…</span>
     </div>
     <div id="history-container"></div>
   </div>
@@ -328,17 +324,49 @@ function toggleTheme() {
   if (t) document.documentElement.setAttribute('data-theme', t);
 })();
 
-// ── Webhook storage ───────────────────────────────────────────────────────────
-function saveWebhook() {
-  const val = document.getElementById('webhook-input').value;
-  if (val) localStorage.setItem('digest_webhook', val);
-  else localStorage.removeItem('digest_webhook');
-  updateResendBtn();
-}
-(function() {
+// ── Webhook / config ──────────────────────────────────────────────────────────
+function saveWebhook() { updateResendBtn(); }
+
+async function loadConfig() {
+  try {
+    const res = await fetch(API_BASE + '?mode=digest_config');
+    if (res.ok) {
+      const cfg = await res.json();
+      if (cfg.webhook_url) {
+        document.getElementById('webhook-input').value = cfg.webhook_url;
+        updateResendBtn();
+        return;
+      }
+    }
+  } catch {}
   const w = localStorage.getItem('digest_webhook');
   if (w) document.getElementById('webhook-input').value = w;
-})();
+  updateResendBtn();
+}
+loadConfig();
+
+async function saveConfig() {
+  const val = document.getElementById('webhook-input').value.trim();
+  const btn = document.getElementById('save-config-btn');
+  const orig = btn.textContent;
+  btn.textContent = 'Saving…';
+  btn.disabled = true;
+  try {
+    await fetch(API_BASE + '?mode=digest_config', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({webhook_url: val}),
+    });
+    if (val) localStorage.setItem('digest_webhook', val);
+    else localStorage.removeItem('digest_webhook');
+    btn.textContent = 'Saved ✓';
+    setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
+  } catch {
+    btn.textContent = 'Error';
+    setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
+  }
+  updateResendBtn();
+}
 
 // ── Audience chips ────────────────────────────────────────────────────────────
 function toggleChip(el) {
@@ -513,6 +541,8 @@ function addHistory(entry) {
   renderHistory();
 }
 function renderHistory() {
+  const sub = document.getElementById('history-subtitle');
+  if (sub) sub.textContent = 'last 5 · local';
   const container = document.getElementById('history-container');
   const list = loadHistory();
   if (!list.length) {
@@ -541,7 +571,33 @@ function loadHistoryItem(i) {
   showPreview(item.text, item.week_key);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-renderHistory();
+async function loadHistoryFromBQ() {
+  const sub = document.getElementById('history-subtitle');
+  try {
+    const res = await fetch(API_BASE + '?mode=digest_history');
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length) {
+        if (sub) sub.textContent = `last ${rows.length} · live from BQ`;
+        const container = document.getElementById('history-container');
+        container.innerHTML = '<div class="history-list">' + rows.map(item => {
+          const ts = new Date(item.generated_at).toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+          const badge = item.slack_sent
+            ? '<span class="history-badge sent">✓ Sent</span>'
+            : '<span class="history-badge draft">Draft</span>';
+          return `<div class="history-row">
+            <span class="history-week">${item.week_key || '—'}</span>
+            <span class="history-ts">${ts}</span>
+            ${badge}
+          </div>`;
+        }).join('') + '</div>';
+        return;
+      }
+    }
+  } catch {}
+  renderHistory();
+}
+loadHistoryFromBQ();
 </script>
 </body>
 </html>

@@ -95,6 +95,39 @@ def dashboard_api(request):
                 {"digest_text": digest_text, "week_key": week_key, "slack_sent": slack_sent},
                 default=str,
             ), 200, CORS)
+        elif mode == "digest_config":
+            from google.cloud import storage as _gcs
+            _cfg_blob = _gcs.Client().bucket("forecast-dashboard-mvp-frontend").blob("digest_config.json")
+            if request.method == "POST":
+                body = request.get_json(silent=True) or {}
+                config = {
+                    "webhook_url": str(body.get("webhook_url", "")),
+                    "saved_at":    datetime.now(timezone.utc).isoformat(),
+                }
+                _cfg_blob.upload_from_string(json.dumps(config), content_type="application/json")
+                return (json.dumps({"saved": True}), 200, CORS)
+            else:
+                try:
+                    raw = _cfg_blob.download_as_text()
+                    return (raw, 200, CORS)
+                except Exception:
+                    return (json.dumps({}), 200, CORS)
+        elif mode == "digest_history":
+            rows = list(bq.query(f"""
+                SELECT week_key, slack_sent, generated_at
+                FROM `{PROJECT}.{DATASET}.digest_snapshots`
+                ORDER BY generated_at DESC
+                LIMIT 10
+            """).result())
+            history = [
+                {
+                    "week_key":     r["week_key"],
+                    "slack_sent":   bool(r["slack_sent"]),
+                    "generated_at": str(r["generated_at"]),
+                }
+                for r in rows
+            ]
+            return (json.dumps(history, default=str), 200, CORS)
         else:
             payload = build_payload(fiscal_quarter)
         return (json.dumps(payload, default=str), 200, CORS)
