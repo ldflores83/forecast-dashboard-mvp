@@ -79,17 +79,29 @@ MOTION_MAP = {
 
 # Stage groupings for pipeline funnel
 STAGE_GROUP = {
-    'Qualifying':              'Early',
-    'Evaluation & Alignment':  'Early',
-    'Solution Exploration':    'Mid',
-    'Proposal & Negotiation':  'Mid',
-    'Verbal Selection':        'Late',
-    'Finalizing Contracts':    'Late',
-    'Sales Ready':             'Renewal',
-    'Dev Assigned':            'Renewal',
-    'Negotiation':             'Renewal',
-    'Closed-Won':              'Closed',
-    'Closed-Lost':             'Closed',
+    'Prospecting':          'Early',
+    'Discovery':            'Early',
+    'Scoping':              'Mid',
+    'Evaluation':           'Mid',
+    'Proposal':             'Late',
+    'Contracts':            'Late',
+    'Qualifying':           'Early',
+    'Solution Exploration': 'Mid',
+    'Evaluation & Alignment': 'Mid',
+    'Proposal & Negotiation': 'Late',
+    'Awaiting Signature':   'Late',
+    'Development':          'Early',
+    'Sales Ready':          'Early',
+    'Stalled':              'Mid',
+    'Renewal Qualifying':   'Renewal',
+    'Renewal Validation':   'Renewal',
+    'Renewal Negotiation':  'Renewal',
+    'Renewal Pending':      'Renewal',
+    'Renewal Confirmed':    'Renewal',
+    'Pending Renewal':      'Renewal',
+    'Closed-Won':           'Closed',
+    'Closed-Lost':          'Closed',
+    'Deal Lost':            'Closed',
 }
 
 
@@ -340,7 +352,8 @@ def build_opportunity_soql(sf):
     select_fields = (
         opp_fields +
         [f"Account.{field}" for field in account_fields] +
-        [f"Owner.{field}" for field in owner_fields]
+        [f"Owner.{field}" for field in owner_fields] +
+        ["Owner.UserRole.Name"]
     )
 
     return f"""
@@ -503,6 +516,20 @@ def fetch_fx_rates(sf) -> dict:
 def transform(df, fx_rates=None):
     print("  Transforming...")
 
+    # Owner sub-object arrives two levels deep; flatten_record only goes one level.
+    # Case 1: simple_salesforce returns Owner as a single nested dict column.
+    if "Owner" in df.columns and df["Owner"].apply(lambda x: isinstance(x, dict)).any():
+        df["Owner_Name"] = df["Owner"].apply(lambda x: x.get("Name") if isinstance(x, dict) else None)
+        df["Owner_Role"] = df["Owner"].apply(lambda x: x.get("UserRole", {}).get("Name") if isinstance(x, dict) else None)
+    # Case 2: dotted column names (Owner.Name / Owner.UserRole.Name) passed through as literals.
+    if "Owner.Name" in df.columns:
+        df["Owner_Name"] = df["Owner.Name"]
+    if "Owner.UserRole.Name" in df.columns:
+        df["Owner_Role"] = df["Owner.UserRole.Name"]
+    # Case 3: flatten_record produced Owner_UserRole as a dict (two-level nesting).
+    if "Owner_UserRole" in df.columns and df["Owner_UserRole"].apply(lambda x: isinstance(x, dict)).any():
+        df["Owner_Role"] = df["Owner_UserRole"].apply(lambda x: x.get("Name") if isinstance(x, dict) else None)
+
     # Rename for clarity
     df = df.rename(columns={
         # Account nested fields (flattened by flatten_record)
@@ -518,7 +545,8 @@ def transform(df, fx_rates=None):
         "Account_AnnualRevenue":       "Account_Annual_Revenue",
         "Account_No_of_Employees__c":  "Account_No_of_Employees",
         "Account_Account_Region__c":   "Account_Region",
-        "Owner_Name":                  "Owner_Name",
+        "Owner.Name":                  "Owner_Name",
+        "Owner.UserRole.Name":         "Owner_Role",
         "Owner_Business_Unit__c":      "Owner_BU",
         # Custom fields — strip __c suffix for cleaner names
         "Prior_Contract_End_Date__c":  "PCED",
@@ -569,6 +597,9 @@ def transform(df, fx_rates=None):
         "CloseDate": None,
         "CreatedDate": None,
         "LeadSource": None,
+        "Owner_Name": None,
+        "Owner_Role": None,
+        "Lead_Source": None,
         "Substage": None,
         "Name": "",
         "Last_Activity_Date": None,
@@ -653,7 +684,7 @@ def transform(df, fx_rates=None):
     df["Opp_Age_Days"]  = (pd.Timestamp.now() - pd.to_datetime(df["CreatedDate"], errors="coerce", utc=True).dt.tz_localize(None)).dt.days.fillna(0).astype(int)
     # S_Date_Aging and Days_In_Stage added once API names confirmed
     df["S_Date_Aging"]  = 0
-    df["Days_In_Stage"] = 0
+    df["Days_In_Stage"] = df["Last_Stage_Change_Days"].fillna(0).astype(int)
 
     # Signal flags — derived booleans for easy filtering in BQ views
     df["Flag_No_Activity_7d"]  = (

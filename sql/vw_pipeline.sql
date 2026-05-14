@@ -17,9 +17,11 @@ WITH stage_pipeline AS (
 
     -- Stage group for color coding in frontend
     CASE
-      WHEN StageName IN ('Development','Sales Ready','Qualifying','Stalled') THEN 'early'
+      WHEN StageName IN ('Development','Sales Ready','Qualifying','Stalled',
+                         'Prospecting','Discovery') THEN 'early'
       WHEN StageName IN ('Solution Exploration','Evaluation & Alignment',
-                         'Proposal & Negotiation','Awaiting Signature')      THEN 'active'
+                         'Proposal & Negotiation','Awaiting Signature',
+                         'Scoping','Evaluation','Proposal','Contracts') THEN 'active'
       WHEN StageName IN ('Renewal Pending','Renewal Validation',
                          'Renewal Negotiation','Renewal Confirmed')          THEN 'renewal'
       ELSE 'other'
@@ -40,9 +42,11 @@ stage_fy AS (
     FiscalYear      AS fiscal_year,
     StageName       AS stage_name,
     CASE
-      WHEN StageName IN ('Development','Sales Ready','Qualifying','Stalled') THEN 'early'
+      WHEN StageName IN ('Development','Sales Ready','Qualifying','Stalled',
+                         'Prospecting','Discovery') THEN 'early'
       WHEN StageName IN ('Solution Exploration','Evaluation & Alignment',
-                         'Proposal & Negotiation','Awaiting Signature')      THEN 'active'
+                         'Proposal & Negotiation','Awaiting Signature',
+                         'Scoping','Evaluation','Proposal','Contracts') THEN 'active'
       WHEN StageName IN ('Renewal Pending','Renewal Validation',
                          'Renewal Negotiation','Renewal Confirmed')          THEN 'renewal'
       ELSE 'other'
