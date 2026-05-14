@@ -47,6 +47,7 @@ from shared.digest_utils import (
     get_latest_signals,
     get_latest_icp,
     get_signals_headlines,
+    get_regional_breakdown,
     generate_digest,
     send_to_slack,
     save_snapshot,
@@ -65,18 +66,20 @@ def main():
 
     # ── [1/4] Fetch ───────────────────────────────────────────────────────────
     print("[1/4] Fetching data from BigQuery...")
-    hero      = get_hero_metrics(bq)
-    signals   = get_latest_signals(bq)
-    icp       = get_latest_icp(bq)
+    hero     = get_hero_metrics(bq)
+    signals  = get_latest_signals(bq)
+    icp      = get_latest_icp(bq)
     headlines = get_signals_headlines(bq)
+    regional = get_regional_breakdown(bq)
     print(f"  Hero metrics:  {'OK' if hero else 'empty'}")
     print(f"  Signals cache: {'OK — ' + signals.get('_week_key', '') if signals else 'empty'}")
     print(f"  ICP profiles:  {len(icp)} BUs")
     print(f"  Headlines:     {'OK — ' + headlines.get('week_key', '') if headlines else 'empty'}")
+    print(f"  Regional:      {len(regional)} regions")
 
     # ── [2/4] Generate ────────────────────────────────────────────────────────
     print("\n[2/4] Generating digest via Claude...")
-    digest_text, week_key = generate_digest(hero, signals, icp, headlines)
+    digest_text, week_key = generate_digest(hero, signals, icp, headlines, regional)
     print(f"  Week: {week_key}")
     print(f"  Length: {len(digest_text)} chars\n")
     print("-" * 60)

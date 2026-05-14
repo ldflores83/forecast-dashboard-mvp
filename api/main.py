@@ -69,6 +69,7 @@ def dashboard_api(request):
                 get_latest_signals as _get_signals,
                 get_latest_icp as _get_icp,
                 get_signals_headlines as _get_headlines,
+                get_regional_breakdown as _get_regional,
                 generate_digest as _generate_digest,
                 send_to_slack as _send_to_slack,
                 save_snapshot as _save_snapshot,
@@ -77,11 +78,12 @@ def dashboard_api(request):
             webhook_url = body.get("webhook_url", "")
             do_snapshot = bool(body.get("save_snapshot", False))
 
-            hero      = _get_hero(bq)
-            signals   = _get_signals(bq)
-            icp       = _get_icp(bq)
+            hero     = _get_hero(bq)
+            signals  = _get_signals(bq)
+            icp      = _get_icp(bq)
             headlines = _get_headlines(bq)
-            digest_text, week_key = _generate_digest(hero, signals, icp, headlines)
+            regional = _get_regional(bq)
+            digest_text, week_key = _generate_digest(hero, signals, icp, headlines, regional)
 
             slack_sent = False
             if webhook_url:
@@ -203,7 +205,7 @@ def build_payload(fiscal_quarter):
         "pipeline":  _shape_pipeline(pipe_rows),
         "lost_analysis": _shape_lost(lost_rows),
         "account_health": _shape_account_health(ah_rows),
-        "signals":        _shape_signals(ah_rows),
+        "signals":        _read_signals_from_gcs(ah_rows),
     }
 
 
@@ -281,15 +283,21 @@ def _shape_pipeline(rows):
             bu = row.get("dimension")
             if bu:
                 by_bu[bu] = {
-                    "open_acv":          _f(row.get("open_acv")),
-                    "open_count":        int(row.get("count") or 0),
-                    "won_acv":           _f(row.get("won_acv")),
-                    "win_rate":          _f(row.get("win_rate_pct")),
-                    "avg_deal":          _f(row.get("avg_deal_won")),
-                    "open_net_new_acv":  _f(row.get("open_net_new_acv")),
-                    "open_expansion_acv":_f(row.get("open_expansion_acv")),
-                    "open_migration_acv":_f(row.get("open_migration_acv")),
-                    "open_renewal_acv":  _f(row.get("open_renewal_acv")),
+                    "open_acv":                  _f(row.get("open_acv")),
+                    "open_count":                int(row.get("count") or 0),
+                    "won_acv":                   _f(row.get("won_acv")),
+                    "win_rate":                  _f(row.get("win_rate_pct")),
+                    "avg_deal":                  _f(row.get("avg_deal_won")),
+                    "open_net_new_acv":          _f(row.get("open_net_new_acv")),
+                    "open_expansion_acv":        _f(row.get("open_expansion_acv")),
+                    "open_migration_acv":        _f(row.get("open_migration_acv")),
+                    "open_renewal_acv":          _f(row.get("open_renewal_acv")),
+                    "q_score":                   _f(row.get("q_score")),
+                    "q_trend":                   row.get("q_trend") or "",
+                    "q_condition":               row.get("q_condition") or "",
+                    "account_at_risk":           bool(row.get("account_at_risk") or False),
+                    "target_account_status":     row.get("target_account_status") or "",
+                    "whitespace_gross_potential":_f(row.get("whitespace_gross_potential")),
                 }
 
     return {"by_stage": by_stage, "by_bu": by_bu}
@@ -378,17 +386,47 @@ def _shape_account_health(rows):
     return result
 
 
+def _read_signals_from_gcs(fallback_rows):
+    """Read signals banner data from agents' signals_output.json on GCS.
+    Falls back to _shape_signals(fallback_rows) on any error.
+
+    warnings = number of top-risk deals surfaced by the pipeline agent
+    critical = top-risk deals where the agent flagged no economic buyer
+    week     = meta.week from the agents' last run
+    """
+    try:
+        from google.cloud import storage as _gcs_mod
+        raw  = (_gcs_mod.Client()
+                .bucket("forecast-dashboard-mvp-frontend")
+                .blob("signals_output.json")
+                .download_as_text())
+        data      = json.loads(raw)
+        meta      = data.get("meta", {})
+        top_risks = (data.get("pipeline") or {}).get("top_risks") or []
+        warnings  = len(top_risks)
+        critical  = sum(
+            1 for d in top_risks
+            if any("economic buyer" in str(f).lower() for f in (d.get("flags") or []))
+        )
+        return {
+            "week":         meta.get("week", ""),
+            "warnings":     warnings,
+            "critical":     critical,
+            "generated_at": meta.get("generated_at", ""),
+            "source":       "agents",
+        }
+    except Exception:
+        return _shape_signals(fallback_rows)
+
+
 def _shape_signals(ah_rows):
+    # fallback only — primary source is signals_output.json
     """
     Derives signal counts from account_health data already in memory.
     No extra BQ query needed.
 
     warnings  = High-risk accounts with renewal <= 90 days
     critical  = High-risk accounts with P1 open AND renewal <= 60 days
-
-    When the Revenue Signals page (agents) exists, it will write a
-    signals_meta table to BQ and this function will read from that instead.
-    For now, values are derived live from account health.
     """
     from datetime import datetime, timezone
 
@@ -416,7 +454,7 @@ def _shape_signals(ah_rows):
         "warnings":     warnings,
         "critical":     critical,
         "generated_at": now.isoformat(),
-        "source":       "derived",   # will change to "agents" once Revenue Signals page exists
+        "source":       "derived",
     }
 
 

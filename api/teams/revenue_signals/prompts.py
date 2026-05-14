@@ -91,6 +91,32 @@ Customer_Profile context: ICP = Ideal Customer Profile (strongest fit), ACP = Ac
 UCP = Unqualified Customer Profile. When a critical deal (high ACV, late stage) is UCP,
 note this as a qualification concern — UCP deals have materially lower win rates.
 
+Account intent signals — each deal in flagged_deals carries seven account-level fields
+from QAD's digital engagement tracking. Use these to amplify or contextualize deal flags:
+
+- q_score (float): Qualified Signals engagement score. Higher = more active digital
+  engagement from the account. Score > 50 is notable. Score = 0 or null means no
+  engagement detected.
+- q_trend (string): Engagement trend — 'Surging', 'Rising', 'Neutral', 'Declining',
+  'Cold'. Surging/Rising on a stalled deal is a buy signal worth surfacing. Declining/Cold
+  on a late-stage deal compounds close risk.
+- q_condition (string): Engagement intent summary — 'Hot', 'Warm', 'Cold'. Contextualizes
+  q_trend. A 'Hot' account with a stalled deal signals urgency to unblock.
+- account_at_risk (bool): Customer Success flag — account marked at risk by CS. True on a
+  renewal deal = compounded risk (CS concern + renewal exposure). True on a sales deal =
+  account instability may undermine the win.
+- target_account_status (string): Marketing's ABM status for this account. 'In Sales
+  Process' = account is marketing-aligned with active support. Null = no ABM coverage.
+- whitespace_gross_potential (float, USD): Estimated expansion potential for the account.
+  High whitespace on a stalled deal signals lost revenue opportunity — quantify the cost
+  of inaction when relevant.
+- primary_sub_vertical (string): Account's sub-industry. Use for cross-deal pattern
+  recognition — multiple stalled deals in the same sub-vertical indicate segment-level
+  risk, not isolated deal issues.
+
+Do not manufacture or infer these values. Use only what is provided. If q_score is 0 or
+null across all flagged deals, omit account intent signals from your analysis entirely.
+
 Return ONLY valid JSON. No preamble, no explanation, no markdown code fences.
 
 Required JSON schema:

@@ -33,8 +33,9 @@ def _strip_html(text) -> str | None:
 
 
 # ── BQ CLIENT ─────────────────────────────────────────────────────────────────
-PROJECT = "forecast-dashboard-mvp"
-DATASET = "forecast_data"
+PROJECT     = "forecast-dashboard-mvp"
+DATASET     = "forecast_data"
+FISCAL_YEAR = 2027
 
 _bq_client = None
 
@@ -543,7 +544,7 @@ def get_renewal_health(fiscal_quarter: int = 0) -> dict:
             renewal_open_acv
         FROM {vw_dyn}
         WHERE 1=1 {fq_filter}
-          AND fiscal_year = 2027
+          AND fiscal_year = {FISCAL_YEAR}
           AND bu IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
         ORDER BY renewal_lost_acv DESC
     """
@@ -697,7 +698,7 @@ def get_winloss_data(fiscal_quarter: int = 0) -> dict:
         WHERE IsClosed = TRUE
           AND Category = 'Solutions'
           AND Is_Channel = FALSE
-          AND FiscalYear = 2027
+          AND FiscalYear = {FISCAL_YEAR}
           AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
         GROUP BY Sales_Motion
         ORDER BY closed_count DESC
@@ -711,7 +712,7 @@ def get_winloss_data(fiscal_quarter: int = 0) -> dict:
             COALESCE(SUM(ACV), 0)            AS reason_acv
         FROM {tbl}
         WHERE Is_Lost = TRUE
-          AND FiscalYear = 2027
+          AND FiscalYear = {FISCAL_YEAR}
           AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
         GROUP BY Loss_Reason
         ORDER BY reason_count DESC
@@ -726,7 +727,7 @@ def get_winloss_data(fiscal_quarter: int = 0) -> dict:
             COALESCE(SUM(ACV), 0)  AS lost_acv
         FROM {tbl}
         WHERE Is_Lost = TRUE
-          AND FiscalYear = 2027
+          AND FiscalYear = {FISCAL_YEAR}
           AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
         GROUP BY StageName
         ORDER BY lost_count DESC
@@ -743,7 +744,7 @@ def get_winloss_data(fiscal_quarter: int = 0) -> dict:
             COALESCE(SUM(CASE WHEN Is_Won  THEN ACV END), 0) AS won_acv
         FROM {tbl}
         WHERE IsClosed = TRUE
-          AND FiscalYear = 2027
+          AND FiscalYear = {FISCAL_YEAR}
           AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
         GROUP BY BU
         ORDER BY lost_acv DESC
@@ -764,7 +765,7 @@ def get_winloss_data(fiscal_quarter: int = 0) -> dict:
             CloseDate
         FROM {tbl}
         WHERE IsClosed = TRUE
-          AND FiscalYear = 2027
+          AND FiscalYear = {FISCAL_YEAR}
           AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
         ORDER BY ACV DESC
         LIMIT 20

@@ -117,9 +117,40 @@ def get_signals_headlines(bq) -> dict:
     }
 
 
+def get_regional_breakdown(bq) -> list:
+    sql = f"""
+        SELECT
+            region,
+            COUNT(*) AS account_count,
+            COUNTIF(at_risk = TRUE) AS at_risk_count,
+            ROUND(SUM(open_pipeline_acv)/1e6, 1) AS open_pipeline_acv_m,
+            ROUND(AVG(q_score), 1) AS avg_q_score,
+            ROUND(SUM(whitespace_gross_potential)/1e6, 1) AS whitespace_m,
+            ROUND(AVG(account_win_rate_pct), 1) AS avg_win_rate_pct
+        FROM `{PROJECT}.{DATASET}.vw_accounts_enriched`
+        WHERE region IS NOT NULL
+        GROUP BY region
+        ORDER BY open_pipeline_acv_m DESC
+    """
+    rows = list(bq.query(sql).result())
+    return [
+        {
+            "region":              r["region"],
+            "account_count":       int(r["account_count"] or 0),
+            "at_risk_count":       int(r["at_risk_count"] or 0),
+            "open_pipeline_acv_m": float(r["open_pipeline_acv_m"] or 0.0),
+            "avg_q_score":         float(r["avg_q_score"]) if r["avg_q_score"] is not None else 0.0,
+            "whitespace_m":        float(r["whitespace_m"] or 0.0),
+            "avg_win_rate_pct":    float(r["avg_win_rate_pct"]) if r["avg_win_rate_pct"] is not None else 0.0,
+        }
+        for r in rows
+    ]
+
+
 # ── DIGEST GENERATOR ─────────────────────────────────────────────────────────
 
-def generate_digest(hero: dict, signals: dict, icp: list, headlines: dict) -> tuple:
+def generate_digest(hero: dict, signals: dict, icp: list, headlines: dict,
+                    regional: list | None = None) -> tuple:
     """Returns (digest_text, week_key)."""
     week_key = (
         headlines.get("week_key")
@@ -131,8 +162,19 @@ def generate_digest(hero: dict, signals: dict, icp: list, headlines: dict) -> tu
     for bu in icp[:3]:
         icp_summary += f"  {bu['bu']}: win rate {bu['win_rate']}% (n={bu['sample_size']})\n"
 
+    regional_lines = ""
+    if regional:
+        for r in regional:
+            regional_lines += (
+                f"  Region: {r['region']} | Pipeline: ${r['open_pipeline_acv_m']}M"
+                f" | At Risk: {r['at_risk_count']} accounts"
+                f" | Avg Engagement Score: {r['avg_q_score']}"
+                f" | Whitespace: ${r['whitespace_m']}M\n"
+            )
+    regional_section = f"REGIONAL BREAKDOWN:\n{regional_lines}" if regional_lines else ""
+
     prompt = f"""You are a Chief Revenue Officer writing a weekly revenue intelligence brief for the executive team.
-Generate a concise digest in under 300 words. Use C-level tone — data-driven, direct, no fluff.
+Generate a concise digest in under 350 words. Use C-level tone — data-driven, direct, no fluff.
 
 Plain text only. Do not use markdown syntax anywhere:
 - no markdown headings, no #, no ##, no bold, no **, no horizontal rules, no ---
@@ -140,12 +182,14 @@ Plain text only. Do not use markdown syntax anywhere:
 - no markdown bullets. Use short plain text lines instead.
 - do not wrap anything in code fences.
 
-Structure with exactly these four sections (use the emoji headers as shown):
+Structure with exactly these five sections (use the emoji headers as shown):
 \U0001f4ca HEADLINE NUMBERS
 ⚠️ KEY RISKS
 ✅ BRIGHT SPOTS
+\U0001f30e REGIONAL PULSE
 \U0001f3af RECOMMENDED ACTIONS
 
+For REGIONAL PULSE, write 2-3 sentences on which regions have the most pipeline concentration, engagement, or risk. Be specific with numbers from the regional data.
 For RECOMMENDED ACTIONS, each action must include an owner tag: (Owner: CRO), (Owner: CS VP), or (Owner: AE Team).
 End the digest with a single plain text focus sentence starting with "This week's priority:".
 The first line of your response must be the HEADLINE NUMBERS section header.
@@ -166,7 +210,7 @@ SIGNAL HEADLINES (week {week_key}):
 
 TOP ICP WIN RATES BY BU:
 {icp_summary or '  (no ICP data available)'}
-
+{regional_section}
 Write the digest now."""
 
     ac = anthropic.Anthropic()

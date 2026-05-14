@@ -16,6 +16,9 @@ WITH lost_totals AS (
   FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Is_Lost = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
+    AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
+    AND Name NOT LIKE '%Amendment%'
+    AND Name NOT LIKE '%zzz%'
   GROUP BY FiscalQuarter, FiscalYear
 ),
 
@@ -29,6 +32,9 @@ lost_totals_fy AS (
   FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Is_Lost = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
+    AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
+    AND Name NOT LIKE '%Amendment%'
+    AND Name NOT LIKE '%zzz%'
   GROUP BY FiscalYear
 ),
 
@@ -43,6 +49,9 @@ lost_by_bu AS (
   FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Is_Lost = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
+    AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
+    AND Name NOT LIKE '%Amendment%'
+    AND Name NOT LIKE '%zzz%'
   GROUP BY FiscalQuarter, FiscalYear, BU
 ),
 
@@ -56,6 +65,9 @@ lost_by_bu_fy AS (
   FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Is_Lost = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
+    AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
+    AND Name NOT LIKE '%Amendment%'
+    AND Name NOT LIKE '%zzz%'
   GROUP BY FiscalYear, BU
 ),
 
@@ -75,6 +87,9 @@ loss_reasons AS (
   FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Is_Lost = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
+    AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
+    AND Name NOT LIKE '%Amendment%'
+    AND Name NOT LIKE '%zzz%'
   GROUP BY FiscalQuarter, FiscalYear, Loss_Reason
 ),
 
@@ -92,6 +107,9 @@ loss_reasons_fy AS (
   FROM `forecast-dashboard-mvp.forecast_data.opportunities`
   WHERE Is_Lost = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
+    AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
+    AND Name NOT LIKE '%Amendment%'
+    AND Name NOT LIKE '%zzz%'
   GROUP BY FiscalYear, Loss_Reason
 ),
 

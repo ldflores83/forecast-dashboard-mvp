@@ -111,6 +111,8 @@ renewal_history AS (
     AND IsClosed = TRUE
     AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
+    AND Name NOT LIKE '%Amendment%'
+    AND Name NOT LIKE '%zzz%'
   GROUP BY AccountId
 )
 
