@@ -139,7 +139,7 @@ def build_payload(fiscal_quarter):
 
         "revenue_health": {
             "renewal_win_rate":    _f(h.get("renewal_win_rate_pct")),
-            "coverage_all_sales":  _f(h.get("sales_coverage_pct")),   # Solutions Direct only
+            "coverage_solutions_direct": _f(h.get("sales_coverage_pct")),
             "coverage_net_new":    _f(h.get("net_new_coverage_pct")),
             "renewal_won_acv":     _f(h.get("renewal_won_acv")),
             "renewal_lost_acv":    _f(h.get("renewal_lost_acv")),

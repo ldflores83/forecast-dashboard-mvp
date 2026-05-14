@@ -59,6 +59,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 .reset-btn{display:flex;align-items:center;gap:5px;height:32px;padding:0 10px;background:var(--amber-bg);border:1px solid rgba(251,191,36,.22);border-radius:var(--r-sm);cursor:pointer;color:var(--amber);font:600 12px/1 var(--sans);transition:all var(--ease);flex-shrink:0;white-space:nowrap}
 .reset-btn:hover{background:rgba(251,191,36,.18);border-color:rgba(251,191,36,.42)}
 .reset-btn:disabled{opacity:.45;cursor:not-allowed}
+.nav-link{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--t3);text-decoration:none;padding:4px 8px;border-radius:var(--r-sm);transition:all var(--ease);white-space:nowrap;border:1px solid var(--b);flex-shrink:0}
+.nav-link:hover{color:var(--t2);border-color:var(--b2);background:var(--b)}
 
 /* ── META BAR ────────────────────────────────────────────────────────────── */
 .meta-bar{background:var(--surf);border-bottom:1px solid var(--b);padding:7px 24px;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10px;color:var(--t3);flex-wrap:wrap}
@@ -222,6 +224,10 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
         <span class="tb-sep">·</span>
         <span class="tb-reviewed" id="tb-reviewed"></span>
       </div>
+      <a class="nav-link" href="icp.html">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+        ICP Intelligence
+      </a>
       <button class="run-btn" id="run-btn" title="Run Revenue Signals pipeline">
         <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><polygon points="2,1 11,6 2,11"/></svg>
         <span class="run-label">Run Analysis</span>
