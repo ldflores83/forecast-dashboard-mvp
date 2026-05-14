@@ -63,6 +63,36 @@ def dashboard_api(request):
             from teams.icp import orchestrator as icp_orchestrator
             result = icp_orchestrator.run(fiscal_quarter=fiscal_quarter, force_refresh=True)
             return (json.dumps(result, default=str), 200, CORS)
+        elif mode == "digest":
+            from shared.digest_utils import (
+                get_hero_metrics as _get_hero,
+                get_latest_signals as _get_signals,
+                get_latest_icp as _get_icp,
+                get_signals_headlines as _get_headlines,
+                generate_digest as _generate_digest,
+                send_to_slack as _send_to_slack,
+                save_snapshot as _save_snapshot,
+            )
+            body        = request.get_json(silent=True) or {}
+            webhook_url = body.get("webhook_url", "")
+            do_snapshot = bool(body.get("save_snapshot", False))
+
+            hero      = _get_hero(bq)
+            signals   = _get_signals(bq)
+            icp       = _get_icp(bq)
+            headlines = _get_headlines(bq)
+            digest_text, week_key = _generate_digest(hero, signals, icp, headlines)
+
+            slack_sent = False
+            if webhook_url:
+                slack_sent = _send_to_slack(webhook_url, digest_text, week_key)
+            if do_snapshot:
+                _save_snapshot(bq, digest_text, hero, week_key, slack_sent)
+
+            return (json.dumps(
+                {"digest_text": digest_text, "week_key": week_key, "slack_sent": slack_sent},
+                default=str,
+            ), 200, CORS)
         else:
             payload = build_payload(fiscal_quarter)
         return (json.dumps(payload, default=str), 200, CORS)

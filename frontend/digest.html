@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Digest — QAD FY2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── RESET + TOKENS ──────────────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'DM Mono',monospace;--r:10px;--r-sm:6px;--ease:.18s ease}
+[data-theme="dark"]{
+  --bg:#08090f;--bg2:#0e1018;--surf:#131622;--surf2:#1a1e2e;
+  --b:rgba(255,255,255,.06);--b2:rgba(255,255,255,.11);
+  --t:#dde3f0;--t2:#7a8499;--t3:#3d4459;
+  --blue:#4f8ef7;--blue-bg:rgba(79,142,247,.1);
+  --green:#2dd4a0;--green-bg:rgba(45,212,160,.1);
+  --purple:#a78bfa;--purple-bg:rgba(167,139,250,.1);
+  --amber:#fbbf24;--amber-bg:rgba(251,191,36,.1);
+  --red:#f87171;--red-bg:rgba(248,113,113,.1);
+  --shadow:0 2px 12px rgba(0,0,0,.4)
+}
+[data-theme="light"]{
+  --bg:#f2f4f8;--bg2:#e9ecf3;--surf:#fff;--surf2:#f8f9fc;
+  --b:rgba(0,0,0,.06);--b2:rgba(0,0,0,.12);
+  --t:#0d1018;--t2:#5a6070;--t3:#9aa0b0;
+  --blue:#2563eb;--blue-bg:rgba(37,99,235,.08);
+  --green:#059669;--green-bg:rgba(5,150,105,.08);
+  --purple:#7c3aed;--purple-bg:rgba(124,58,237,.08);
+  --amber:#d97706;--amber-bg:rgba(217,119,6,.08);
+  --red:#dc2626;--red-bg:rgba(220,38,38,.08);
+  --shadow:0 1px 4px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.05)
+}
+body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;line-height:1.6;transition:background var(--ease),color var(--ease)}
+
+/* ── TOPBAR ──────────────────────────────────────────────────────────────── */
+.topbar{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--b);height:52px;display:flex;align-items:center;padding:0 24px;gap:16px;transition:background var(--ease)}
+.topbar-left{display:flex;align-items:center;gap:12px;min-width:0}
+.back-link{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t3);text-decoration:none;padding:4px 8px;border-radius:var(--r-sm);transition:all var(--ease);white-space:nowrap;flex-shrink:0}
+.back-link:hover{color:var(--t2);background:var(--b)}
+.divider-v{width:1px;height:18px;background:var(--b2);flex-shrink:0}
+.page-ident{display:flex;align-items:center;gap:8px;min-width:0}
+.page-eyebrow{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3)}
+.page-title{font-size:15px;font-weight:600;color:var(--blue);white-space:nowrap}
+.page-pulse{width:6px;height:6px;border-radius:50%;background:var(--blue);flex-shrink:0;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.nav-link{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--t3);text-decoration:none;padding:4px 8px;border-radius:var(--r-sm);transition:all var(--ease);white-space:nowrap;border:1px solid var(--b);flex-shrink:0}
+.nav-link:hover{color:var(--t2);border-color:var(--b2);background:var(--b)}
+.theme-btn{width:32px;height:32px;background:var(--surf);border:1px solid var(--b2);border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);transition:all var(--ease);flex-shrink:0}
+.theme-btn:hover{color:var(--t)}
+
+/* ── LAYOUT ──────────────────────────────────────────────────────────────── */
+.main{max-width:1000px;margin:0 auto;padding:40px 24px 80px;display:flex;flex-direction:column;gap:28px}
+
+/* ── PAGE HEADER ─────────────────────────────────────────────────────────── */
+.page-header{display:flex;flex-direction:column;gap:4px}
+.page-header-eyebrow{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--t3)}
+.page-header-title{font-size:26px;font-weight:700;color:var(--t);letter-spacing:-.5px}
+.page-header-sub{font-size:13px;color:var(--t2)}
+
+/* ── CARD ────────────────────────────────────────────────────────────────── */
+.card{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:24px;box-shadow:var(--shadow)}
+.card-title{font-size:13px;font-weight:600;color:var(--t);margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.card-title svg{flex-shrink:0;opacity:.7}
+
+/* ── FORM ELEMENTS ───────────────────────────────────────────────────────── */
+.field-label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--t3);margin-bottom:7px}
+.text-input{width:100%;background:var(--bg2);border:1px solid var(--b2);border-radius:var(--r-sm);padding:10px 14px;color:var(--t);font:14px var(--sans);transition:border-color var(--ease);outline:none}
+.text-input::placeholder{color:var(--t3)}
+.text-input:focus{border-color:var(--blue)}
+.text-input[type=password]{font-family:var(--mono);letter-spacing:.5px}
+.field-row{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.field-row:last-child{margin-bottom:0}
+.field-hint{font-size:11px;color:var(--t3)}
+
+/* ── AUDIENCE CHIPS ──────────────────────────────────────────────────────── */
+.chip-group{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;border:1px solid var(--b2);background:var(--surf2);color:var(--t2);font:500 12px var(--sans);cursor:pointer;transition:all var(--ease);user-select:none}
+.chip:hover{border-color:var(--blue);color:var(--blue)}
+.chip.selected{background:var(--blue-bg);border-color:rgba(79,142,247,.45);color:var(--blue)}
+.chip svg{flex-shrink:0;display:none}
+.chip.selected svg{display:block}
+
+/* ── DATA STATUS ROW ─────────────────────────────────────────────────────── */
+.status-row{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--bg2);border:1px solid var(--b);border-radius:var(--r-sm);flex-wrap:wrap}
+.status-item{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--t3)}
+.status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.status-dot.ok{background:var(--green)}
+.status-dot.loading{background:var(--amber);animation:pulse 1.2s ease-in-out infinite}
+.status-dot.error{background:var(--red)}
+.status-sep{width:1px;height:14px;background:var(--b2)}
+.status-lbl{color:var(--t2)}
+
+/* ── GENERATE BUTTON ─────────────────────────────────────────────────────── */
+.gen-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:44px;background:var(--blue-bg);border:1px solid rgba(79,142,247,.4);border-radius:var(--r-sm);cursor:pointer;color:var(--blue);font:600 13px var(--sans);transition:all var(--ease);margin-top:20px}
+.gen-btn:hover:not(:disabled){background:rgba(79,142,247,.18);border-color:rgba(79,142,247,.6)}
+.gen-btn:disabled{opacity:.45;cursor:not-allowed}
+.gen-btn.loading{color:var(--t3)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:14px;height:14px;border:2px solid var(--b2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+
+/* ── PREVIEW PANE ────────────────────────────────────────────────────────── */
+.preview-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px;gap:10px;color:var(--t3)}
+.preview-empty-icon{width:44px;height:44px;border-radius:50%;background:var(--blue-bg);border:1px solid rgba(79,142,247,.25);display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.preview-empty-title{font-size:14px;font-weight:500;color:var(--t2)}
+.preview-empty-sub{font-size:12px;color:var(--t3)}
+.preview-content{display:none;flex-direction:column;gap:16px}
+.preview-text{font-size:13px;color:var(--t2);line-height:1.75;white-space:pre-wrap;background:var(--bg2);border:1px solid var(--b);border-radius:var(--r-sm);padding:18px 20px}
+.preview-actions{display:flex;gap:8px}
+.action-btn{display:flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:var(--r-sm);cursor:pointer;font:500 12px var(--sans);transition:all var(--ease);border:1px solid}
+.action-btn.copy{background:var(--surf2);border-color:var(--b2);color:var(--t2)}
+.action-btn.copy:hover{border-color:var(--b2);color:var(--t)}
+.action-btn.resend{background:var(--green-bg);border-color:rgba(45,212,160,.35);color:var(--green)}
+.action-btn.resend:hover{background:rgba(45,212,160,.18);border-color:rgba(45,212,160,.55)}
+.action-btn.resend:disabled{opacity:.45;cursor:not-allowed}
+.copy-confirm{font-size:11px;color:var(--green);display:none}
+
+/* ── HISTORY CARD ────────────────────────────────────────────────────────── */
+.history-empty{font-size:12px;color:var(--t3);padding:16px 0}
+.history-list{display:flex;flex-direction:column;gap:1px}
+.history-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--r-sm);background:var(--surf2);border:1px solid var(--b);transition:background var(--ease);cursor:default}
+.history-row:hover{background:var(--bg2)}
+.history-week{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--t);min-width:80px}
+.history-ts{font-family:var(--mono);font-size:10px;color:var(--t3);flex:1}
+.history-badge{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:4px;border:1px solid;white-space:nowrap}
+.history-badge.sent{background:var(--green-bg);color:var(--green);border-color:rgba(45,212,160,.25)}
+.history-badge.draft{background:var(--b);color:var(--t3);border-color:var(--b2)}
+.history-preview-btn{font-size:10px;color:var(--t3);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px;transition:all var(--ease)}
+.history-preview-btn:hover{color:var(--blue);background:var(--blue-bg)}
+
+/* ── API CALLOUT ─────────────────────────────────────────────────────────── */
+.callout{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;background:var(--amber-bg);border:1px solid rgba(251,191,36,.22);border-radius:var(--r-sm)}
+.callout-icon{width:20px;height:20px;flex-shrink:0;color:var(--amber);margin-top:1px}
+.callout-text{font-size:12px;color:var(--t2);line-height:1.6}
+.callout-text strong{color:var(--amber)}
+
+/* ── WEEK KEY BADGE ──────────────────────────────────────────────────────── */
+.week-badge{font-family:var(--mono);font-size:10px;background:var(--surf2);border:1px solid var(--b2);border-radius:4px;padding:2px 8px;color:var(--t3);display:inline-block}
+</style>
+</head>
+<body>
+
+<!-- ── TOPBAR ──────────────────────────────────────────────────────────────── -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="revenue-signals.html" class="back-link">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Revenue Signals
+    </a>
+    <div class="divider-v"></div>
+    <div class="page-ident">
+      <div class="page-eyebrow">Revenue Intelligence</div>
+      <div class="divider-v"></div>
+      <div class="page-title">Weekly Digest</div>
+      <div class="page-pulse"></div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <a href="revenue-signals.html" class="nav-link">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Signals
+    </a>
+    <a href="icp.html" class="nav-link">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      ICP
+    </a>
+    <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+      <svg id="theme-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ── MAIN ────────────────────────────────────────────────────────────────── -->
+<div class="main">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-eyebrow">Revenue Intelligence · FY2027</div>
+    <div class="page-header-title">Weekly Digest</div>
+    <div class="page-header-sub">C-level revenue brief generated from live signals, ICP data, and hero metrics.</div>
+  </div>
+
+  <!-- ── CONFIG CARD ──────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Configuration
+    </div>
+
+    <!-- Webhook URL -->
+    <div class="field-row">
+      <div class="field-label">Slack Webhook URL</div>
+      <input
+        type="password"
+        id="webhook-input"
+        class="text-input"
+        placeholder="https://hooks.slack.com/services/..."
+        autocomplete="off"
+        oninput="saveWebhook()"
+      >
+      <div class="field-hint">Saved locally in your browser. Never sent to any server except Slack.</div>
+    </div>
+
+    <!-- Audience -->
+    <div class="field-row">
+      <div class="field-label">Audience</div>
+      <div class="chip-group" id="audience-chips">
+        <div class="chip selected" data-audience="CRO" onclick="toggleChip(this)">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          CRO
+        </div>
+        <div class="chip" data-audience="CS VP" onclick="toggleChip(this)">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          CS VP
+        </div>
+        <div class="chip" data-audience="CEO" onclick="toggleChip(this)">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          CEO
+        </div>
+        <div class="chip" data-audience="CFO" onclick="toggleChip(this)">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          CFO
+        </div>
+        <div class="chip" data-audience="Board" onclick="toggleChip(this)">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          Board
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Status -->
+    <div class="field-row">
+      <div class="field-label">Data Status</div>
+      <div class="status-row" id="status-row">
+        <div class="status-item">
+          <div class="status-dot loading" id="dot-signals"></div>
+          <span class="status-lbl">Signals cache</span>
+          <span id="lbl-signals">checking…</span>
+        </div>
+        <div class="status-sep"></div>
+        <div class="status-item">
+          <div class="status-dot loading" id="dot-icp"></div>
+          <span class="status-lbl">ICP profiles</span>
+          <span id="lbl-icp">checking…</span>
+        </div>
+        <div class="status-sep"></div>
+        <div class="status-item">
+          <div class="status-dot loading" id="dot-hero"></div>
+          <span class="status-lbl">Hero metrics</span>
+          <span id="lbl-hero">checking…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Callout: endpoint not live yet -->
+    <div class="callout">
+      <svg class="callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="callout-text">
+        <strong>Note:</strong> The <code>?mode=digest</code> Cloud Function endpoint is not yet deployed. The Generate &amp; Send button is wired up and ready — run <code>python scripts/digest.py</code> locally in the meantime.
+      </div>
+    </div>
+
+    <!-- Generate Button -->
+    <button class="gen-btn" id="gen-btn" onclick="generate()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Generate &amp; Send
+    </button>
+  </div>
+
+  <!-- ── PREVIEW PANE ──────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Preview
+      <span class="week-badge" id="preview-week" style="display:none"></span>
+    </div>
+
+    <div id="preview-empty" class="preview-empty">
+      <div class="preview-empty-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <div class="preview-empty-title">No digest generated yet</div>
+      <div class="preview-empty-sub">Configure and click Generate &amp; Send above</div>
+    </div>
+
+    <div id="preview-content" class="preview-content">
+      <div class="preview-text" id="preview-text"></div>
+      <div class="preview-actions">
+        <button class="action-btn copy" onclick="copyDigest()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy
+        </button>
+        <button class="action-btn resend" id="resend-btn" onclick="resend()" disabled>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Re-send to Slack
+        </button>
+        <span class="copy-confirm" id="copy-confirm">Copied!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HISTORY CARD ──────────────────────────────────────────────────────── -->
+  <div class="card">
+    <div class="card-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Send History
+      <span style="margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--t3);font-weight:400">last 5 · stored locally</span>
+    </div>
+    <div id="history-container"></div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+const API_BASE = "https://us-central1-forecast-dashboard-mvp.cloudfunctions.net/dashboard-api";
+
+// ── Theme ─────────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('digest_theme', next);
+}
+(function() {
+  const t = localStorage.getItem('digest_theme');
+  if (t) document.documentElement.setAttribute('data-theme', t);
+})();
+
+// ── Webhook storage ───────────────────────────────────────────────────────────
+function saveWebhook() {
+  const val = document.getElementById('webhook-input').value;
+  if (val) localStorage.setItem('digest_webhook', val);
+  else localStorage.removeItem('digest_webhook');
+  updateResendBtn();
+}
+(function() {
+  const w = localStorage.getItem('digest_webhook');
+  if (w) document.getElementById('webhook-input').value = w;
+})();
+
+// ── Audience chips ────────────────────────────────────────────────────────────
+function toggleChip(el) {
+  el.classList.toggle('selected');
+  saveAudience();
+}
+function getAudience() {
+  return Array.from(document.querySelectorAll('.chip.selected')).map(c => c.dataset.audience);
+}
+function saveAudience() {
+  localStorage.setItem('digest_audience', JSON.stringify(getAudience()));
+}
+(function() {
+  const saved = JSON.parse(localStorage.getItem('digest_audience') || 'null');
+  if (saved) {
+    document.querySelectorAll('.chip').forEach(c => {
+      c.classList.toggle('selected', saved.includes(c.dataset.audience));
+    });
+  }
+})();
+
+// ── Data status check ─────────────────────────────────────────────────────────
+async function checkDataStatus() {
+  try {
+    const res = await fetch(API_BASE + '?mode=signals&fy=2027');
+    const ok = res.ok;
+    setStatus('signals', ok ? 'ok' : 'error', ok ? 'available' : 'unavailable');
+  } catch {
+    setStatus('signals', 'error', 'unreachable');
+  }
+  try {
+    const res = await fetch(API_BASE + '?mode=icp&fy=2027');
+    const ok = res.ok;
+    setStatus('icp', ok ? 'ok' : 'error', ok ? 'available' : 'unavailable');
+  } catch {
+    setStatus('icp', 'error', 'unreachable');
+  }
+  try {
+    const res = await fetch(API_BASE + '?mode=hero&fy=2027');
+    const ok = res.ok;
+    setStatus('hero', ok ? 'ok' : 'error', ok ? 'available' : 'unavailable');
+  } catch {
+    setStatus('hero', 'error', 'unreachable');
+  }
+}
+function setStatus(key, state, label) {
+  const dot = document.getElementById('dot-' + key);
+  const lbl = document.getElementById('lbl-' + key);
+  dot.className = 'status-dot ' + state;
+  lbl.textContent = label;
+}
+checkDataStatus();
+
+// ── Generate & Send ───────────────────────────────────────────────────────────
+let currentDigest = null;
+let currentWeekKey = null;
+
+async function generate() {
+  const btn = document.getElementById('gen-btn');
+  const webhook = document.getElementById('webhook-input').value.trim()
+    || localStorage.getItem('digest_webhook') || '';
+  const audience = getAudience();
+
+  btn.disabled = true;
+  btn.classList.add('loading');
+  btn.innerHTML = '<div class="spinner"></div> Generating…';
+
+  try {
+    const res = await fetch(API_BASE + '?mode=digest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ webhook_url: webhook, audience, save_snapshot: true }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`HTTP ${res.status}: ${err}`);
+    }
+
+    const data = await res.json();
+    currentDigest = data.digest_text || data.text || JSON.stringify(data, null, 2);
+    currentWeekKey = data.week_key || getCurrentWeekKey();
+
+    showPreview(currentDigest, currentWeekKey);
+
+    const sent = !!webhook && data.slack_sent !== false;
+    addHistory({ week_key: currentWeekKey, ts: new Date().toISOString(), sent, text: currentDigest });
+
+  } catch (err) {
+    currentDigest = `[Endpoint not yet deployed]\n\nThe ?mode=digest endpoint does not exist yet in main.py.\n\nTo generate a digest now, run:\n  python scripts/digest.py --dry-run\n\nError: ${err.message}`;
+    currentWeekKey = getCurrentWeekKey();
+    showPreview(currentDigest, currentWeekKey);
+  }
+
+  btn.disabled = false;
+  btn.classList.remove('loading');
+  btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Generate &amp; Send';
+}
+
+function showPreview(text, weekKey) {
+  document.getElementById('preview-empty').style.display = 'none';
+  const content = document.getElementById('preview-content');
+  content.style.display = 'flex';
+  document.getElementById('preview-text').textContent = text;
+  const badge = document.getElementById('preview-week');
+  badge.textContent = weekKey;
+  badge.style.display = 'inline-block';
+  updateResendBtn();
+}
+
+function getCurrentWeekKey() {
+  const d = new Date();
+  const jan1 = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+  return `${d.getFullYear()}-W${String(week).padStart(2, '0')}`;
+}
+
+// ── Copy ──────────────────────────────────────────────────────────────────────
+function copyDigest() {
+  if (!currentDigest) return;
+  navigator.clipboard.writeText(currentDigest).then(() => {
+    const el = document.getElementById('copy-confirm');
+    el.style.display = 'inline';
+    setTimeout(() => { el.style.display = 'none'; }, 2000);
+  });
+}
+
+// ── Re-send ───────────────────────────────────────────────────────────────────
+function updateResendBtn() {
+  const btn = document.getElementById('resend-btn');
+  const hasWebhook = !!(document.getElementById('webhook-input').value.trim() || localStorage.getItem('digest_webhook'));
+  btn.disabled = !currentDigest || !hasWebhook;
+}
+
+async function resend() {
+  if (!currentDigest) return;
+  const webhook = document.getElementById('webhook-input').value.trim()
+    || localStorage.getItem('digest_webhook') || '';
+  if (!webhook) return;
+
+  const btn = document.getElementById('resend-btn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  try {
+    const res = await fetch(API_BASE + '?mode=digest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ webhook_url: webhook, audience: getAudience(), digest_text: currentDigest, save_snapshot: false }),
+    });
+    const sent = res.ok;
+    addHistory({ week_key: currentWeekKey, ts: new Date().toISOString(), sent, text: currentDigest });
+  } catch {
+    /* silent */
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Re-send to Slack';
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+function loadHistory() {
+  return JSON.parse(localStorage.getItem('digest_history') || '[]');
+}
+function saveHistoryList(list) {
+  localStorage.setItem('digest_history', JSON.stringify(list.slice(0, 5)));
+}
+function addHistory(entry) {
+  const list = loadHistory();
+  list.unshift(entry);
+  saveHistoryList(list);
+  renderHistory();
+}
+function renderHistory() {
+  const container = document.getElementById('history-container');
+  const list = loadHistory();
+  if (!list.length) {
+    container.innerHTML = '<div class="history-empty">No digests sent yet. Generate one above.</div>';
+    return;
+  }
+  container.innerHTML = '<div class="history-list">' + list.map((item, i) => {
+    const ts = new Date(item.ts).toLocaleString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    const badge = item.sent
+      ? '<span class="history-badge sent">✓ Sent</span>'
+      : '<span class="history-badge draft">Draft</span>';
+    return `<div class="history-row">
+      <span class="history-week">${item.week_key || '—'}</span>
+      <span class="history-ts">${ts}</span>
+      ${badge}
+      <button class="history-preview-btn" onclick="loadHistoryItem(${i})">View</button>
+    </div>`;
+  }).join('') + '</div>';
+}
+function loadHistoryItem(i) {
+  const list = loadHistory();
+  const item = list[i];
+  if (!item) return;
+  currentDigest = item.text;
+  currentWeekKey = item.week_key;
+  showPreview(item.text, item.week_key);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+renderHistory();
+</script>
+</body>
+</html>
