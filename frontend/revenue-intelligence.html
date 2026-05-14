@@ -870,7 +870,7 @@ function renderFromAPI(d, q) {
     (bm.Renewal ? bm.Renewal.won_opps : 0) + ' won of ' +
     ((bm.Renewal ? bm.Renewal.won_opps : 0) + (bm.Renewal ? bm.Renewal.lost_opps : 0)) + ' closed renewals');
 
-  set('kpi-coverage', fmtPct(rh.coverage_all_sales || 0));
+  set('kpi-coverage', fmtPct(rh.coverage_solutions_direct || 0));
   set('kpi-coverage-sub',
     'Solutions Direct ' + fmt(rh.sales_won_acv || 0) + ' / Lost renewals ' + fmt(rh.renewal_lost_acv || 0));
   // Channel context line

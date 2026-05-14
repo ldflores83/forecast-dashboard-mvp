@@ -95,6 +95,7 @@ def build_payload(fiscal_quarter):
     dyn_rows = query(f"""
         SELECT * FROM {ref('vw_revenue_dynamics')}
         WHERE fiscal_quarter = {fq}
+          AND fiscal_year = 2027
         ORDER BY bu
     """)
 
