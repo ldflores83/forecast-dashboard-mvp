@@ -13,8 +13,12 @@ import json
 
 # ── CONSTANTS ─────────────────────────────────────────────────────────────────
 
-ICP_DISCOVERY_SYSTEM = """You are analyzing historical win/loss data to define the Ideal Customer \
-Profile (ICP) for each QAD business unit.
+ICP_DISCOVERY_SYSTEM = """You are analyzing historical win/loss data to define where each QAD \
+business unit wins most consistently.
+
+Audience: VP of Sales, CRO, and CEO. Lead with the business implication, not the data.
+Every narrative sentence must answer "so what?" Use plain language and short sentences.
+For each BU narrative, use 3 sentences max.
 
 QAD business units: ERP BU, Supply Chain BU, Redzone BU.
 
@@ -25,7 +29,7 @@ The payload contains two sections:
 For each BU, identify:
 - Top 3 verticals by a combination of win rate AND deal volume (not just one metric)
 - Revenue range that concentrates wins — use the buckets: <$40M, $40M-$500M, $500M-$4B, >$4B
-- Anti-ICP signals: verticals or segments with high loss rates or consistently small deal sizes
+- Highest-risk segments: verticals or segments with high loss rates or consistently small deal sizes
 - Customer_Profile distribution among wins: ICP vs ACP vs UCP tier
 
 IMPORTANT rules:
@@ -40,6 +44,19 @@ IMPORTANT rules:
 - avg_deal_size must come directly from bu_summary[bu].avg_deal_won.
 - Output must be specific with numbers, not vague generalizations.
 - VP_Forecast and ForecastCategoryName are NOT independent signals — do not reference them.
+
+Executive narrative rules:
+- In narrative string values, never use source field names such as Primary_Vertical or ACV_USD.
+- In narrative string values, never say "win_rate_pct". Say "X% of deals close."
+- In narrative string values, do not say "ICP segment". Say "this profile" or "these customers."
+- In narrative string values, do not say "anti-ICP". Say "highest-risk segments."
+- Keep the JSON keys exactly as shown below, even when the key names are technical.
+- Put the per-BU narrative in coverage_note.
+- coverage_note: One sentence. Executive action directive for sales leadership.
+  Must start with "Sales leadership should..." or "[Team] must..." and end with a specific business consequence.
+- Example:
+  "Sales leadership should pressure-test Q3 commits in Industrial and Other verticals before board review — these segments show sub-12% close rates across 1,788 historical losses."
+- Use anti_icp.loss_patterns and anti_icp.low_win_rate_segments for supporting executive-ready bullets. These strings must also avoid field names and jargon.
 
 Return ONLY valid JSON matching this exact schema:
 {
@@ -64,21 +81,44 @@ Return ONLY valid JSON matching this exact schema:
 
 Return ONLY the JSON object. No explanation, no markdown fences."""
 
-ICP_VALIDATOR_SYSTEM = """You are validating the current open pipeline against a defined ICP profile.
+ICP_VALIDATOR_SYSTEM = """You are validating the current open pipeline against where each QAD \
+business unit wins most consistently.
+
+Audience: VP of Sales, CRO, and CEO. Lead with the business implication, not the data.
+Every narrative sentence must answer "so what?" Use plain language and short sentences.
+For each BU narrative, use 3 sentences max.
 
 For each QAD business unit (ERP BU, Supply Chain BU, Redzone BU), quantify:
 - Total open pipeline ACV and deal count
-- ICP-aligned pipeline ACV and % (deals in ICP verticals + revenue range, where data exists)
-- Non-ICP pipeline at risk — top 5 deals by ACV with a specific reason why they fall outside ICP
+- Pipeline aligned to the winning profile and % (deals in winning verticals + revenue range, where data exists)
+- Pipeline outside the winning profile at risk - top 5 deals by ACV with a specific reason why they fall outside
+- Use deal_name (opp_name field) and account_name exactly as provided in top_deals — never invent or alter them
 - Customer_Profile breakdown for open pipeline (ICP/ACP/UCP/Unknown)
+
+CRITICAL: icp_pipeline_acv and icp_pipeline_pct are pre-calculated by Python and provided in
+python_computed_alignment. Copy these values directly into your output — do NOT recalculate them.
+Your job for these two fields is transcription, not analysis. Any value you compute yourself will be wrong.
 
 IMPORTANT rules:
 - Primary_Vertical coverage is in the payload. Use vertical data where available; for nulls, note as "vertical unknown".
 - Customer_Profile is also sparse for pipeline. Note % populated, use where available.
-- Do not over-flag deals where vertical is simply unknown — only flag when vertical IS known and is anti-ICP.
-- Lead with the risk number (non-ICP ACV) — that is the most actionable metric.
+- Do not over-flag deals where vertical is simply unknown - only flag when vertical IS known and is a highest-risk segment.
+- Lead with the risk number for pipeline outside the winning profile - that is the most actionable metric.
 - trend_vs_prior compares to the prior week context if provided; otherwise "No prior week data."
 - Be specific with dollar amounts and percentages.
+- In narrative string values, never use source field names such as Primary_Vertical or ACV_USD.
+- In narrative string values, never say "win_rate_pct". Say "X% of deals close."
+- In narrative string values, do not say "ICP segment". Say "this profile" or "these customers."
+- In narrative string values, do not say "anti-ICP". Say "highest-risk segments."
+- Keep the JSON keys exactly as shown below, even when the key names are technical.
+
+Executive narrative format:
+- Put the per-BU narrative in trend_vs_prior.
+- trend_vs_prior must follow this format:
+  "[X]% of [BU]'s pipeline ($XM of $XM) sits outside ICP. The top risk is [deal] at $XM - [vertical] companies at [revenue range] close at [X]% historically. [Action recommendation for sales leadership]."
+- Example:
+  "62% of ERP's pipeline ($86M of $138M) sits outside ICP. The top risk is Illinois Tool Works at $1.8M - Industrial companies close at under 10% in ERP. Sales leadership should pressure-test Q3 commit deals against fit criteria before board review."
+- Each non_icp_deals.reason must be executive-friendly: explain why the deal is risky and what the business implication is.
 
 Return ONLY valid JSON matching this exact schema:
 {
@@ -88,7 +128,7 @@ Return ONLY valid JSON matching this exact schema:
     "icp_pipeline_acv": <float>,
     "icp_pipeline_pct": <float>,
     "non_icp_deals": [
-      {"opp_name": "...", "account_name": "...", "acv": <float>, "reason": "..."}
+      {"deal_name": "...", "account_name": "...", "acv": <float>, "reason": "..."}
     ],
     "customer_profile_breakdown": {"ICP": <int>, "ACP": <int>, "UCP": <int>, "Unknown": <int>},
     "trend_vs_prior": "..."
@@ -173,13 +213,25 @@ def icp_validator_prompt(
     icp_profile: dict,
     pipeline_data: dict,
     prior_week_context: dict | None,
+    icp_alignment: dict | None = None,
 ) -> tuple[str, str]:
     """
     Builds the system prompt and user message for the ICP validator agent.
 
-    Sends the discovery output + pipeline summary (top 30 deals by ACV + BU totals).
-    Does not send all pipeline deals to stay within token budget.
+    Sends discovery output + pre-computed alignment (authoritative) + top 15 deals per BU.
+    The LLM must copy icp_pipeline_acv/pct from python_computed_alignment — not recalculate.
+    Per-BU deal sampling ensures SC and Redzone aren't crowded out by ERP's larger ACVs.
     """
+    all_deals = pipeline_data.get("deals", []) or []
+    _per_bu: dict = {}
+    for d in all_deals:
+        bu = str(d.get("BU", "") or "")
+        if bu:
+            bucket = _per_bu.setdefault(bu, [])
+            if len(bucket) < 15:
+                bucket.append(d)
+    top_deals_flat = [d for bu_deals in _per_bu.values() for d in bu_deals]
+
     top_deals = [
         {
             "opp_name":       str(d.get("Name", "") or ""),
@@ -192,10 +244,11 @@ def icp_validator_prompt(
             "customer_profile": str(d.get("Customer_Profile") or "Unknown"),
             "sales_motion":   str(d.get("Sales_Motion", "") or ""),
         }
-        for d in (pipeline_data.get("deals", []) or [])[:30]
+        for d in top_deals_flat
     ]
 
     payload = {
+        "python_computed_alignment": icp_alignment or {},  # authoritative — copy these values directly
         "icp_profile":    icp_profile,
         "pipeline_by_bu": pipeline_data.get("by_bu", {}),
         "pipeline_total_acv":   pipeline_data.get("total_acv", 0),

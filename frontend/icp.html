@@ -76,7 +76,7 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 .summary-stat{display:flex;flex-direction:column;justify-content:center;padding:12px 28px 12px 0;gap:2px;position:relative}
 .summary-stat+.summary-stat{padding-left:28px}
 .summary-stat+.summary-stat::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:1px;background:var(--b)}
-.summary-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:var(--t3)}
+.summary-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3)}
 .summary-value{font-size:18px;font-weight:700;color:var(--t);letter-spacing:-.5px;line-height:1.2}
 .summary-sub{font-size:11px;color:var(--t2)}
 
@@ -112,20 +112,20 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 .icp-win-rates{display:flex;align-items:center;gap:0;margin-top:12px}
 .icp-rate-block{flex:1;display:flex;flex-direction:column;gap:2px}
 .icp-rate-block+.icp-rate-block{padding-left:14px;border-left:1px solid var(--b)}
-.icp-rate-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--t3)}
+.icp-rate-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3)}
 .icp-rate-value{font-size:20px;font-weight:700;color:var(--bu-color);letter-spacing:-.5px;line-height:1.1}
 .icp-rate-sub{font-size:10px;color:var(--t3)}
 .icp-card-body{padding:16px 18px;flex:1;display:flex;flex-direction:column;gap:16px}
 
 /* ── ICP PROFILE SECTION ─────────────────────────────────────────────────── */
-.icp-section-lbl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);margin-bottom:9px;display:flex;align-items:center;gap:6px}
+.icp-section-lbl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);margin-bottom:9px;display:flex;align-items:center;gap:6px}
 .icp-section-lbl::after{content:'';flex:1;height:1px;background:var(--b)}
 .icp-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:4px 0}
 .icp-row-label{font-size:11px;color:var(--t3);white-space:nowrap;flex-shrink:0}
-.icp-row-value{font-size:12px;font-weight:500;color:var(--t);text-align:right}
+.icp-row-value{font-size:12px;font-weight:700;color:var(--t);text-align:right}
 .vertical-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
-.v-pill{display:inline-block;font-size:10px;font-weight:500;padding:2px 9px;border-radius:20px;background:var(--bu-bg-alpha);color:var(--bu-color);border:1px solid var(--bu-border)}
-.sample-note{font-size:10px;color:var(--t3);font-style:italic;margin-top:2px}
+.v-pill{display:inline-block;font-size:10px;font-weight:500;padding:2px 9px;border-radius:20px;background:color-mix(in srgb,var(--bu-color) 10%,transparent);color:var(--bu-color);border:1px solid var(--bu-border)}
+.sample-note{font-size:max(13.5px,1em);color:var(--t2);font-style:italic;margin-top:2px;line-height:1.6}
 .low-conf{color:var(--amber)}
 
 /* ── PIPELINE EXPOSURE ───────────────────────────────────────────────────── */
@@ -141,26 +141,48 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 .non-icp-toggle:hover{color:var(--t)}
 .non-icp-toggle svg{flex-shrink:0;transition:transform var(--ease)}
 .non-icp-toggle.is-open svg{transform:rotate(180deg)}
-.non-icp-count{font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:4px;background:var(--red-bg);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+.non-icp-count{font-family:var(--mono);font-size:10px;padding:1px 6px;border-radius:4px;background:var(--surf2);color:var(--t2);border:1px solid var(--b2)}
 .non-icp-table-wrap{overflow:hidden;transition:max-height .3s ease;max-height:0}
 .non-icp-table-wrap.is-open{max-height:400px}
 .non-icp-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
-.non-icp-table thead th{background:var(--bg2);padding:6px 8px;text-align:left;font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:1px;color:var(--t3);border-bottom:1px solid var(--b)}
+.non-icp-table thead th{background:var(--bg2);padding:6px 8px;text-align:left;font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);border-bottom:1px solid var(--b)}
 .non-icp-table tbody tr{border-bottom:1px solid var(--b)}
 .non-icp-table tbody tr:last-child{border-bottom:none}
 .non-icp-table td{padding:7px 8px;color:var(--t2);vertical-align:top}
 .non-icp-acct{font-weight:500;color:var(--t);font-size:11px}
-.non-icp-reason{color:var(--t3);font-size:10px;line-height:1.4}
-.non-icp-acv{font-family:var(--mono);font-size:11px;color:var(--t);white-space:nowrap}
+.non-icp-deal{font-size:10px;color:var(--t3);margin-top:1px}
+.non-icp-reason{color:var(--t2);font-size:max(13.5px,1em);line-height:1.6;margin-top:2px}
+.non-icp-acv{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--t);white-space:nowrap}
 
 /* ── ANTI-ICP SIGNALS ────────────────────────────────────────────────────── */
 .anti-icp-list{display:flex;flex-direction:column;gap:5px}
-.anti-icp-item{display:flex;align-items:flex-start;gap:7px;font-size:11px;color:var(--t2);line-height:1.45}
+.anti-icp-item{display:flex;align-items:flex-start;gap:7px;font-size:max(13.5px,1em);color:var(--t2);line-height:1.6}
 .anti-icp-dot{width:5px;height:5px;border-radius:50%;background:var(--red);flex-shrink:0;margin-top:5px}
+
+/* ── WIN CALLOUT ─────────────────────────────────────────────────────────── */
+.win-callout{background:var(--bu-bg-alpha);border:1px solid var(--bu-border);border-radius:var(--r-sm);padding:10px 12px;display:flex;align-items:flex-start;gap:8px;margin-bottom:4px}
+.win-callout-icon{font-size:13px;flex-shrink:0;margin-top:1px}
+.win-callout-text{font-size:max(13.5px,1em);color:var(--t);line-height:1.6;font-weight:500}
+
+/* ── RISK HERO ───────────────────────────────────────────────────────────── */
+.risk-hero{font-size:26px;font-weight:700;letter-spacing:-.5px;line-height:1;display:flex;align-items:baseline;gap:8px}
+.risk-hero-label{font-size:12px;font-weight:400;color:var(--t2);letter-spacing:0}
+.risk-subtitle{font-size:11px;color:var(--t3);margin-top:4px;margin-bottom:8px}
+
+/* ── SO WHAT ─────────────────────────────────────────────────────────────── */
+.so-what{font-size:max(13.5px,1em);color:var(--t2);line-height:1.6;margin:8px 0 4px;padding:8px 10px;background:var(--surf2);border-radius:var(--r-sm);border-left:2px solid var(--amber)}
+
+/* ── RISK BADGE ──────────────────────────────────────────────────────────── */
+.risk-badge{display:inline-flex;align-items:center;font-size:10px;white-space:nowrap;color:var(--t2);background:var(--surf2);border:1px solid var(--b2);border-radius:4px;padding:2px 6px}
+.risk-badge.medium{background:var(--amber-bg);color:var(--amber);border-color:rgba(251,191,36,.25)}
+.risk-badge.high{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.25)}
+.win-rate-value,.pipeline-acv,.icp-acv,.icp-rate-value,.risk-hero,.summary-value{font-weight:700}
 
 /* ── REFINE BUTTON ───────────────────────────────────────────────────────── */
 .icp-card-foot{padding:12px 18px 16px;border-top:1px solid var(--b)}
-.refine-btn{width:100%;height:30px;background:none;border:1px solid var(--b2);border-radius:var(--r-sm);cursor:not-allowed;color:var(--t3);font:500 11px/1 var(--sans);display:flex;align-items:center;justify-content:center;gap:5px;opacity:.5;transition:none}
+.refine-btn{width:100%;height:32px;background:none;border:1px solid var(--bu-border);border-radius:var(--r-sm);cursor:default;color:var(--t2);font:500 11px/1 var(--sans);display:flex;align-items:center;justify-content:center;gap:6px;transition:all var(--ease)}
+.refine-btn:hover{background:var(--bu-bg-alpha);color:var(--t)}
+.refine-soon{font-size:9px;color:var(--t3);border:1px solid var(--b2);border-radius:3px;padding:1px 5px;margin-left:2px}
 
 /* ── DETAILED ANALYSIS ───────────────────────────────────────────────────── */
 .detail-section{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
@@ -169,11 +191,18 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 .detail-toggle svg{flex-shrink:0;transition:transform var(--ease);color:var(--t3)}
 .detail-toggle.is-open svg{transform:rotate(180deg)}
 .detail-body{padding:0 22px;max-height:0;overflow:hidden;transition:max-height .4s ease,padding .3s ease}
-.detail-body.is-open{max-height:2000px;padding:0 22px 22px}
-.detail-bu-block{margin-bottom:20px;padding-top:20px;border-top:1px solid var(--b)}
-.detail-bu-block:first-child{border-top:none;padding-top:4px}
-.detail-bu-name{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
-.detail-text{font-size:13px;color:var(--t2);line-height:1.65}
+.detail-body.is-open{max-height:3000px;padding:0 22px 22px}
+.detail-bu-block{padding:20px 0 4px;border-top:1px solid var(--b)}
+.detail-bu-block:first-child{border-top:none;padding-top:8px}
+.detail-bu-name{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:4px}
+.detail-divider{height:1px;background:var(--b);margin:6px 0 14px}
+.detail-section-block{margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--b)}
+.detail-section-block+.detail-section-block{padding-top:8px}
+.detail-section-block:last-child{margin-bottom:8px}
+.detail-section-block:last-child{border-bottom:none}
+.detail-section-name{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);margin-bottom:6px}
+.detail-bullet{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;color:var(--t2);line-height:1.6;padding:2px 0}
+.detail-bullet-dash{color:var(--t3);flex-shrink:0;user-select:none}
 
 /* ── REVIEW FOOTER ───────────────────────────────────────────────────────── */
 .review-footer{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:20px 24px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px}
@@ -187,7 +216,7 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 .rev-note{font-size:11px;color:var(--t2);display:flex;align-items:flex-start;gap:6px}
 .rev-note-dot{color:var(--t3);flex-shrink:0}
 .rev-correction{font-size:11px;color:var(--amber);display:flex;align-items:flex-start;gap:6px}
-.body-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3)}
+.body-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--t3)}
 .refresh-hint{font-family:var(--mono);font-size:10px;color:var(--t3)}
 .refresh-hint code{background:var(--surf2);border:1px solid var(--b);border-radius:3px;padding:1px 5px}
 
@@ -269,19 +298,19 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 <!-- ── SUMMARY BAR ────────────────────────────────────────────────────────── -->
 <div id="summary-bar" class="summary-bar" style="display:none">
   <div class="summary-stat">
-    <div class="summary-label">Pipeline Analyzed</div>
+    <div class="summary-label">Open Pipeline</div>
     <div class="summary-value" id="sum-pipeline">—</div>
     <div class="summary-sub" id="sum-deals">— open deals</div>
   </div>
   <div class="summary-stat">
-    <div class="summary-label">ICP Alignment</div>
+    <div class="summary-label">At Risk</div>
     <div class="summary-value" id="sum-icp-pct">—</div>
-    <div class="summary-sub">weighted across all BUs</div>
+    <div class="summary-sub" id="sum-icp-sub">outside ICP profile</div>
   </div>
   <div class="summary-stat">
-    <div class="summary-label">BUs Profiled</div>
-    <div class="summary-value" id="sum-bus">3</div>
-    <div class="summary-sub" id="sum-deals-analyzed">— historical deals</div>
+    <div class="summary-label">ICP Advantage</div>
+    <div class="summary-value" id="sum-bus">—</div>
+    <div class="summary-sub" id="sum-deals-analyzed">win rate inside ICP vs. company-wide</div>
   </div>
 </div>
 
@@ -558,7 +587,7 @@ function renderMeta(meta, review) {
 }
 
 // ── RENDER SUMMARY BAR ─────────────────────────────────────────────────────
-function renderSummary(meta, validation) {
+function renderSummary(meta, validation, icpProfile) {
   var totalAcv = 0, icpAcv = 0, totalDeals = 0;
   BU_DEFS.forEach(function(def) {
     var v = (validation || {})[def.key] || {};
@@ -566,15 +595,29 @@ function renderSummary(meta, validation) {
     icpAcv     += parseFloat(v.icp_pipeline_acv)   || 0;
     totalDeals += parseInt(v.total_pipeline_count)  || 0;
   });
-  var overallPct = totalAcv > 0 ? (icpAcv / totalAcv * 100).toFixed(0) + '%' : '—';
+  var nonIcpAcv = totalAcv - icpAcv;
+  var nonIcpPct = totalAcv > 0 ? (nonIcpAcv / totalAcv * 100) : 0;
+  var riskColor = nonIcpPct > 60 ? 'var(--red)' : 'var(--amber)';
+
+  var rates = BU_DEFS.map(function(def) {
+    var ip = ((icpProfile || {})[def.key] || {}).icp_profile || {};
+    return { overall: parseFloat(ip.bu_overall_win_rate_pct) || 0, icp: parseFloat(ip.icp_segment_win_rate_pct) || 0 };
+  }).filter(function(r) { return r.overall > 0 && r.icp > 0; });
+  var avgOverall = rates.length ? rates.reduce(function(s,r) { return s + r.overall; }, 0) / rates.length : 0;
+  var avgIcp     = rates.length ? rates.reduce(function(s,r) { return s + r.icp; },     0) / rates.length : 0;
+  var multiplier = avgOverall > 0 ? (avgIcp / avgOverall).toFixed(1) + '×' : '—';
 
   document.getElementById('summary-bar').style.display = 'flex';
   document.getElementById('sum-pipeline').textContent = fmtM(totalAcv);
   document.getElementById('sum-deals').textContent = totalDeals.toLocaleString() + ' open deals';
-  document.getElementById('sum-icp-pct').textContent = overallPct;
-  document.getElementById('sum-bus').textContent = '3';
-  var analyzed = meta.total_deals_analyzed;
-  document.getElementById('sum-deals-analyzed').textContent = analyzed ? analyzed.toLocaleString() + ' historical deals' : '';
+
+  var riskEl = document.getElementById('sum-icp-pct');
+  riskEl.textContent = (nonIcpPct > 30 ? '⚠ ' : '') + fmtM(nonIcpAcv);
+  riskEl.style.color = riskColor;
+  document.getElementById('sum-icp-sub').textContent = nonIcpPct.toFixed(0) + '% outside ICP profile';
+
+  document.getElementById('sum-bus').textContent = multiplier;
+  document.getElementById('sum-deals-analyzed').textContent = 'win rate inside ICP vs. company-wide';
 }
 
 // ── BUILD ONE BU CARD ──────────────────────────────────────────────────────
@@ -593,56 +636,105 @@ function buildCard(def, profile, valid) {
   var lowConf     = sampleSize < 50 && sampleSize > 0;
   var lossPatterns = (anti.loss_patterns || []).concat(anti.low_win_rate_segments || []).slice(0, 3);
 
-  var totalAcv   = parseFloat(v.total_pipeline_acv) || 0;
-  var icpAcv     = parseFloat(v.icp_pipeline_acv)   || 0;
-  var icpPct     = parseFloat(v.icp_pipeline_pct)   || 0;
-  var totalCount = parseInt(v.total_pipeline_count)  || 0;
+  var totalAcv    = parseFloat(v.total_pipeline_acv) || 0;
+  var icpAcv      = parseFloat(v.icp_pipeline_acv)   || 0;
+  var nonIcpAcv   = totalAcv - icpAcv;
+  var nonIcpPct   = totalAcv > 0 ? (nonIcpAcv / totalAcv * 100) : 0;
+  var totalCount  = parseInt(v.total_pipeline_count)  || 0;
   var nonIcpDeals = v.non_icp_deals || [];
-  var trend = v.trend_vs_prior || '';
+  var trend       = v.trend_vs_prior || '';
 
-  var cardId = def.key.replace(/ /g, '-').toLowerCase();
+  var cardId    = def.key.replace(/ /g, '-').toLowerCase();
+  var riskColor = nonIcpPct > 60 ? 'var(--red)' : 'var(--amber)';
 
-  // Vertical pills
+  // WHERE WE WIN callout sentence
+  var buShort = def.key.replace(' BU', '');
+  var topVerts = verticals.slice(0, 3).join(', ');
+  var overallNum = parseFloat(ip.bu_overall_win_rate_pct) || 0;
+  var icpNum     = parseFloat(ip.icp_segment_win_rate_pct) || 0;
+  var multiplier = (overallNum > 0 && icpNum > 0) ? (icpNum / overallNum).toFixed(1) : null;
+  var winSentence = topVerts
+    ? esc(buShort) + ' wins in ' + esc(topVerts) + ' (' + esc(revRange) + ').' +
+      (multiplier ? ' Win rate ' + multiplier + '× higher vs. other segments.' : '')
+    : 'No vertical data available for this cycle.';
+
+  // Vertical pills (supporting detail)
   var pillsHtml = verticals.length
-    ? '<div class="vertical-pills">' + verticals.map(function(v) { return '<span class="v-pill">' + esc(v) + '</span>'; }).join('') + '</div>'
-    : '<span style="color:var(--t3);font-size:11px">No vertical data</span>';
+    ? '<div class="vertical-pills" style="margin-top:8px">' +
+        verticals.map(function(vt) { return '<span class="v-pill">' + esc(vt) + '</span>'; }).join('') +
+      '</div>'
+    : '';
 
-  // Non-ICP deals table
+  // Risk badge — uses BU overall rate as proxy for non-ICP segment win rate
+  var riskLabel = overallNum < 5 ? '🔴 High risk' : overallNum < 10 ? '🟡 Medium risk' : '🔵 Borderline';
+
+  function dealWinRate(d) {
+    var raw = d.win_rate != null ? d.win_rate : d.win_rate_pct;
+    var n = parseFloat(raw);
+    if (!isFinite(n) || n <= 0) return null;
+    return n <= 1 ? n * 100 : n;
+  }
+  var dealRates = nonIcpDeals.map(dealWinRate).filter(function(n) { return n != null; });
+  var hasHighRisk = dealRates.some(function(n) { return n < 5; });
+  var hasMediumRisk = !hasHighRisk && dealRates.some(function(n) { return n >= 5 && n <= 10; });
+  riskLabel = hasHighRisk ? 'High risk' : hasMediumRisk ? 'Medium risk' : 'Neutral risk';
+  var riskBadgeClass = hasHighRisk ? 'high' : hasMediumRisk ? 'medium' : 'neutral';
+
+  // Non-ICP deals table (simplified — no reason column, add risk badge)
   var nonIcpToggleHtml = '';
   var nonIcpTableHtml  = '';
   if (nonIcpDeals.length) {
-    nonIcpToggleHtml = '<button class="non-icp-toggle" onclick="toggleNonIcp(\'' + cardId + '\')" id="toggle-' + cardId + '">' +
-      '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 6l4 4 4-4"/></svg>' +
-      'Non-ICP Risk' +
-      '<span class="non-icp-count">' + nonIcpDeals.length + ' deal' + (nonIcpDeals.length > 1 ? 's' : '') + '</span>' +
-    '</button>';
+    nonIcpToggleHtml =
+      '<button class="non-icp-toggle" onclick="toggleNonIcp(\'' + cardId + '\')" id="toggle-' + cardId + '">' +
+        '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 6l4 4 4-4"/></svg>' +
+        'Top deals at risk' +
+        '<span class="non-icp-count">' + nonIcpDeals.length + ' deal' + (nonIcpDeals.length > 1 ? 's' : '') + '</span>' +
+      '</button>';
 
     var rows = nonIcpDeals.map(function(d) {
-      return '<tr><td><div class="non-icp-acct">' + esc(d.account_name || d.opp_name || '—') + '</div>' +
-             '<div class="non-icp-reason">' + esc(d.reason || '') + '</div></td>' +
-             '<td class="non-icp-acv">' + fmtM(d.acv) + '</td></tr>';
+      var dealLine   = d.deal_name ? '<div class="non-icp-deal">'   + esc(d.deal_name) + '</div>' : '';
+      var reasonLine = d.reason    ? '<div class="non-icp-reason">' + esc(d.reason)    + '</div>' : '';
+      return '<tr>' +
+        '<td>' +
+          '<div class="non-icp-acct">' + esc(d.account_name || '—') + '</div>' +
+          dealLine + reasonLine +
+        '</td>' +
+        '<td style="vertical-align:top;text-align:right;white-space:nowrap">' +
+          '<div class="non-icp-acv">' + fmtM(d.acv) + '</div>' +
+          '<div style="margin-top:5px"><span class="risk-badge ' + riskBadgeClass + '">' + riskLabel + '</span></div>' +
+        '</td>' +
+      '</tr>';
     }).join('');
 
-    nonIcpTableHtml = '<div class="non-icp-table-wrap" id="nonicp-' + cardId + '">' +
-      '<table class="non-icp-table"><thead><tr><th>Account / Reason</th><th>ACV</th></tr></thead>' +
-      '<tbody>' + rows + '</tbody></table></div>';
+    nonIcpTableHtml =
+      '<div class="non-icp-table-wrap" id="nonicp-' + cardId + '">' +
+        '<table class="non-icp-table"><thead><tr><th>Account / Deal</th><th style="text-align:right">ACV</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table>' +
+      '</div>';
+  }
+
+  // So-what directive
+  var soWhatHtml = '';
+  if (nonIcpDeals.length && overallNum > 0) {
+    soWhatHtml = '<div class="so-what">→ These deals should be reviewed before forecast commit — ' +
+      esc(buShort) + ' closes fewer than ' + Math.ceil(overallNum) + '% of opportunities outside this profile.</div>';
   }
 
   return '<div class="icp-bu-card" style="--bu-color:' + def.color + ';--bu-bg-alpha:' + def.bgAlpha + ';--bu-border:' + def.border + '">' +
 
-    // Card head
+    // Card head (unchanged)
     '<div class="icp-card-head">' +
       '<span class="icp-bu-badge">' + esc(def.key) + '</span>' +
       '<div class="icp-win-rates" style="margin-top:14px">' +
         '<div class="icp-rate-block">' +
           '<div class="icp-rate-label">Overall Win Rate</div>' +
           '<div class="icp-rate-value">' + esc(overallRate) + '</div>' +
-          '<div class="icp-rate-sub">full population</div>' +
+          '<div class="icp-rate-sub">across all deals</div>' +
         '</div>' +
         '<div class="icp-rate-block" style="margin-left:14px">' +
           '<div class="icp-rate-label">ICP Segment</div>' +
           '<div class="icp-rate-value">' + esc(icpRate) + '</div>' +
-          '<div class="icp-rate-sub">top verticals only</div>' +
+          '<div class="icp-rate-sub">in ICP segments</div>' +
         '</div>' +
       '</div>' +
     '</div>' +
@@ -650,52 +742,59 @@ function buildCard(def, profile, valid) {
     // Card body
     '<div class="icp-card-body">' +
 
-      // ICP Profile
+      // WHERE WE WIN
       '<div>' +
-        '<div class="icp-section-lbl">ICP Profile</div>' +
-        '<div style="margin-bottom:8px">' +
-          '<div class="icp-row-label" style="font-size:10px;color:var(--t3);margin-bottom:5px">Top Verticals</div>' +
-          pillsHtml +
+        '<div class="icp-section-lbl">Where We Win</div>' +
+        '<div class="win-callout">' +
+          '<span class="win-callout-icon">💡</span>' +
+          '<span class="win-callout-text">' + winSentence + '</span>' +
         '</div>' +
-        '<div class="icp-row"><span class="icp-row-label">Revenue Range</span><span class="icp-row-value">' + esc(revRange) + '</span></div>' +
-        '<div class="icp-row"><span class="icp-row-label">Avg Deal Won</span><span class="icp-row-value">' + esc(avgDeal) + '</span></div>' +
-        '<div class="icp-row"><span class="icp-row-label">Sample</span><span class="icp-row-value' + (lowConf ? ' low-conf' : '') + '">' + esc(sampleSize.toLocaleString()) + ' deals' + (lowConf ? ' ⚠' : '') + '</span></div>' +
-        (p.coverage_note ? '<div class="sample-note">' + esc(p.coverage_note) + '</div>' : '') +
+        pillsHtml +
+        '<div style="display:flex;align-items:flex-start;gap:20px;margin-top:10px">' +
+          '<div><div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Revenue Range</div>' +
+               '<div style="font-size:11px;font-weight:700;color:var(--t)">' + esc(revRange) + '</div></div>' +
+          '<div><div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Avg Deal Won</div>' +
+               '<div style="font-size:11px;font-weight:700;color:var(--t)">' + esc(avgDeal) + '</div></div>' +
+          '<div><div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Sample</div>' +
+               '<div style="font-size:11px;font-weight:500;color:' + (lowConf ? 'var(--amber)' : 'var(--t)') + '">' + esc(sampleSize.toLocaleString()) + (lowConf ? ' ⚠' : '') + '</div></div>' +
+        '</div>' +
+        (p.coverage_note ? '<div class="sample-note" style="margin-top:6px">' + esc(p.coverage_note) + '</div>' : '') +
       '</div>' +
 
-      // Pipeline Exposure
+      // PIPELINE AT RISK
       '<div>' +
-        '<div class="icp-section-lbl">Pipeline Exposure</div>' +
-        '<div class="icp-row"><span class="icp-row-label">Total Pipeline</span><span class="icp-row-value">' + esc(fmtM(totalAcv)) + ' · ' + totalCount.toLocaleString() + ' deals</span></div>' +
-        '<div class="icp-progress-wrap">' +
-          '<div class="icp-progress-bar"><div class="icp-progress-fill" style="width:' + Math.min(icpPct, 100).toFixed(0) + '%"></div></div>' +
-          '<div class="icp-progress-labels">' +
-            '<span class="icp-progress-pct">ICP Aligned: ' + fmtPct(icpPct) + '</span>' +
-            '<span class="icp-progress-total">' + fmtM(icpAcv) + '</span>' +
-          '</div>' +
-        '</div>' +
-        (trend ? '<div class="sample-note" style="margin-top:4px">' + esc(trend) + '</div>' : '') +
-        nonIcpToggleHtml +
-        nonIcpTableHtml +
+        '<div class="icp-section-lbl">Pipeline at Risk</div>' +
+        (totalAcv > 0
+          ? '<div class="risk-hero" style="color:' + riskColor + '">' + fmtM(nonIcpAcv) + '<span class="risk-hero-label">outside ICP</span></div>' +
+            '<div class="risk-subtitle">' + nonIcpPct.toFixed(0) + '% of ' + fmtM(totalAcv) + ' total pipeline · ' + totalCount.toLocaleString() + ' deals</div>' +
+            '<div class="icp-progress-wrap">' +
+              '<div class="icp-progress-bar"><div class="icp-progress-fill" style="width:' + Math.min(nonIcpPct, 100).toFixed(0) + '%;background:' + riskColor + '"></div></div>' +
+            '</div>' +
+            (trend ? '<div class="sample-note" style="margin-top:4px">' + esc(trend) + '</div>' : '') +
+            soWhatHtml +
+            nonIcpToggleHtml +
+            nonIcpTableHtml
+          : '<div style="color:var(--t3);font-size:12px">No pipeline data</div>') +
       '</div>' +
 
-      // Anti-ICP
-      (lossPatterns.length ? '<div>' +
-        '<div class="icp-section-lbl">Anti-ICP Signals</div>' +
-        '<div class="anti-icp-list">' +
-        lossPatterns.map(function(lp) {
-          return '<div class="anti-icp-item"><div class="anti-icp-dot"></div><span>' + esc(lp) + '</span></div>';
-        }).join('') +
-        '</div>' +
-      '</div>' : '') +
+      // WHAT TO AVOID
+      (lossPatterns.length
+        ? '<div>' +
+            '<div class="icp-section-lbl">What to Avoid</div>' +
+            '<div class="anti-icp-list">' +
+              lossPatterns.map(function(lp) {
+                return '<div class="anti-icp-item"><div class="anti-icp-dot"></div><span>' + esc(lp) + '</span></div>';
+              }).join('') +
+            '</div>' +
+          '</div>'
+        : '') +
 
     '</div>' + // end card-body
 
-    // Card footer
+    // Card footer — refine button (outlined, not disabled)
     '<div class="icp-card-foot">' +
-      '<button class="refine-btn" disabled title="Manual ICP refinement — coming soon">' +
-        '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5"/><path d="M8 5v3l2 2"/></svg>' +
-        'Refine ICP — coming soon' +
+      '<button class="refine-btn" title="Define your own ICP criteria — coming in next release">' +
+        '🔒 Refine ICP Profile<span class="refine-soon">coming soon</span>' +
       '</button>' +
     '</div>' +
 
@@ -721,34 +820,93 @@ function renderGrid(icpProfile, validation) {
 
 // ── RENDER DETAILED ANALYSIS ───────────────────────────────────────────────
 function renderDetail(icpProfile, validation) {
-  // Build narrative from profile + validation data (agents don't output a separate narrative field)
   var hasContent = false;
+
+  function bullets(arr) {
+    return arr.map(function(b) {
+      return '<div class="detail-bullet"><span class="detail-bullet-dash">—</span><span>' + esc(b) + '</span></div>';
+    }).join('');
+  }
+
   var html = BU_DEFS.map(function(def) {
     var p = icpProfile[def.key];
     var v = validation[def.key];
     if (!p && !v) return '';
     hasContent = true;
-    var ip = (p || {}).icp_profile || {};
-    var text = [];
-    if (ip.top_verticals && ip.top_verticals.length) {
-      text.push('Top ICP verticals: ' + ip.top_verticals.join(', ') + '. Revenue sweet spot: ' + (ip.revenue_range || '—') + '.');
-    }
-    if (ip.bu_overall_win_rate_pct != null) {
-      text.push('Overall win rate ' + fmtPct(ip.bu_overall_win_rate_pct) + ' across all deals; ICP segment rate ' + fmtPct(ip.icp_segment_win_rate_pct) + '.');
-    }
-    if (v) {
-      text.push('Open pipeline: ' + fmtM(v.total_pipeline_acv) + ' total, ' + fmtPct(v.icp_pipeline_pct) + ' ICP-aligned (' + fmtM(v.icp_pipeline_acv) + ').');
-      if (v.trend_vs_prior && v.trend_vs_prior !== 'No prior week data.') text.push(v.trend_vs_prior);
-    }
-    var anti = ((p || {}).anti_icp || {}).loss_patterns || [];
-    if (anti.length) text.push('Anti-ICP signals: ' + anti.join('; ') + '.');
-    if ((p || {}).coverage_note) text.push((p || {}).coverage_note);
+    var ip   = (p || {}).icp_profile || {};
+    var anti = (p || {}).anti_icp   || {};
 
-    // BU color
-    var buColor = def.color;
+    // WHERE WE WIN
+    var whereWin = [];
+    if (ip.top_verticals && ip.top_verticals.length) {
+      whereWin.push(ip.top_verticals.join(', ') + ' — ' + (ip.revenue_range || '—') + ' revenue');
+    }
+    if (ip.icp_segment_win_rate_pct != null && ip.bu_overall_win_rate_pct != null) {
+      whereWin.push('Win rate ' + fmtPct(ip.icp_segment_win_rate_pct) + ' in ICP vs ' +
+                    fmtPct(ip.bu_overall_win_rate_pct) + ' company-wide');
+    }
+    if (ip.avg_deal_size) {
+      whereWin.push('Avg deal won: ' + fmtM(ip.avg_deal_size));
+    }
+
+    // PIPELINE RISK
+    var pipeRisk = [];
+    if (v) {
+      var totalAcv  = parseFloat(v.total_pipeline_acv) || 0;
+      var icpAcv    = parseFloat(v.icp_pipeline_acv)   || 0;
+      var nonIcpAcv = totalAcv - icpAcv;
+      var nonIcpPct = totalAcv > 0 ? (nonIcpAcv / totalAcv * 100) : 0;
+      if (totalAcv > 0) {
+        pipeRisk.push(fmtM(nonIcpAcv) + ' (' + nonIcpPct.toFixed(0) + '%) outside winning profile');
+      }
+      var topRisk = (v.non_icp_deals || [])[0];
+      if (topRisk) {
+        var riskStr = 'Top risk: ' + (topRisk.account_name || '—') + ' ' + fmtM(topRisk.acv);
+        if (topRisk.reason) riskStr += ' — ' + topRisk.reason;
+        pipeRisk.push(riskStr);
+      }
+      if (v.trend_vs_prior && v.trend_vs_prior !== 'No prior week data.') {
+        pipeRisk.push(v.trend_vs_prior);
+      }
+    }
+    var coverageNote = (p || {}).coverage_note || '';
+    if (coverageNote && coverageNote !== 'Analysis unavailable for this cycle.') {
+      pipeRisk.push(coverageNote);
+    }
+
+    // HIGHEST-RISK SEGMENTS
+    var riskSegs = (anti.loss_patterns || [])
+      .concat(anti.low_win_rate_segments || [])
+      .filter(Boolean)
+      .slice(0, 4);
+
+    var sections = [];
+    if (whereWin.length) {
+      sections.push(
+        '<div class="detail-section-block">' +
+          '<div class="detail-section-name">Where We Win</div>' + bullets(whereWin) +
+        '</div>'
+      );
+    }
+    if (pipeRisk.length) {
+      sections.push(
+        '<div class="detail-section-block">' +
+          '<div class="detail-section-name">Pipeline Risk</div>' + bullets(pipeRisk) +
+        '</div>'
+      );
+    }
+    if (riskSegs.length) {
+      sections.push(
+        '<div class="detail-section-block">' +
+          '<div class="detail-section-name">Highest-Risk Segments</div>' + bullets(riskSegs) +
+        '</div>'
+      );
+    }
+
     return '<div class="detail-bu-block">' +
-      '<div class="detail-bu-name" style="color:' + buColor + '">' + esc(def.key) + '</div>' +
-      '<div class="detail-text">' + text.map(function(t) { return esc(t); }).join(' ') + '</div>' +
+      '<div class="detail-bu-name" style="color:' + def.color + '">' + esc(def.key) + '</div>' +
+      '<div class="detail-divider"></div>' +
+      sections.join('') +
     '</div>';
   }).join('');
 
@@ -808,7 +966,7 @@ function loadICP() {
       var review     = data.review      || {};
 
       renderMeta(meta, review);
-      renderSummary(meta, validation);
+      renderSummary(meta, validation, icpProfile);
       renderGrid(icpProfile, validation);
       renderDetail(icpProfile, validation);
       renderReview(review);

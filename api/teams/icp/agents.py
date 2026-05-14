@@ -14,6 +14,7 @@ Agent 2: icp_validator  — validates open pipeline against the ICP profile
 """
 
 from shared.llm_adapter import call_llm_json
+from shared.utils import safe_float
 from .prompts import icp_discovery_prompt, icp_validator_prompt
 
 _BUS = ("ERP BU", "Supply Chain BU", "Redzone BU")
@@ -105,17 +106,87 @@ def _validate_validation(raw: dict) -> dict:
             result[bu] = _bu_validation_fallback(bu)
             continue
 
+        raw_deals = bu_data.get("non_icp_deals") or []
+        non_icp_deals = [
+            {
+                "deal_name":    str(d.get("deal_name") or d.get("opp_name") or ""),
+                "account_name": str(d.get("account_name") or ""),
+                "acv":          float(d.get("acv") or 0.0),
+                "reason":       str(d.get("reason") or ""),
+            }
+            for d in raw_deals
+            if isinstance(d, dict)
+        ]
+
         result[bu] = {
             "total_pipeline_acv":   float(bu_data.get("total_pipeline_acv")   or 0.0),
             "total_pipeline_count": int(bu_data.get("total_pipeline_count")   or 0),
             "icp_pipeline_acv":     float(bu_data.get("icp_pipeline_acv")     or 0.0),
             "icp_pipeline_pct":     float(bu_data.get("icp_pipeline_pct")     or 0.0),
-            "non_icp_deals":        list(bu_data.get("non_icp_deals")         or []),
+            "non_icp_deals":        non_icp_deals,
             "customer_profile_breakdown": bu_data.get("customer_profile_breakdown") or {
                 "ICP": 0, "ACP": 0, "UCP": 0, "Unknown": 0
             },
             "trend_vs_prior": str(bu_data.get("trend_vs_prior") or "No prior week data."),
         }
+
+    return result
+
+
+# ── DETERMINISTIC ICP ALIGNMENT ───────────────────────────────────────────────
+
+def _compute_icp_alignment(discovery_output: dict, pipeline_data: dict) -> dict:
+    """
+    Deterministically computes ICP pipeline alignment per BU in Python.
+
+    A deal is ICP-aligned if ALL of:
+    - Primary_Vertical is non-null AND matches a BU top_vertical (case-insensitive)
+    - revenue_bucket is non-Unknown AND matches the BU revenue_range exactly
+
+    If either field is null → not ICP-aligned (no partial credit).
+
+    Returns:
+        {bu: {icp_pipeline_acv, icp_pipeline_pct, icp_deal_count, total_pipeline_acv}}
+    """
+    deals = pipeline_data.get("deals", []) or []
+
+    result = {}
+    for bu, bu_profile in discovery_output.items():
+        ip         = bu_profile.get("icp_profile", {})
+        top_verts  = {v.strip().lower() for v in (ip.get("top_verticals") or []) if v}
+        rev_range  = ip.get("revenue_range", "").strip()
+
+        total_acv = 0.0
+        icp_acv   = 0.0
+        icp_count = 0
+
+        for d in deals:
+            if str(d.get("BU", "") or "") != bu:
+                continue
+
+            acv = safe_float(d.get("ACV"))
+            total_acv += acv
+
+            vertical   = d.get("Primary_Vertical")
+            rev_bucket = str(d.get("revenue_bucket", "") or "").strip()
+
+            if not vertical or rev_bucket in ("Unknown", ""):
+                continue  # null vertical or unknown revenue → not ICP
+
+            if vertical.strip().lower() in top_verts and rev_bucket == rev_range:
+                icp_acv   += acv
+                icp_count += 1
+
+        icp_pct = round(icp_acv / total_acv * 100, 1) if total_acv > 0 else 0.0
+        result[bu] = {
+            "icp_pipeline_acv":   round(icp_acv, 2),
+            "icp_pipeline_pct":   icp_pct,
+            "icp_deal_count":     icp_count,
+            "total_pipeline_acv": round(total_acv, 2),
+        }
+        print(f"[agents] ICP Alignment (Python) — {bu}: "
+              f"icp={icp_pct:.1f}%, icp_acv=${icp_acv/1e6:.2f}M, "
+              f"total=${total_acv/1e6:.2f}M, n={icp_count}")
 
     return result
 
@@ -182,12 +253,17 @@ def icp_validator(
         Validated dict: {bu: {total_pipeline_acv, icp_pipeline_acv, icp_pipeline_pct,
                                non_icp_deals, customer_profile_breakdown, trend_vs_prior}}
     """
-    print("[agents] Running ICP Validator...")
+    # Step 1: Compute alignment deterministically — never trust the LLM for this
+    print("[agents] Computing ICP alignment (deterministic Python)...")
+    icp_alignment = _compute_icp_alignment(discovery_output, pipeline_data)
 
+    # Step 2: LLM handles narrative + non-ICP deal identification only
+    print("[agents] Running ICP Validator (LLM — narrative and non-ICP deals)...")
     system_prompt, user_message = icp_validator_prompt(
         icp_profile=discovery_output,
         pipeline_data=pipeline_data,
         prior_week_context=prior_week_context,
+        icp_alignment=icp_alignment,
     )
 
     raw_output = call_llm_json(
@@ -199,9 +275,16 @@ def icp_validator(
 
     validated = _validate_validation(raw_output)
 
+    # Step 3: Override any LLM-computed alignment with the authoritative Python values
+    for bu, align in icp_alignment.items():
+        if bu in validated:
+            validated[bu]["icp_pipeline_acv"]   = align["icp_pipeline_acv"]
+            validated[bu]["icp_pipeline_pct"]   = align["icp_pipeline_pct"]
+            validated[bu]["total_pipeline_acv"] = align["total_pipeline_acv"]
+
     for bu, data in validated.items():
         print(f"[agents] ICP Validator — {bu}: "
               f"total=${data['total_pipeline_acv']/1e6:.1f}M, "
-              f"icp={data['icp_pipeline_pct']:.0f}%")
+              f"icp={data['icp_pipeline_pct']:.1f}% (Python-computed)")
 
     return validated
