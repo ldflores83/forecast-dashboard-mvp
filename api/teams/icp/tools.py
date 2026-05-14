@@ -221,45 +221,80 @@ def get_pipeline_by_bu() -> dict:
     Returns:
         dict with keys:
             deals       — list of deal dicts (revenue_bucket added in Python)
-            by_bu       — {bu: {total_acv, deal_count}}
+            by_bu       — {bu: {total_acv, deal_count, avg_q_score,
+                                surging_count, abm_count}}
             total_deals — int
             total_acv   — float
     """
-    tbl = _tbl("opportunities")
+    tbl     = _tbl("opportunities")
+    acc_tbl = _tbl("accounts")
     sql = f"""
         SELECT
-            Id,
-            Name,
-            BU,
-            StageName,
-            ACV,
-            Account_Name,
-            Primary_Vertical,
-            Account_Annual_Revenue  AS AnnualRevenue,
-            Account_No_of_Employees AS No_of_Employees,
-            Account_Type,
-            Country,
-            Customer_Profile,
-            Sales_Motion,
-            Owner_Name,
-            CloseDate
-        FROM {tbl}
-        WHERE Is_Open = TRUE
-          AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
-        ORDER BY ACV DESC
+            o.Id,
+            o.Name,
+            o.BU,
+            o.StageName,
+            o.ACV,
+            o.Account_Name,
+            o.Primary_Vertical,
+            o.Account_Annual_Revenue  AS AnnualRevenue,
+            o.Account_No_of_Employees AS No_of_Employees,
+            o.Account_Type,
+            o.Country,
+            o.Customer_Profile,
+            o.Sales_Motion,
+            o.Owner_Name,
+            o.CloseDate,
+            o.AccountId,
+            acc.q_score,
+            acc.q_trend,
+            acc.q_condition,
+            acc.target_account_status,
+            acc.whitespace_gross_potential
+        FROM {tbl} o
+        LEFT JOIN {acc_tbl} acc
+            ON o.AccountId = acc.account_id
+        WHERE o.Is_Open = TRUE
+          AND o.BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
+        ORDER BY o.ACV DESC
     """
     deals = _query(sql)
 
     for d in deals:
-        d["revenue_bucket"] = _revenue_bucket(d.get("AnnualRevenue"))
+        d["revenue_bucket"]           = _revenue_bucket(d.get("AnnualRevenue"))
+        d["q_score"]                  = safe_float(d.get("q_score"))
+        d["q_trend"]                  = str(d.get("q_trend") or "")
+        d["q_condition"]              = str(d.get("q_condition") or "")
+        d["target_account_status"]    = str(d.get("target_account_status") or "")
+        d["whitespace_gross_potential"] = safe_float(d.get("whitespace_gross_potential"))
 
     by_bu: dict = {}
     for d in deals:
         bu = str(d.get("BU", "") or "")
         if bu not in by_bu:
-            by_bu[bu] = {"total_acv": 0.0, "deal_count": 0}
-        by_bu[bu]["total_acv"]   += safe_float(d.get("ACV"))
-        by_bu[bu]["deal_count"]  += 1
+            by_bu[bu] = {
+                "total_acv":    0.0,
+                "deal_count":   0,
+                "_q_scores":    [],   # temp accumulator, removed before return
+                "surging_count": 0,
+                "abm_count":    0,
+            }
+        by_bu[bu]["total_acv"]  += safe_float(d.get("ACV"))
+        by_bu[bu]["deal_count"] += 1
+
+        qs = d.get("q_score")
+        if qs is not None and qs > 0:
+            by_bu[bu]["_q_scores"].append(qs)
+
+        if d.get("q_trend") in ("Surging", "Rising"):
+            by_bu[bu]["surging_count"] += 1
+
+        if d.get("target_account_status"):
+            by_bu[bu]["abm_count"] += 1
+
+    for bu, b in by_bu.items():
+        scores = b.pop("_q_scores")
+        b["avg_q_score"] = round(sum(scores) / len(scores), 1) if scores else 0.0
 
     return {
         "deals":       deals,

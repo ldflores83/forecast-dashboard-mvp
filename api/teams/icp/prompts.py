@@ -123,6 +123,28 @@ IMPORTANT rules:
 - In narrative string values, do not say "anti-ICP". Say "highest-risk segments."
 - Keep the JSON keys exactly as shown below, even when the key names are technical.
 
+MOMENTUM AND ABM SIGNALS:
+Account intelligence fields are provided in top_deals (q_score, q_trend, q_condition,
+target_account_status) and in pipeline_by_bu (avg_q_score, surging_count, abm_count per BU).
+
+q_score and q_trend interpretation:
+- q_score > 50 is notable engagement. q_score > 70 is a strong intent signal.
+- q_trend "Surging" or "Rising" on a stalled deal (early stage or long time in stage) = buy signal
+  worth accelerating. Mention it in trend_vs_prior if it is also ICP-aligned.
+- q_trend "Declining" or "Cold" at Commit or Best Case stage = intervention risk.
+  Flag these deals by name in trend_vs_prior.
+- If q_score is null or 0 and q_trend is not Surging/Rising, omit that deal from momentum analysis.
+
+target_account_status interpretation:
+- "In Sales Process" = deal is ABM-aligned. Prioritize and call out in trend_vs_prior.
+- null/empty + ACV > $500,000 = flag as missing ABM coverage in trend_vs_prior.
+
+For momentum_deals, select the top 3 ICP-aligned deals (matching winning verticals or revenue range
+from icp_profile) with the highest q_score OR q_trend = "Surging" or "Rising".
+For each, write one sentence in "reason" on the specific acceleration opportunity.
+If fewer than 3 ICP-aligned deals have positive momentum signals, include the best available
+and note the shortfall in the reason field.
+
 Executive narrative format:
 - Put the per-BU narrative in trend_vs_prior.
 - trend_vs_prior must follow this format:
@@ -145,7 +167,17 @@ Return ONLY valid JSON matching this exact schema:
     "trend_vs_prior": "..."
   },
   "Supply Chain BU": { ... },
-  "Redzone BU": { ... }
+  "Redzone BU": { ... },
+  "momentum_deals": [
+    {
+      "deal_name": "...",
+      "bu": "...",
+      "acv": <float>,
+      "q_score": <float>,
+      "q_trend": "...",
+      "reason": "..."
+    }
+  ]
 }
 
 Return ONLY the JSON object. No explanation, no markdown fences."""
@@ -245,15 +277,19 @@ def icp_validator_prompt(
 
     top_deals = [
         {
-            "opp_name":       str(d.get("Name", "") or ""),
-            "account_name":   str(d.get("Account_Name", "") or ""),
-            "bu":             str(d.get("BU", "") or ""),
-            "stage":          str(d.get("StageName", "") or ""),
-            "acv":            d.get("ACV"),
-            "vertical":       str(d.get("Primary_Vertical") or "Unknown"),
-            "revenue_bucket": d.get("revenue_bucket", "Unknown"),
-            "customer_profile": str(d.get("Customer_Profile") or "Unknown"),
-            "sales_motion":   str(d.get("Sales_Motion", "") or ""),
+            "opp_name":              str(d.get("Name", "") or ""),
+            "account_name":          str(d.get("Account_Name", "") or ""),
+            "bu":                    str(d.get("BU", "") or ""),
+            "stage":                 str(d.get("StageName", "") or ""),
+            "acv":                   d.get("ACV"),
+            "vertical":              str(d.get("Primary_Vertical") or "Unknown"),
+            "revenue_bucket":        d.get("revenue_bucket", "Unknown"),
+            "customer_profile":      str(d.get("Customer_Profile") or "Unknown"),
+            "sales_motion":          str(d.get("Sales_Motion", "") or ""),
+            "q_score":               d.get("q_score"),
+            "q_trend":               str(d.get("q_trend", "") or ""),
+            "q_condition":           str(d.get("q_condition", "") or ""),
+            "target_account_status": str(d.get("target_account_status", "") or ""),
         }
         for d in top_deals_flat
     ]

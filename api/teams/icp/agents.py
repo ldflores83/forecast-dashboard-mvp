@@ -105,9 +105,12 @@ def _validate_discovery(raw: dict) -> dict:
 def _validate_validation(raw: dict) -> dict:
     """
     Validates validator output — ensures each BU has required fields.
+    Preserves top-level momentum_deals array.
     """
     if not isinstance(raw, dict) or raw.get("error"):
-        return {bu: _bu_validation_fallback(bu) for bu in _BUS}
+        result = {bu: _bu_validation_fallback(bu) for bu in _BUS}
+        result["momentum_deals"] = []
+        return result
 
     result = {}
     for bu in _BUS:
@@ -140,6 +143,20 @@ def _validate_validation(raw: dict) -> dict:
             },
             "trend_vs_prior": str(bu_data.get("trend_vs_prior") or "No prior week data."),
         }
+
+    raw_momentum = raw.get("momentum_deals") or []
+    result["momentum_deals"] = [
+        {
+            "deal_name": str(d.get("deal_name") or ""),
+            "bu":        str(d.get("bu") or ""),
+            "acv":       float(d.get("acv") or 0.0),
+            "q_score":   float(d.get("q_score") or 0.0),
+            "q_trend":   str(d.get("q_trend") or ""),
+            "reason":    str(d.get("reason") or ""),
+        }
+        for d in raw_momentum
+        if isinstance(d, dict)
+    ]
 
     return result
 
@@ -290,12 +307,14 @@ def icp_validator(
 
     # Step 3: Override any LLM-computed alignment with the authoritative Python values
     for bu, align in icp_alignment.items():
-        if bu in validated:
+        if bu in validated and isinstance(validated[bu], dict):
             validated[bu]["icp_pipeline_acv"]   = align["icp_pipeline_acv"]
             validated[bu]["icp_pipeline_pct"]   = align["icp_pipeline_pct"]
             validated[bu]["total_pipeline_acv"] = align["total_pipeline_acv"]
 
     for bu, data in validated.items():
+        if not isinstance(data, dict):
+            continue
         print(f"[agents] ICP Validator — {bu}: "
               f"total=${data['total_pipeline_acv']/1e6:.1f}M, "
               f"icp={data['icp_pipeline_pct']:.1f}% (Python-computed)")
