@@ -127,61 +127,71 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
     tbl = _tbl("opportunities")
 
     # ── Flagged deals ──────────────────────────────────────────────────────────
+    acc_tbl = _tbl("accounts")
     deals_sql = f"""
         SELECT
-            Id                      AS opp_id,
-            AccountId,
-            Name                    AS opp_name,
-            Account_Name,
-            BU,
-            StageName               AS stage,
-            Sales_Motion,
-            ACV,
-            ATR_Value,
-            PCED,
-            CloseDate,
-            Owner_Name,
-            Push_Count,
-            Last_Activity_Date,
-            Last_Stage_Change_Date,
-            Next_Step,
-            Opp_Age_Days,
-            Days_In_Stage,
-            VP_Forecast,
-            ForecastCategoryName,
-            At_Power,
-            Gong_Count,
-            Customer_Profile,
-            Flag_Pushed_5x,
-            Flag_No_Activity_7d,
-            Flag_Overdue_Close,
-            Flag_Touch_Back_Overdue,
-            Flag_No_Next_Step
-        FROM {tbl}
-        WHERE Is_Open = TRUE
+            o.Id                      AS opp_id,
+            o.AccountId,
+            o.Name                    AS opp_name,
+            o.Account_Name,
+            o.BU,
+            o.StageName               AS stage,
+            o.Sales_Motion,
+            o.ACV,
+            o.ATR_Value,
+            o.PCED,
+            o.CloseDate,
+            o.Owner_Name,
+            o.Push_Count,
+            o.Last_Activity_Date,
+            o.Last_Stage_Change_Date,
+            o.Next_Step,
+            o.Opp_Age_Days,
+            o.Days_In_Stage,
+            o.VP_Forecast,
+            o.ForecastCategoryName,
+            o.At_Power,
+            o.Gong_Count,
+            o.Customer_Profile,
+            o.Flag_Pushed_5x,
+            o.Flag_No_Activity_7d,
+            o.Flag_Overdue_Close,
+            o.Flag_Touch_Back_Overdue,
+            o.Flag_No_Next_Step,
+            acc.q_score,
+            acc.q_trend,
+            acc.q_condition,
+            acc.at_risk               AS account_at_risk,
+            acc.target_account_status,
+            acc.whitespace_gross_potential,
+            acc.primary_sub_vertical
+        FROM {tbl} o
+        LEFT JOIN {acc_tbl} acc
+            ON o.AccountId = acc.account_id
+        WHERE o.Is_Open = TRUE
           AND (
             -- Sales motions with strong flags
             (
-                Sales_Motion IN ('Net New', 'Expansion', 'Migration')
+                o.Sales_Motion IN ('Net New', 'Expansion', 'Migration')
                 AND (
-                    Flag_Pushed_5x = TRUE
-                    OR Flag_No_Activity_7d = TRUE
-                    OR Flag_Overdue_Close = TRUE
-                    OR Flag_Touch_Back_Overdue = TRUE
+                    o.Flag_Pushed_5x = TRUE
+                    OR o.Flag_No_Activity_7d = TRUE
+                    OR o.Flag_Overdue_Close = TRUE
+                    OR o.Flag_Touch_Back_Overdue = TRUE
                 )
             )
             OR
             -- Renewals only with critical flags
             (
-                Sales_Motion = 'Renewal'
-                AND (Flag_Pushed_5x = TRUE OR Flag_Overdue_Close = TRUE)
+                o.Sales_Motion = 'Renewal'
+                AND (o.Flag_Pushed_5x = TRUE OR o.Flag_Overdue_Close = TRUE)
             )
           )
           {fq_filter}
         ORDER BY
-            CASE WHEN Sales_Motion IN ('Net New','Expansion','Migration') THEN 0 ELSE 1 END,
-            ACV DESC,
-            ATR_Value DESC
+            CASE WHEN o.Sales_Motion IN ('Net New','Expansion','Migration') THEN 0 ELSE 1 END,
+            o.ACV DESC,
+            o.ATR_Value DESC
         LIMIT 25
     """
 
@@ -452,6 +462,13 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
             "gong_latest_next_steps":       gong_latest_next_steps,
             "gong_latest_call_title":       gong_latest_call_title,
             "customer_profile": str(r.get("Customer_Profile") or ""),
+            "q_score":                    safe_float(r.get("q_score")),
+            "q_trend":                    str(r.get("q_trend") or ""),
+            "q_condition":                str(r.get("q_condition") or ""),
+            "account_at_risk":            bool(r.get("account_at_risk", False)),
+            "target_account_status":      str(r.get("target_account_status") or ""),
+            "whitespace_gross_potential": safe_float(r.get("whitespace_gross_potential")),
+            "primary_sub_vertical":       str(r.get("primary_sub_vertical") or ""),
             "Flag_Stagnant_Stage":    bool(r.get("Flag_Stagnant_Stage")),
             "Flag_No_Economic_Buyer": bool(r.get("Flag_No_Economic_Buyer")),
             "has_economic_buyer":     any(c["role"] == "Economic Buyer" for c in contacts),
