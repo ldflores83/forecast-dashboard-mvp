@@ -172,6 +172,8 @@ OPPORTUNITY_FIELDS = [
     "Touch_Back_Date__c",
     "QAD_Status__c",
     "OwnerId",
+    "Opp_Owner_Region__c",
+    "Account_Region__c",
 ]
 
 ACCOUNT_FIELDS = [
@@ -580,6 +582,8 @@ def transform(df, fx_rates=None):
         "Push_Count_FQ__c":            "Push_Count",
         "Touch_Back_Date__c":          "Touch_Back_Date",
         "QAD_Status__c":               "QAD_Status",
+        "Opp_Owner_Region__c":         "Opp_Owner_Region",
+        "Account_Region__c":           "Account_Region",
         # Standard SF fields kept as-is (views reference these names):
         # Id, Name, AccountId, StageName, Type, FiscalYear, FiscalQuarter,
         # IsClosed, IsWon, CloseDate, Probability, LeadSource, CreatedDate, OwnerId
@@ -607,6 +611,8 @@ def transform(df, fx_rates=None):
         "Push_Count": 0,
         "Next_Step": "",
         "Description": "",
+        "Opp_Owner_Region": None,
+        "Account_Region": None,
     })
 
     # Derived flags

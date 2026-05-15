@@ -242,6 +242,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 .rev-note-dot{color:var(--t3);flex-shrink:0}
 .rev-correction{font-size:11px;color:var(--amber);display:flex;align-items:flex-start;gap:6px}
 .body-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);margin-bottom:6px}
+.info-card{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:20px 24px;box-shadow:var(--shadow);color:var(--t2);font-size:13px;line-height:1.6}
+.info-card strong{color:var(--t);font-weight:600}
 
 /* ── CONFIG TABLES ───────────────────────────────────────────────────────── */
 .cfg-section{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);margin-bottom:20px}
@@ -278,6 +280,70 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
   .stat-grid{grid-template-columns:1fr 1fr}
   .funnel-stage-name{width:100px}
 }
+
+/* ── MOTION SCORECARDS ─────────────────────────────────────────────────────── */
+.motion-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+.motion-card{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:20px;box-shadow:var(--shadow)}
+.motion-card-head{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.motion-metrics{display:flex;flex-direction:column;gap:7px}
+.motion-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.motion-val{font-family:var(--mono);font-size:17px;font-weight:500;color:var(--t);white-space:nowrap}
+.motion-lbl{font-size:11px;color:var(--t3);text-align:right;line-height:1.3}
+.motion-alert{font-size:11px;color:var(--amber);background:var(--amber-bg);border:1px solid rgba(251,191,36,.25);border-radius:var(--r-sm);padding:7px 10px;margin-top:10px;line-height:1.4}
+
+.overview-funnel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px}
+.overview-funnel-card{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);min-width:0}
+.overview-funnel-title{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:var(--t3);margin-bottom:10px}
+.overview-funnel-row{display:flex;align-items:stretch;gap:6px;overflow-x:auto;padding-bottom:2px}
+.overview-funnel-step{flex:1;min-width:74px;border:1px solid;border-radius:var(--r-sm);padding:8px 7px;background:var(--surf2)}
+.overview-funnel-step.ovf-ok{border-color:rgba(45,212,160,.35);background:var(--green-bg)}
+.overview-funnel-step.ovf-warn{border-color:rgba(251,191,36,.35);background:var(--amber-bg)}
+.overview-funnel-step.ovf-crit{border-color:rgba(248,113,113,.35);background:var(--red-bg)}
+.overview-funnel-step.ovf-na{border-color:var(--b2);background:var(--surf2)}
+.overview-funnel-stage{font-size:10px;font-weight:600;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
+.overview-funnel-meta{display:flex;align-items:baseline;justify-content:space-between;gap:6px;font-family:var(--mono)}
+.overview-funnel-count{font-size:14px;color:var(--t)}
+.overview-funnel-acv{font-size:9px;color:var(--t3);white-space:nowrap}
+.overview-funnel-arrow{align-self:center;color:var(--t3);font-size:13px;flex-shrink:0}
+
+/* ── HORIZONTAL FLOW ───────────────────────────────────────────────────────── */
+.h-flow-wrap{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);margin-bottom:16px;overflow-x:auto}
+.h-flow{display:flex;align-items:flex-start}
+.h-flow-step{flex:1;min-width:120px;background:var(--surf2);border:1px solid var(--b);border-radius:var(--r);padding:14px 16px}
+.h-flow-step.sla-ok{border-color:rgba(45,212,160,.35)}
+.h-flow-step.sla-warn{border-color:rgba(251,191,36,.35)}
+.h-flow-step.sla-crit{border-color:rgba(248,113,113,.35)}
+.h-flow-arrow{display:flex;align-items:center;padding:0 8px;color:var(--t3);flex-shrink:0;margin-top:16px}
+.h-flow-label{font-size:11px;font-weight:600;color:var(--t2);margin-bottom:6px}
+.h-flow-sublabel{font-size:10px;color:var(--t3);margin-top:5px;line-height:1.4}
+.h-flow-count{font-family:var(--mono);font-size:24px;font-weight:500;line-height:1;margin-bottom:4px}
+.h-flow-avg{font-size:11px;color:var(--t2);margin-bottom:6px}
+.h-flow-sla{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:10px}
+.sla-ok{background:var(--green-bg);color:var(--green)}
+.sla-warn{background:var(--amber-bg);color:var(--amber)}
+.sla-crit{background:var(--red-bg);color:var(--red)}
+.sla-na{background:var(--b);color:var(--t3)}
+.leakage-callout{display:flex;align-items:center;gap:12px;background:var(--surf2);border:1px solid var(--b2);border-radius:var(--r-sm);padding:10px 16px;margin-top:12px;font-size:12px;color:var(--t2)}
+.leakage-val{font-family:var(--mono);font-size:20px;font-weight:500}
+
+/* ── SOURCE BREAKDOWN ──────────────────────────────────────────────────────── */
+.source-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.source-card{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
+.source-card-head{font-family:var(--mono);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:11px;display:flex;align-items:center;justify-content:space-between}
+.source-conv{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:10px}
+.source-stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.source-stat-val{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--t)}
+.source-stat-lbl{font-size:11px;color:var(--t3)}
+
+/* ── RENEWAL SIGNALS ───────────────────────────────────────────────────────── */
+.signals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.signal-card{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
+.signal-val{font-family:var(--mono);font-size:26px;font-weight:500;color:var(--t);letter-spacing:-.5px;line-height:1;margin-bottom:6px}
+.signal-lbl{font-size:11px;color:var(--t3);line-height:1.4}
+.signal-card.warn .signal-val{color:var(--amber)}
+.signal-card.crit .signal-val{color:var(--red)}
+@media(max-width:960px){.motion-grid,.source-grid,.signals-grid,.overview-funnel-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.motion-grid,.source-grid,.signals-grid,.overview-funnel-grid{grid-template-columns:1fr}.h-flow{flex-direction:column}}
 </style>
 </head>
 <body>
@@ -348,13 +414,17 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
     <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
     Overview
   </button>
-  <button class="tab-btn" data-tab="stage">
+  <button class="tab-btn" data-tab="pipeline-gen">
     <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 4h12M2 8h8M2 12h5"/></svg>
-    Stage &amp; Push
+    Pipeline Generation
   </button>
-  <button class="tab-btn" data-tab="meddpicc">
+  <button class="tab-btn" data-tab="sales-exec">
     <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="2" width="12" height="12" rx="1"/><line x1="6" y1="2" x2="6" y2="14"/><line x1="10" y1="2" x2="10" y2="14"/><line x1="2" y1="6" x2="14" y2="6"/><line x1="2" y1="10" x2="14" y2="10"/></svg>
-    MEDDPICC
+    Sales Execution
+  </button>
+  <button class="tab-btn" data-tab="renewals">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 8A6 6 0 112 8"/><polyline points="8,2 8,8 11,11"/></svg>
+    Renewals
   </button>
   <button class="tab-btn" data-tab="config">
     <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M12.95 3.05l-1.41 1.41M4.46 11.54l-1.41 1.41"/></svg>
@@ -403,6 +473,28 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
       <div class="scorecard-grid" id="scorecard-grid"></div>
 
       <div class="sec-header" style="margin-top:8px">
+        <div class="sec-icon" style="background:var(--purple-bg);border:1px solid rgba(167,139,250,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--purple)" stroke-width="1.5" stroke-linecap="round"><circle cx="5" cy="8" r="2"/><circle cx="11" cy="5" r="2"/><circle cx="11" cy="11" r="2"/><line x1="7" y1="7" x2="9" y2="6"/><line x1="7" y1="9" x2="9" y2="10"/></svg>
+        </div>
+        <span class="sec-label">Revenue Motion Scorecards</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">PIPELINE GENERATION · SALES EXECUTION · RENEWALS</span>
+      </div>
+
+      <div class="motion-grid" id="motion-grid"></div>
+
+      <div class="sec-header" style="margin-top:8px">
+        <div class="sec-icon" style="background:var(--green-bg);border:1px solid rgba(45,212,160,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round"><path d="M2 4h3l2 8 2-8h5"/></svg>
+        </div>
+        <span class="sec-label">Revenue Motion Funnels</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">COMPACT STAGE FLOW</span>
+      </div>
+
+      <div class="overview-funnel-grid" id="overview-funnel-grid"></div>
+
+      <div class="sec-header" style="margin-top:8px">
         <div class="sec-icon" style="background:var(--blue-bg);border:1px solid rgba(79,142,247,.22)">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round"><path d="M8 1l1.5 4h4l-3.2 2.4 1.2 4L8 9.2l-3.5 2.2 1.2-4L2.5 5h4z"/></svg>
         </div>
@@ -437,6 +529,19 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
         </table>
       </div>
 
+      <div class="sec-header" style="margin-top:32px">
+        <div class="sec-icon" style="background:var(--blue-bg);border:1px solid rgba(79,142,247,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round"><path d="M2 13V5l6-3 6 3v8"/><path d="M5 13V7h6v6"/></svg>
+        </div>
+        <span class="sec-label">Regional Pipeline</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">REGIONAL BREAKDOWN</span>
+      </div>
+
+      <div class="info-card">
+        <strong>Regional breakdown coming soon</strong> — Opp_Owner_Region field being added to pipeline data export.
+      </div>
+
       <!-- Review footer -->
       <div class="review-footer" id="review-footer" style="margin-top:8px">
         <div class="review-top-row">
@@ -455,8 +560,40 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 
     </div><!-- /#tab-overview -->
 
-    <!-- ── TAB: STAGE & PUSH ──────────────────────────────────────────────── -->
-    <div class="tab-pane" id="tab-stage">
+    <!-- ── TAB: PIPELINE GENERATION ─────────────────────────────────────── -->
+    <div class="tab-pane" id="tab-pipeline-gen">
+
+      <!-- Section 1 — Development Lifecycle -->
+      <div class="sec-header">
+        <div class="sec-icon" style="background:var(--blue-bg);border:1px solid rgba(79,142,247,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </div>
+        <span class="sec-label">Development Lifecycle</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">BDE HANDOFF VELOCITY · SLA STATUS</span>
+      </div>
+
+      <div class="h-flow-wrap">
+        <div class="h-flow" id="bde-flow"></div>
+        <div class="leakage-callout" id="bde-leakage"></div>
+      </div>
+
+      <!-- Section 2 — Source Breakdown -->
+      <div class="sec-header">
+        <div class="sec-icon" style="background:var(--purple-bg);border:1px solid rgba(167,139,250,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--purple)" stroke-width="1.5" stroke-linecap="round"><circle cx="5" cy="8" r="2"/><circle cx="11" cy="5" r="2"/><circle cx="11" cy="11" r="2"/><line x1="7" y1="7" x2="9" y2="6"/><line x1="7" y1="9" x2="9" y2="10"/></svg>
+        </div>
+        <span class="sec-label">Source Breakdown</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">BDE · CSM · AE-SELF</span>
+      </div>
+
+      <div class="source-grid" id="source-grid"></div>
+
+    </div><!-- /#tab-pipeline-gen -->
+
+    <!-- ── TAB: SALES EXECUTION ──────────────────────────────────────────── -->
+    <div class="tab-pane" id="tab-sales-exec">
 
       <div class="sec-header">
         <div class="sec-icon" style="background:var(--blue-bg);border:1px solid rgba(79,142,247,.22)">
@@ -474,52 +611,6 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
         <div class="stage-criteria-grid" id="stage-criteria-grid"></div>
       </div>
 
-      <!-- Renewals compact table — shown only when renewal stages exist -->
-      <div id="renewal-table-wrap" style="display:none">
-        <div class="renewal-mini-wrap">
-          <div class="renewal-mini-head">
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-linecap="round"><path d="M14 8A6 6 0 112 8"/><polyline points="8,2 8,8 11,11"/></svg>
-            <span class="renewal-mini-label">Renewal Pipeline</span>
-          </div>
-          <table class="renewal-mini-table">
-            <thead><tr><th>Stage</th><th>Deals</th><th style="text-align:right">Open ACV</th></tr></thead>
-            <tbody id="renewal-body"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="sec-header" style="margin-top:8px">
-        <div class="sec-icon" style="background:var(--red-bg);border:1px solid rgba(248,113,113,.22)">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round"><path d="M8 1v8M5 6l3 3 3-3M2 12h12"/></svg>
-        </div>
-        <span class="sec-label">Push Analysis</span>
-        <div class="sec-line"></div>
-        <span class="sec-sub">CLOSE DATE INTEGRITY</span>
-      </div>
-
-      <div class="stat-grid" id="push-stats"></div>
-
-      <div class="deal-table-wrap">
-        <table class="deal-table">
-          <thead>
-            <tr>
-              <th>Opportunity / Account</th>
-              <th>Stage</th>
-              <th style="text-align:right">ACV</th>
-              <th style="text-align:right">Pushes</th>
-              <th>Days Dark</th>
-              <th>Owner</th>
-            </tr>
-          </thead>
-          <tbody id="zombie-body"></tbody>
-        </table>
-      </div>
-
-    </div><!-- /#tab-stage -->
-
-    <!-- ── TAB: MEDDPICC ─────────────────────────────────────────────────── -->
-    <div class="tab-pane" id="tab-meddpicc">
-
       <div class="sec-header">
         <div class="sec-icon" style="background:var(--purple-bg);border:1px solid rgba(167,139,250,.22)">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--purple)" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="2" width="12" height="12" rx="1"/><line x1="6" y1="2" x2="6" y2="14"/><line x1="10" y1="2" x2="10" y2="14"/><line x1="2" y1="6" x2="14" y2="6"/><line x1="2" y1="10" x2="14" y2="10"/></svg>
@@ -527,6 +618,10 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
         <span class="sec-label">MEDDPICC Gap Heatmap</span>
         <div class="sec-line"></div>
         <span class="sec-sub">GAP RATE BY STAGE · CRITERIA</span>
+      </div>
+
+      <div class="motion-alert" style="margin-bottom:14px">
+        ⚠ <strong>Data Quality Note:</strong> Most MEDDPICC fields in Salesforce have &lt;5% population rate. Economic Buyer (At_Power) is the only directly reliable signal at 100% population. All other criteria use proxies — contact roles, substage progression, and forecast category. Low scores reflect both qualification gaps AND CRM data entry discipline.
       </div>
 
       <div class="medd-legend">
@@ -578,7 +673,90 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
         </table>
       </div>
 
-    </div><!-- /#tab-meddpicc -->
+      <div class="sec-header" style="margin-top:8px">
+        <div class="sec-icon" style="background:var(--red-bg);border:1px solid rgba(248,113,113,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round"><path d="M8 1v8M5 6l3 3 3-3M2 12h12"/></svg>
+        </div>
+        <span class="sec-label">Push Analysis</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">CLOSE DATE INTEGRITY</span>
+      </div>
+
+      <div class="stat-grid" id="push-stats"></div>
+
+      <div class="deal-table-wrap">
+        <table class="deal-table">
+          <thead>
+            <tr>
+              <th>Opportunity / Account</th>
+              <th>Stage</th>
+              <th style="text-align:right">ACV</th>
+              <th style="text-align:right">Pushes</th>
+              <th>Days Dark</th>
+              <th>Owner</th>
+            </tr>
+          </thead>
+          <tbody id="zombie-body"></tbody>
+        </table>
+      </div>
+
+    </div><!-- /#tab-sales-exec -->
+
+    <!-- ── TAB: RENEWALS ─────────────────────────────────────────────────── -->
+    <div class="tab-pane" id="tab-renewals">
+
+      <!-- Section 1 — Renewal Stage Flow -->
+      <div class="sec-header">
+        <div class="sec-icon" style="background:var(--amber-bg);border:1px solid rgba(251,191,36,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-linecap="round"><path d="M14 8A6 6 0 112 8"/><polyline points="8,2 8,8 11,11"/></svg>
+        </div>
+        <span class="sec-label">Renewal Stage Flow</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">30-DAY THRESHOLD · CLICK TO FILTER</span>
+      </div>
+
+      <div class="h-flow-wrap">
+        <div class="h-flow" id="renewal-flow"></div>
+      </div>
+
+      <!-- Section 3 — Renewal Signals (shown above table so context is set first) -->
+      <div class="sec-header" style="margin-top:4px">
+        <div class="sec-icon" style="background:var(--red-bg);border:1px solid rgba(248,113,113,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round"><path d="M8 2L14.5 13H1.5L8 2z"/><line x1="8" y1="7" x2="8" y2="9.5"/><circle cx="8" cy="11.5" r=".5" fill="var(--red)"/></svg>
+        </div>
+        <span class="sec-label">Renewal Signals</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">AT-RISK INDICATORS</span>
+      </div>
+
+      <div class="signals-grid" id="renewal-signals"></div>
+
+      <!-- Section 2 — Renewal Stage Table -->
+      <div class="sec-header" style="margin-top:4px">
+        <div class="sec-icon" style="background:var(--blue-bg);border:1px solid rgba(79,142,247,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+        </div>
+        <span class="sec-label">Renewal Pipeline</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">ALL OPEN RENEWAL STAGES</span>
+      </div>
+
+      <div class="deal-table-wrap">
+        <table class="deal-table">
+          <thead>
+            <tr>
+              <th>Stage</th>
+              <th style="text-align:right">Deals</th>
+              <th style="text-align:right">Total ACV</th>
+              <th style="text-align:right">Avg Days</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="renewal-stages-body"></tbody>
+        </table>
+      </div>
+
+    </div><!-- /#tab-renewals -->
 
     <!-- ── TAB: CONFIG ────────────────────────────────────────────────────── -->
     <div class="tab-pane" id="tab-config">
@@ -688,11 +866,20 @@ document.querySelectorAll('.tab-btn').forEach(function(btn) {
     document.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.remove('active'); });
     btn.classList.add('active');
     document.getElementById('tab-' + tab).classList.add('active');
+    setEmptyStateVisible(!_data && document.getElementById('loading-state').style.display === 'none');
     if (tab === 'config') loadConfig();
+    if (tab === 'renewals' && _data) renderRenewals(_data);
   });
 });
 
 // ── UTILITIES ──────────────────────────────────────────────────────────────
+function getActiveTab() {
+  var active = document.querySelector('.tab-btn.active');
+  return active ? active.dataset.tab : 'overview';
+}
+function setEmptyStateVisible(shouldShow) {
+  document.getElementById('empty-state').style.display = shouldShow && getActiveTab() !== 'config' ? 'flex' : 'none';
+}
 function esc(s) {
   return String(s == null ? '' : s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -786,6 +973,7 @@ function renderOverview(data) {
   }).join('');
 
   document.getElementById('ov-sub').textContent = Object.keys(scorecard).length + ' BUs ASSESSED';
+  renderOverviewMotionFunnels(data);
   document.getElementById('narrative-block').textContent = data.narrative || '—';
 
   // Top stalling deals
@@ -815,6 +1003,56 @@ function renderOverview(data) {
 }
 
 // ── RENDER REVIEW ──────────────────────────────────────────────────────────
+function renderOverviewMotionFunnels(data) {
+  var stageMap = {};
+  ((data.stage_health || {}).stages || []).forEach(function(s) { stageMap[s.stage_name] = s; });
+  var nameMap = {
+    'Development': 'Dev',
+    'Sales Ready': 'Ready',
+    'Prospecting': 'Prospect',
+    'Discovery': 'Discovery',
+    'Scoping': 'Scoping',
+    'Evaluation': 'Eval',
+    'Proposal': 'Proposal',
+    'Contracts': 'Contracts',
+    'Renewal Pending': 'Pending',
+    'Renewal Validation': 'Validation',
+    'Renewal Negotiation': 'Negotiation',
+    'Renewal Confirmed': 'Confirmed',
+  };
+  var funnels = [
+    {title:'Pipeline Generation', stages:['Development','Sales Ready','Prospecting']},
+    {title:'Sales Execution', stages:['Prospecting','Discovery','Scoping','Evaluation','Proposal','Contracts']},
+    {title:'Renewals', stages:RENEWAL_FLOW_ORDER},
+  ];
+  function acvM(v) {
+    var n = parseFloat(v) || 0;
+    return '$' + (n / 1000000).toFixed(1) + 'M';
+  }
+  function statusClass(s) {
+    if (!s || s.max_days_allowed == null) return 'ovf-na';
+    var pct = s.pct_over_max_days || 0;
+    return pct > 50 ? 'ovf-crit' : pct >= 20 ? 'ovf-warn' : 'ovf-ok';
+  }
+  document.getElementById('overview-funnel-grid').innerHTML = funnels.map(function(f) {
+    var steps = f.stages.map(function(stageName, i) {
+      var s = stageMap[stageName] || {};
+      return '<div class="overview-funnel-step ' + statusClass(s) + '">' +
+          '<div class="overview-funnel-stage" title="' + esc(stageName) + '">' + esc(nameMap[stageName] || stageName) + '</div>' +
+          '<div class="overview-funnel-meta">' +
+            '<span class="overview-funnel-count">' + esc(s.deal_count || 0) + '</span>' +
+            '<span class="overview-funnel-acv">' + acvM(s.total_acv_usd || 0) + '</span>' +
+          '</div>' +
+        '</div>' +
+        (i < f.stages.length - 1 ? '<span class="overview-funnel-arrow">&rarr;</span>' : '');
+    }).join('');
+    return '<div class="overview-funnel-card">' +
+      '<div class="overview-funnel-title">' + esc(f.title) + '</div>' +
+      '<div class="overview-funnel-row">' + steps + '</div>' +
+    '</div>';
+  }).join('');
+}
+
 function renderReview(review) {
   var status = review.status || 'unknown';
   var pill = document.getElementById('rev-pill');
@@ -919,8 +1157,6 @@ function renderStage(data) {
   var netNew = NET_NEW_ORDER.map(function(n) { return stageMap[n] || null; }).filter(Boolean);
 
   // Everything else → renewals/legacy table
-  var renewals = allStages.filter(function(s) { return NET_NEW_ORDER.indexOf(s.stage_name) === -1; });
-
   // Bar widths proportional to total_acv_usd
   var maxAcv = 0;
   netNew.forEach(function(s) { if ((s.total_acv_usd || 0) > maxAcv) maxAcv = s.total_acv_usd; });
@@ -957,22 +1193,6 @@ function renderStage(data) {
   document.getElementById('funnel-wrap').innerHTML = funnelHtml
     || '<div style="color:var(--t3);padding:20px;text-align:center">No net new stage data</div>';
 
-  // Renewals table
-  var renewalWrap = document.getElementById('renewal-table-wrap');
-  if (renewals.length) {
-    renewalWrap.style.display = 'block';
-    var sorted = renewals.slice().sort(function(a, b) { return (b.total_acv_usd || 0) - (a.total_acv_usd || 0); });
-    document.getElementById('renewal-body').innerHTML = sorted.map(function(s) {
-      return '<tr>' +
-        '<td style="font-weight:500;color:var(--t)">' + esc(s.stage_name) + '</td>' +
-        '<td style="font-family:var(--mono);color:var(--t2)">' + s.deal_count + '</td>' +
-        '<td style="font-family:var(--mono);text-align:right;color:var(--t2)">' + fmtAcv(s.total_acv_usd || 0) + '</td>' +
-        '</tr>';
-    }).join('');
-  } else {
-    renewalWrap.style.display = 'none';
-  }
-
   // Store for selectStage()
   window._stageData = netNew;
 
@@ -1007,8 +1227,6 @@ function renderStage(data) {
       '<td style="font-size:11px;color:var(--t3)">' + esc(d.owner_name || '—') + '</td>' +
       '</tr>';
   }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:20px">No zombie deals</td></tr>';
-
-  window._stageData = stageHealth.stages || [];
 }
 
 var _selectedStageIdx = null;
@@ -1079,7 +1297,9 @@ function gapSentence(gaps) {
 // ── RENDER MEDDPICC ────────────────────────────────────────────────────────
 function renderMeddpicc(data) {
   var gapData = data.meddpicc_gaps || {};
-  var byStage = gapData.by_stage || [];
+  var byStageMap = {};
+  (gapData.by_stage || []).forEach(function(row) { byStageMap[row.stage_name] = row; });
+  var byStage = NET_NEW_ORDER.map(function(stage) { return byStageMap[stage] || null; }).filter(Boolean);
   // Criteria in data: M, E, D, I, C  (D = Decision Criteria/Process combined)
   var CRITERIA_ORDER = ['M', 'E', 'D', 'I', 'C'];
 
@@ -1116,17 +1336,259 @@ function renderMeddpicc(data) {
   }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:20px">No BTL deals</td></tr>';
 }
 
+// ── RENEWAL HELPERS ────────────────────────────────────────────────────────
+var RENEWAL_FLOW_ORDER = ['Renewal Pending','Renewal Validation','Renewal Negotiation','Renewal Confirmed'];
+function isRenewal(name) {
+  if (!name) return false;
+  return RENEWAL_FLOW_ORDER.indexOf(name) !== -1;
+}
+
+// ── RENDER MOTION SCORECARDS ───────────────────────────────────────────────
+function renderMotionCards(data) {
+  var bde   = data.bde_cadence || {};
+  var push  = data.push_analysis || {};
+  var gapData = data.meddpicc_gaps || {};
+  var allStages = (data.stage_health || {}).stages || [];
+
+  // Renewal aggregates
+  var renDeals = 0, renACV = 0, renStalling = 0;
+  allStages.forEach(function(s) {
+    if (isRenewal(s.stage_name)) {
+      renDeals += (s.deal_count || 0);
+      renACV   += (s.total_acv_usd || 0);
+      if ((s.avg_days_in_stage || 0) > 30) renStalling += (s.deal_count || 0);
+    }
+  });
+
+  // MEDDPICC avg gap rate
+  var gTotal = 0, gCount = 0;
+  (gapData.by_stage || []).forEach(function(row) {
+    (row.meddpicc_gaps || []).forEach(function(g) {
+      if (g.gap_pct != null) { gTotal += g.gap_pct; gCount++; }
+    });
+  });
+  var avgGap = gCount > 0 ? Math.round(gTotal / gCount) : null;
+  var lowMedd = avgGap != null && avgGap > 80;
+
+  // % stalling across net new stages
+  var netNewSt = allStages.filter(function(s) { return NET_NEW_ORDER.indexOf(s.stage_name) !== -1 && s.pct_over_max_days != null; });
+  var avgStalling = netNewSt.length ? Math.round(netNewSt.reduce(function(a, s) { return a + s.pct_over_max_days; }, 0) / netNewSt.length) : null;
+  var zombieCount = (push.zombie_deals || []).length;
+
+  // Helpers
+  function mval(v, suffix, danger, warn) {
+    var c = danger ? 'color:var(--red)' : warn ? 'color:var(--amber)' : '';
+    return '<span class="motion-val" style="' + c + '">' + esc(v) + '</span>';
+  }
+  function mrow(val, lbl) { return '<div class="motion-row">' + val + '<span class="motion-lbl">' + esc(lbl) + '</span></div>'; }
+
+  var lr = bde.leakage_rate;
+  var ad = bde.avg_days_in_development;
+  var hc = bde.handoff_count;
+
+  var html =
+    '<div class="motion-card">' +
+      '<div class="motion-card-head"><span style="color:var(--blue)">◈</span>&nbsp;Pipeline Generation</div>' +
+      '<div class="motion-metrics">' +
+        mrow(mval(lr != null ? lr + '%' : '—', '', false, lr > 30), 'BDE leakage rate') +
+        mrow(mval(ad != null ? Math.round(ad) + 'd' : '—', '', false, ad > 72), 'Avg days in Development') +
+        mrow(mval(hc != null ? hc : '—', '', false, false), 'AE handoff deals') +
+      '</div>' +
+    '</div>' +
+    '<div class="motion-card">' +
+      '<div class="motion-card-head"><span style="color:var(--green)">◈</span>&nbsp;Sales Execution</div>' +
+      '<div class="motion-metrics">' +
+        mrow(mval(zombieCount, '', zombieCount > 5, zombieCount > 2), 'Zombie deals') +
+        mrow(mval(avgStalling != null ? avgStalling + '%' : '—', '', avgStalling > 50, avgStalling > 25), 'Deals over stage max (avg)') +
+        mrow(mval(avgGap != null ? (100 - avgGap) + '%' : '—', '', false, lowMedd), 'MEDDPICC field completion') +
+      '</div>' +
+      (lowMedd ? '<div class="motion-alert">⚠ MEDDPICC data quality &lt;20% — proxies in use. Coaching opportunity for Crystal.</div>' : '') +
+    '</div>' +
+    '<div class="motion-card">' +
+      '<div class="motion-card-head"><span style="color:var(--amber)">◈</span>&nbsp;Renewals</div>' +
+      '<div class="motion-metrics">' +
+        mrow(mval(renDeals, '', false, false), 'Open renewal deals') +
+        mrow(mval(fmtAcv(renACV), '', false, false), 'Total renewal ACV') +
+        mrow(mval(renStalling, '', renStalling > 5, renStalling > 2), 'Deals stalling >30 days') +
+      '</div>' +
+    '</div>';
+
+  document.getElementById('motion-grid').innerHTML = html;
+}
+
+// ── RENDER BDE LIFECYCLE + SOURCES ────────────────────────────────────────
+function renderBDESection(data) {
+  var bde = data.bde_cadence || {};
+  var sb  = bde.source_breakdown || {};
+  var conv = bde.conversion_by_source || {};
+  var allStages = (data.stage_health || {}).stages || [];
+  var stageMap = {};
+  allStages.forEach(function(s) { stageMap[s.stage_name] = s; });
+
+  // Horizontal flow: Development → Sales Ready → Prospecting (AE Accepted)
+  var BDE_STEPS = [
+    {label:'Development',      sublabel:'Dev Assigned → Dev Pursuing → Dev Engaging',
+     count: (function() {
+       var n = 0;
+       ['BDE','CSM','AE'].forEach(function(k) { n += ((sb[k] || {}).deal_count || 0); });
+       return n || ((stageMap['Development'] || {}).deal_count || 0);
+     })(),
+     avg: bde.avg_days_in_development, sla: 90},
+    {label:'Sales Ready',      sublabel:'Awaiting AE acceptance',
+     count: (stageMap['Sales Ready'] || {}).deal_count || 0,
+     avg: bde.avg_days_to_accept, sla: 7},
+    {label:'AE Accepted',      sublabel:'Prospecting (BDE-sourced handoffs)',
+     count: bde.handoff_count, avg: null, sla: null},
+  ];
+
+  var flowHtml = BDE_STEPS.map(function(step, i) {
+    var cnt = step.count != null ? step.count : '—';
+    var avg = step.avg;
+    var sla = step.sla;
+    var slaCls = 'sla-na', slaBadge = '<span class="h-flow-sla sla-na">destination</span>';
+    var countColor = 'color:var(--t)';
+    if (sla != null && avg != null) {
+      var pct = avg / sla;
+      if (pct > 1)         { slaCls = 'sla-crit'; slaBadge = '<span class="h-flow-sla sla-crit">' + Math.round(avg) + 'd / ' + sla + 'd SLA</span>'; countColor = 'color:var(--red)'; }
+      else if (pct >= 0.8) { slaCls = 'sla-warn'; slaBadge = '<span class="h-flow-sla sla-warn">' + Math.round(avg) + 'd / ' + sla + 'd SLA</span>'; countColor = 'color:var(--amber)'; }
+      else                 { slaCls = 'sla-ok';   slaBadge = '<span class="h-flow-sla sla-ok">'  + Math.round(avg) + 'd / ' + sla + 'd SLA</span>'; countColor = 'color:var(--green)'; }
+    }
+    var arrow = i < BDE_STEPS.length - 1
+      ? '<div class="h-flow-arrow"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>'
+      : '';
+    return '<div class="h-flow-step ' + slaCls + '">' +
+      '<div class="h-flow-label">' + esc(step.label) + '</div>' +
+      '<div class="h-flow-count" style="' + countColor + '">' + esc(String(cnt)) + '</div>' +
+      (avg != null ? '<div class="h-flow-avg">avg ' + Math.round(avg) + 'd</div>' : '') +
+      slaBadge +
+      '<div class="h-flow-sublabel">' + esc(step.sublabel) + '</div>' +
+    '</div>' + arrow;
+  }).join('');
+
+  document.getElementById('bde-flow').innerHTML = flowHtml || '<span style="color:var(--t3)">No BDE pipeline data</span>';
+
+  // Leakage callout
+  var lr = bde.leakage_rate;
+  var lrColor = lr == null ? 'var(--t3)' : lr > 30 ? 'var(--red)' : lr > 15 ? 'var(--amber)' : 'var(--green)';
+  document.getElementById('bde-leakage').innerHTML = lr != null
+    ? '<span class="leakage-val" style="color:' + lrColor + '">' + lr + '%</span><span>leakage — Development deals open &gt;90 days without progressing</span>'
+    : '<span style="color:var(--t3)">Leakage data unavailable</span>';
+
+  // Source breakdown cards
+  var segments = [
+    {key:'BDE', label:'BDE-Sourced',     color:'var(--blue)'},
+    {key:'CSM', label:'CSM-Sourced',     color:'var(--purple)'},
+    {key:'AE',  label:'AE Self-Sourced', color:'var(--green)'},
+  ];
+  document.getElementById('source-grid').innerHTML = segments.map(function(seg) {
+    var s    = sb[seg.key] || {};
+    var cv   = conv[seg.key];
+    var cvCls = (cv == null || cv === 0) ? 'sla-na' : cv > 50 ? 'sla-ok' : cv > 20 ? 'sla-warn' : 'sla-crit';
+    var cvStr = (cv != null && cv > 0) ? cv + '% conv.' : '—';
+    return '<div class="source-card">' +
+      '<div class="source-card-head">' +
+        '<span style="color:' + seg.color + '">' + esc(seg.label) + '</span>' +
+        '<span class="source-conv h-flow-sla ' + cvCls + '">' + esc(cvStr) + '</span>' +
+      '</div>' +
+      '<div class="source-stat-row"><span class="source-stat-lbl">Deals (Dev + SR)</span><span class="source-stat-val">' + (s.deal_count != null ? s.deal_count : '—') + '</span></div>' +
+      '<div class="source-stat-row"><span class="source-stat-lbl">Open ACV</span><span class="source-stat-val">' + fmtAcv(s.total_acv || 0) + '</span></div>' +
+      '<div class="source-stat-row"><span class="source-stat-lbl">Avg days in stage</span><span class="source-stat-val">' + (s.avg_days_in_stage != null ? Math.round(s.avg_days_in_stage) + 'd' : '—') + '</span></div>' +
+    '</div>';
+  }).join('');
+}
+
+// ── RENDER RENEWALS ────────────────────────────────────────────────────────
+function renderRenewals(data) {
+  var allStages = (data.stage_health || {}).stages || [];
+  var renStages = allStages.filter(function(s) { return isRenewal(s.stage_name); });
+
+  // Section 1 — Horizontal flow
+  var flowOrder = RENEWAL_FLOW_ORDER.filter(function(n) { return renStages.some(function(s) { return s.stage_name === n; }); });
+  if (!flowOrder.length) flowOrder = renStages.map(function(s) { return s.stage_name; });
+
+  var stageMap = {};
+  renStages.forEach(function(s) { stageMap[s.stage_name] = s; });
+
+  var flowHtml = flowOrder.map(function(name, i) {
+    var s = stageMap[name];
+    if (!s) return '';
+    var avg = s.avg_days_in_stage || 0;
+    var slaCls = avg > 30 ? 'sla-crit' : avg > 24 ? 'sla-warn' : 'sla-ok';
+    var countColor = avg > 30 ? 'color:var(--red)' : avg > 24 ? 'color:var(--amber)' : 'color:var(--green)';
+    var arrow = i < flowOrder.length - 1
+      ? '<div class="h-flow-arrow"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>'
+      : '';
+    return '<div class="h-flow-step ' + slaCls + '">' +
+      '<div class="h-flow-label">' + esc(name) + '</div>' +
+      '<div class="h-flow-count" style="' + countColor + '">' + s.deal_count + '</div>' +
+      '<div class="h-flow-avg">' + fmtAcv(s.total_acv_usd || 0) + '</div>' +
+      '<span class="h-flow-sla ' + slaCls + '">' + Math.round(avg) + 'd avg</span>' +
+      '<div class="h-flow-sublabel">30d threshold</div>' +
+    '</div>' + arrow;
+  }).join('');
+
+  var flowEl = document.getElementById('renewal-flow');
+  if (flowEl) flowEl.innerHTML = flowHtml || '<span style="color:var(--t3);padding:20px">No renewal stage data</span>';
+
+  // Signal computations
+  var totalACV   = 0, totalDeals = 0, stallingDeals = 0, slowStages = 0;
+  renStages.forEach(function(s) {
+    totalACV   += (s.total_acv_usd || 0);
+    totalDeals += (s.deal_count || 0);
+    if ((s.avg_days_in_stage || 0) > 30) stallingDeals += (s.deal_count || 0);
+    if ((s.avg_days_in_stage || 0) > 30) slowStages++;
+  });
+
+  // Signals
+  var signalsHtml =
+    '<div class="signal-card">' +
+      '<div class="signal-val">' + fmtAcv(totalACV) + '</div>' +
+      '<div class="signal-lbl">Total renewal ACV open</div>' +
+    '</div>' +
+    '<div class="signal-card' + (stallingDeals > 5 ? ' crit' : stallingDeals > 2 ? ' warn' : '') + '">' +
+      '<div class="signal-val">' + stallingDeals + '</div>' +
+      '<div class="signal-lbl">Deals in stages averaging &gt;30 days</div>' +
+    '</div>' +
+    '<div class="signal-card' + (slowStages > 2 ? ' crit' : slowStages > 0 ? ' warn' : '') + '">' +
+      '<div class="signal-val">' + slowStages + '</div>' +
+      '<div class="signal-lbl">Stages averaging &gt;30 days</div>' +
+    '</div>';
+  var sigEl = document.getElementById('renewal-signals');
+  if (sigEl) sigEl.innerHTML = signalsHtml;
+
+  // Section 2 — Stage table
+  var sorted = renStages.slice().sort(function(a, b) { return (b.total_acv_usd || 0) - (a.total_acv_usd || 0); });
+  var tableHtml = sorted.map(function(s) {
+    var avg     = s.avg_days_in_stage || 0;
+    var statusCls = avg > 30 ? 'critical' : avg > 24 ? 'warning' : 'ok';
+    var statusLbl = avg > 30 ? 'Stalling' : avg > 24 ? 'Watch'   : 'On Track';
+    return '<tr>' +
+      '<td style="font-weight:500;color:var(--t)">' + esc(s.stage_name) + '</td>' +
+      '<td style="text-align:right;font-family:var(--mono);color:var(--t2)">' + s.deal_count + '</td>' +
+      '<td style="text-align:right;font-family:var(--mono);color:var(--t2)">' + fmtAcv(s.total_acv_usd || 0) + '</td>' +
+      '<td style="text-align:right;font-family:var(--mono);' + (avg > 30 ? 'color:var(--red)' : avg > 24 ? 'color:var(--amber)' : 'color:var(--green)') + '">' + Math.round(avg) + 'd</td>' +
+      '<td><span class="flag ' + statusCls + '">' + statusLbl + '</span></td>' +
+    '</tr>';
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:20px">No renewal stage data</td></tr>';
+  var bodyEl = document.getElementById('renewal-stages-body');
+  if (bodyEl) bodyEl.innerHTML = tableHtml;
+}
+
 // ── MAIN RENDER ────────────────────────────────────────────────────────────
 function render(data) {
   console.log('[pipeline-health] API response:', data);
   _data = data;
   document.getElementById('loading-state').style.display = 'none';
+  setEmptyStateVisible(false);
   document.getElementById('content').style.display = 'block';
 
   renderMeta(data.meta || {});
   renderOverview(data);
+  renderMotionCards(data);
+  renderBDESection(data);
   renderStage(data);
   renderMeddpicc(data);
+  renderRenewals(data);
   renderReview(data.review || {});
 }
 
@@ -1141,7 +1603,7 @@ function loadData() {
     .then(render)
     .catch(function(e) {
       document.getElementById('loading-state').style.display = 'none';
-      document.getElementById('empty-state').style.display = 'flex';
+      setEmptyStateVisible(true);
       if (e.message !== 'not_found') console.warn('[pipeline-health] Load error:', e.message);
     });
 }

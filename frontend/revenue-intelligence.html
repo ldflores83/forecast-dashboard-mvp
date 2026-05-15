@@ -39,6 +39,14 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 /* ── TOPBAR ── */
 .topbar{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--b);height:52px;display:flex;align-items:center;transition:background var(--ease)}
 .topbar-inner{max-width:1440px;margin:0 auto;width:100%;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.topbar-left{display:flex;align-items:center;gap:12px;min-width:0}
+.page-menu{position:relative;flex-shrink:0}
+.menu-btn{width:32px;height:32px;background:var(--surf);border:1px solid var(--b2);border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);transition:all var(--ease)}
+.menu-btn:hover,.menu-btn[aria-expanded="true"]{color:var(--t);border-color:var(--blue)}
+.menu-list{display:none;position:absolute;top:calc(100% + 8px);left:0;min-width:190px;background:var(--surf);border:1px solid var(--b2);border-radius:var(--r-sm);box-shadow:var(--shadow);padding:6px;z-index:300}
+.page-menu.open .menu-list{display:block}
+.menu-link{display:block;padding:8px 10px;border-radius:5px;color:var(--t2);text-decoration:none;font-size:12px;font-weight:500;white-space:nowrap;transition:all var(--ease)}
+.menu-link:hover{background:var(--blue-bg);color:var(--blue)}
 .brand{display:flex;align-items:baseline;gap:8px;flex-shrink:0}
 .brand-name{font-size:17px;font-weight:700;color:var(--t)}
 .brand-name em{font-style:normal;color:var(--blue)}
@@ -264,9 +272,22 @@ tbody tr:hover{background:var(--bg2)}
 <!-- TOPBAR -->
 <header class="topbar">
   <div class="topbar-inner">
-    <div class="brand">
-      <div class="brand-name">Revenue <em>Intelligence</em></div>
-      <div class="brand-tag" id="brand-tag">FY2027 · ERP, Supply Chain & Redzone</div>
+    <div class="topbar-left">
+      <div class="page-menu" id="page-menu">
+        <button class="menu-btn" id="menu-btn" type="button" aria-label="Open page menu" aria-expanded="false">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="3" y1="4" x2="13" y2="4"/><line x1="3" y1="8" x2="13" y2="8"/><line x1="3" y1="12" x2="13" y2="12"/></svg>
+        </button>
+        <div class="menu-list" id="menu-list">
+          <a class="menu-link" href="digest.html">Digest</a>
+          <a class="menu-link" href="icp.html">ICP</a>
+          <a class="menu-link" href="pipeline-health.html">Pipeline Health</a>
+          <a class="menu-link" href="revenue-signals.html">Revenue Signals</a>
+        </div>
+      </div>
+      <div class="brand">
+        <div class="brand-name">Revenue <em>Intelligence</em></div>
+        <div class="brand-tag" id="brand-tag">FY2027 · ERP, Supply Chain & Redzone</div>
+      </div>
     </div>
     <div class="topbar-right">
       <div class="qpills">
@@ -822,6 +843,27 @@ document.getElementById('theme-btn').addEventListener('click', () => {
 });
 const saved = localStorage.getItem('theme');
 if (saved) html.dataset.theme = saved;
+
+// -- PAGE MENU --
+const pageMenu = document.getElementById('page-menu');
+const menuBtn = document.getElementById('menu-btn');
+menuBtn.addEventListener('click', function(e) {
+  e.stopPropagation();
+  const open = pageMenu.classList.toggle('open');
+  menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+document.addEventListener('click', function(e) {
+  if (!pageMenu.contains(e.target)) {
+    pageMenu.classList.remove('open');
+    menuBtn.setAttribute('aria-expanded', 'false');
+  }
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    pageMenu.classList.remove('open');
+    menuBtn.setAttribute('aria-expanded', 'false');
+  }
+});
 
 // ── HELPERS ──
 function fmt(n, dec) {
