@@ -37,6 +37,7 @@ from .tools import (
     get_push_analysis,
     get_bde_cadence,
     get_pipeline_by_owner,
+    get_regional_breakdown,
 )
 from .agents import (
     pipeline_risk_agent,
@@ -137,14 +138,15 @@ def run_pipeline_health(
             return name, None, str(e)
 
     tool_specs = [
-        ("stage_health",      get_stage_health,      {"bu": bu, "fiscal_quarter": fiscal_quarter}),
-        ("meddpicc_gaps",     get_meddpicc_gaps,     {"bu": bu, "fiscal_quarter": fiscal_quarter}),
-        ("push_analysis",     get_push_analysis,     {"bu": bu, "fiscal_quarter": fiscal_quarter}),
-        ("bde_cadence",       get_bde_cadence,       {"bu": bu}),
-        ("pipeline_by_owner", get_pipeline_by_owner, {"bu": bu, "fiscal_quarter": fiscal_quarter}),
+        ("stage_health",        get_stage_health,        {"bu": bu, "fiscal_quarter": fiscal_quarter}),
+        ("meddpicc_gaps",       get_meddpicc_gaps,       {"bu": bu, "fiscal_quarter": fiscal_quarter}),
+        ("push_analysis",       get_push_analysis,       {"bu": bu, "fiscal_quarter": fiscal_quarter}),
+        ("bde_cadence",         get_bde_cadence,         {"bu": bu}),
+        ("pipeline_by_owner",   get_pipeline_by_owner,   {"bu": bu, "fiscal_quarter": fiscal_quarter}),
+        ("regional_breakdown",  get_regional_breakdown,  {"bu": bu}),
     ]
 
-    with ThreadPoolExecutor(max_workers=5) as pool:
+    with ThreadPoolExecutor(max_workers=6) as pool:
         futures = {pool.submit(_run_tool, name, fn, kw): name for name, fn, kw in tool_specs}
         for future in as_completed(futures):
             name, data, err = future.result()
@@ -157,11 +159,12 @@ def run_pipeline_health(
 
     tools_ms = int((datetime.now(timezone.utc) - t0).total_seconds() * 1000)
 
-    stage_health_data      = tool_results.get("stage_health", {})
-    meddpicc_gaps_data     = tool_results.get("meddpicc_gaps", {})
-    push_analysis_data     = tool_results.get("push_analysis", {})
-    bde_cadence_data       = tool_results.get("bde_cadence", {})
-    pipeline_by_owner_data = tool_results.get("pipeline_by_owner", {})
+    stage_health_data       = tool_results.get("stage_health", {})
+    meddpicc_gaps_data      = tool_results.get("meddpicc_gaps", {})
+    push_analysis_data      = tool_results.get("push_analysis", {})
+    bde_cadence_data        = tool_results.get("bde_cadence", {})
+    pipeline_by_owner_data  = tool_results.get("pipeline_by_owner", {})
+    regional_breakdown_data = tool_results.get("regional_breakdown", [])
 
     print(
         f"[orchestrator] Tools complete in {tools_ms}ms — "
@@ -268,7 +271,8 @@ def run_pipeline_health(
         "meddpicc_gaps":  meddpicc_gaps_data,
         "push_analysis":  push_analysis_data,
         "bde_cadence":    bde_cadence_data,
-        "pipeline_by_owner": pipeline_by_owner_data,
+        "pipeline_by_owner":   pipeline_by_owner_data,
+        "regional_breakdown":  regional_breakdown_data,
         "agent_outputs": {
             "stage_risk":      out_risk,
             "qualification":   out_qualification,

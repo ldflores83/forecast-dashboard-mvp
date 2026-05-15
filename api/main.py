@@ -72,6 +72,11 @@ def dashboard_api(request):
                 force_refresh=True,
             )
             return (json.dumps(result, default=str), 200, CORS)
+        elif mode == "regional_breakdown":
+            from teams.pipeline_health.tools import get_regional_breakdown
+            bu = request.args.get("bu") or None
+            result = get_regional_breakdown(bu=bu)
+            return (json.dumps(result, default=str), 200, CORS)
         elif mode == "digest":
             from shared.digest_utils import (
                 get_hero_metrics as _get_hero,

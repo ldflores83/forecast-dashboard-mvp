@@ -153,6 +153,13 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 .stat-lbl{font-size:11px;color:var(--t3);margin-top:6px}
 .stat-card.danger .stat-val{color:var(--red)}
 .stat-card.warn .stat-val{color:var(--amber)}
+/* ── REGION CARDS ────────────────────────────────────────────────────────── */
+.region-card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.region-card-name{font-family:var(--mono);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--blue);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--b)}
+.region-card-main{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--t);letter-spacing:-.3px;line-height:1;margin-bottom:2px}
+.region-card-sub{font-size:10px;color:var(--t3);margin-bottom:8px}
+.region-card-row{display:flex;justify-content:space-between;align-items:baseline;margin-top:3px}
+.region-card-val{font-family:var(--mono);font-size:11px;color:var(--t2)}
 /* ── MEDDPICC LEGEND ─────────────────────────────────────────────────────── */
 .medd-legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
 .medd-pill{display:inline-flex;align-items:flex-start;gap:8px;font-size:11px;color:var(--t2);line-height:1.45;padding:9px 12px;background:var(--surf);border:1px solid var(--b);border-radius:var(--r-sm);flex:1 1 160px;box-shadow:var(--shadow)}
@@ -342,6 +349,32 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 .signal-lbl{font-size:11px;color:var(--t3);line-height:1.4}
 .signal-card.warn .signal-val{color:var(--amber)}
 .signal-card.crit .signal-val{color:var(--red)}
+
+/* ── REGIONAL MAP ─────────────────────────────────────────────────────────── */
+.region-map-wrap{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);margin-bottom:28px}
+.map-toggle-group{display:flex;gap:8px;margin-bottom:14px}
+.map-toggle-btn{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.8px;padding:5px 13px;border-radius:var(--r-sm);border:1px solid var(--b);background:var(--bg2);color:var(--t3);cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.map-toggle-btn:hover{background:var(--surf2);color:var(--t2)}
+.map-toggle-btn[data-metric="pipeline"].active{background:var(--blue-bg);color:var(--blue);border-color:rgba(79,142,247,.35)}
+.map-toggle-btn[data-metric="won"].active,.map-toggle-btn[data-metric="winrate"].active{background:var(--green-bg);color:var(--green);border-color:rgba(45,212,160,.35)}
+.region-svg-wrap{position:relative;width:100%;line-height:0}
+.region-svg-wrap svg{width:100%;height:auto;display:block;border-radius:6px}
+[data-region]{cursor:pointer;transition:opacity .12s;stroke-width:1;stroke:var(--bg)}
+[data-region]:hover{opacity:.72}
+.map-tip{position:absolute;background:var(--surf2);border:1px solid var(--b);border-radius:var(--r-sm);padding:10px 13px;pointer-events:none;white-space:nowrap;z-index:10;box-shadow:0 4px 14px rgba(0,0,0,.4);display:none;min-width:210px}
+.map-tip-title{font-family:var(--mono);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--t);margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid var(--b)}
+.map-tip-row{display:flex;justify-content:space-between;gap:16px;line-height:1.65}
+.map-tip-lbl{font-size:10px;color:var(--t3)}
+.map-tip-val{font-family:var(--mono);font-size:10px;color:var(--t)}
+.map-legend{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+.map-legend-lbl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);white-space:nowrap}
+.map-legend-bar{height:7px;border-radius:4px;flex:1;min-width:80px;max-width:180px}
+.map-legend-range{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--t3);margin-top:3px;min-width:80px;max-width:180px}
+.map-global-note{margin-top:10px;padding:8px 12px;background:var(--bg2);border:1px solid var(--b);border-radius:var(--r-sm);display:flex;align-items:baseline;gap:8px}
+.map-global-tag{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3)}
+.map-global-stat{font-family:var(--mono);font-size:11px;color:var(--t)}
+.map-ocean{fill:var(--bg)}
+
 @media(max-width:960px){.motion-grid,.source-grid,.signals-grid,.overview-funnel-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:640px){.motion-grid,.source-grid,.signals-grid,.overview-funnel-grid{grid-template-columns:1fr}.h-flow{flex-direction:column}}
 </style>
@@ -496,6 +529,32 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 
       <div class="sec-header" style="margin-top:8px">
         <div class="sec-icon" style="background:var(--blue-bg);border:1px solid rgba(79,142,247,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c-2 2-3 4-3 6s1 4 3 6M8 2c2 2 3 4 3 6s-1 4-3 6"/></svg>
+        </div>
+        <span class="sec-label">Regional Pipeline</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">FY2027 · COLORED BY SELECTED METRIC</span>
+      </div>
+
+      <div class="region-map-wrap">
+        <div class="map-toggle-group">
+          <button class="map-toggle-btn active" data-metric="pipeline" onclick="setMapMetric('pipeline')">Pipeline ACV</button>
+          <button class="map-toggle-btn" data-metric="won" onclick="setMapMetric('won')">Closed Won</button>
+          <button class="map-toggle-btn" data-metric="winrate" onclick="setMapMetric('winrate')">Win Rate</button>
+        </div>
+        <div class="region-svg-wrap" id="region-svg-wrap">
+          <!-- D3 choropleth renders here -->
+          <div id="map-tip" class="map-tip"></div>
+        </div>
+        <div class="map-legend" id="map-legend"></div>
+        <div class="map-global-note">
+          <span class="map-global-tag">Global / Unassigned</span>
+          <span id="map-global-stat" class="map-global-stat">—</span>
+        </div>
+      </div>
+
+      <div class="sec-header" style="margin-top:8px">
+        <div class="sec-icon" style="background:var(--blue-bg);border:1px solid rgba(79,142,247,.22)">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round"><path d="M8 1l1.5 4h4l-3.2 2.4 1.2 4L8 9.2l-3.5 2.2 1.2-4L2.5 5h4z"/></svg>
         </div>
         <span class="sec-label">Executive Narrative</span>
@@ -535,12 +594,10 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
         </div>
         <span class="sec-label">Regional Pipeline</span>
         <div class="sec-line"></div>
-        <span class="sec-sub">REGIONAL BREAKDOWN</span>
+        <span class="sec-sub">FY2027 · BY REGION</span>
       </div>
 
-      <div class="info-card">
-        <strong>Regional breakdown coming soon</strong> — Opp_Owner_Region field being added to pipeline data export.
-      </div>
+      <div class="region-card-grid" id="region-cards-grid" style="display:none"></div>
 
       <!-- Review footer -->
       <div class="review-footer" id="review-footer" style="margin-top:8px">
@@ -844,6 +901,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;
 <!-- ── TOAST ───────────────────────────────────────────────────────────────── -->
 <div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <script>
 var GCS_URL = 'https://storage.googleapis.com/forecast-dashboard-mvp-frontend/pipeline_health_output.json';
 var API_URL = 'https://us-central1-forecast-dashboard-mvp.cloudfunctions.net/dashboard-api';
@@ -1574,6 +1633,290 @@ function renderRenewals(data) {
   if (bodyEl) bodyEl.innerHTML = tableHtml;
 }
 
+// ── REGIONAL MAP ────────────────────────────────────────────────────────────
+// Hardcoded fallback — overwritten by updateRegionMapData() once API responds
+var REGION_MAP_DATA = {
+  'NAmer':    {label:'North America',     pipeline:21700000, deals:452, won:4200000,  won_deals:92,  lost_deals:1031},
+  'EMEA':     {label:'EMEA',              pipeline:6800000,  deals:268, won:9700000,  won_deals:179, lost_deals:313},
+  'Asia/Pac': {label:'Asia Pacific',      pipeline:5300000,  deals:261, won:1800000,  won_deals:76,  lost_deals:76},
+  'LAmer':    {label:'Latin America',     pipeline:200000,   deals:14,  won:200000,   won_deals:11,  lost_deals:827},
+  'Global':   {label:'Global/Unassigned', pipeline:7600000,  deals:309, won:8100000,  won_deals:97,  lost_deals:63},
+};
+var _mapMetric = 'pipeline';
+var _mapInited  = false;
+
+// ISO 3166-1 numeric → region key; first-write wins (NAmer/LAmer take priority)
+var COUNTRY_REGION = (function() {
+  var m = {};
+  function add(codes, r) { codes.forEach(function(c) { if (!m[c]) m[c] = r; }); }
+  // NAmer — defined first so overlapping codes stay NAmer
+  add([124,484,630,840], 'NAmer');
+  // LAmer — user-specified codes
+  add([32,68,76,152,170,188,218,320,332,340,388,558,591,600,604,740,858,862], 'LAmer');
+  // LAmer — other Caribbean / Central American territories
+  add([28,44,52,84,192,214,222,308,328,474,659,662,670,780,796,850], 'LAmer');
+  // EMEA — Europe
+  add([8,20,40,56,70,100,112,191,196,203,208,233,246,250,276,300,336,348,352,372,380,
+       428,438,440,442,470,492,498,499,528,578,616,620,642,643,674,688,703,705,724,
+       752,756,792,804,807,826], 'EMEA');
+  // EMEA — Africa
+  add([12,24,72,108,120,132,140,148,174,178,180,204,226,231,232,262,266,270,288,324,
+       384,404,426,430,434,450,454,466,478,480,504,508,516,562,566,624,646,678,686,
+       690,694,706,710,716,728,729,748,768,788,800,818,834,854,894], 'EMEA');
+  // EMEA — Middle East
+  add([48,275,364,368,376,400,414,422,512,634,682,760,784,887], 'EMEA');
+  // Asia/Pac — Asia (Central, South, Southeast, East, Caucasus)
+  add([4,31,50,51,64,96,104,116,144,156,158,268,344,356,360,392,398,408,410,417,418,
+       446,458,462,496,524,586,608,626,702,704,762,764,795,860], 'Asia/Pac');
+  // Asia/Pac — Oceania
+  add([36,90,242,296,520,548,554,583,584,585,598,776,798,882], 'Asia/Pac');
+  return m;
+})();
+
+function _mapWinRate(d) {
+  var tot = d.won_deals + d.lost_deals;
+  return tot > 0 ? d.won_deals / tot * 100 : 0;
+}
+function _mapVal(d, metric) {
+  return metric === 'pipeline' ? d.pipeline : metric === 'won' ? d.won : _mapWinRate(d);
+}
+function _lerpMapColor(c1, c2, t) {
+  t = Math.max(0, Math.min(1, Math.pow(t, 0.65)));
+  return '#' + [0,1,2].map(function(i) {
+    return ('0' + Math.round(c1[i] + (c2[i] - c1[i]) * t).toString(16)).slice(-2);
+  }).join('');
+}
+function _fmtMapVal(v, metric) {
+  if (metric === 'winrate') return Math.round(v) + '%';
+  return v >= 1e6 ? '$' + (v/1e6).toFixed(1) + 'M' : '$' + (v/1e3).toFixed(0) + 'K';
+}
+
+function setMapMetric(metric) {
+  _mapMetric = metric;
+  document.querySelectorAll('.map-toggle-btn').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-metric') === metric);
+  });
+  var ramps = {
+    pipeline: {lo:[15,25,68],  hi:[79,142,247]},
+    won:      {lo:[12,35,36],  hi:[20,184,166]},
+    winrate:  {lo:[12,34,22],  hi:[45,212,160]},
+  };
+  var r = ramps[metric] || ramps.pipeline;
+  var mapRegions = ['NAmer','EMEA','Asia/Pac','LAmer'];
+  var vals = mapRegions.map(function(k) { return _mapVal(REGION_MAP_DATA[k], metric); });
+  var minV = Math.min.apply(null, vals), maxV = Math.max.apply(null, vals);
+
+  var svg = document.getElementById('region-map-svg');
+  if (svg) svg.querySelectorAll('[data-region]').forEach(function(p) {
+    var d = REGION_MAP_DATA[p.getAttribute('data-region')];
+    if (!d) return;
+    var t = maxV > minV ? (_mapVal(d, metric) - minV) / (maxV - minV) : 0.6;
+    var col = _lerpMapColor(r.lo, r.hi, t);
+    p.setAttribute('fill', col);
+    p.setAttribute('data-fill', col);
+  });
+
+  var gradEnd   = {pipeline:'#4f8ef7', won:'#14b8a6', winrate:'#2dd4a0'}[metric];
+  var gradStart = {pipeline:'#0e1a48', won:'#0c2224', winrate:'#0c2218'}[metric];
+  var legEl = document.getElementById('map-legend');
+  if (legEl) legEl.innerHTML =
+    '<span class="map-legend-lbl">' + {pipeline:'Pipeline ACV',won:'Closed Won ACV',winrate:'Win Rate'}[metric] + '</span>' +
+    '<div>' +
+      '<div class="map-legend-bar" style="background:linear-gradient(to right,' + gradStart + ',' + gradEnd + ')"></div>' +
+      '<div class="map-legend-range"><span>' + _fmtMapVal(minV,metric) + '</span><span>' + _fmtMapVal(maxV,metric) + '</span></div>' +
+    '</div>';
+
+  var gd = REGION_MAP_DATA['Global'];
+  var gEl = document.getElementById('map-global-stat');
+  if (gEl && gd) {
+    gEl.textContent = fmtAcv(gd.pipeline) + ' pipeline · ' + fmtAcv(gd.won) + ' won · ' +
+                      _mapWinRate(gd).toFixed(1) + '% win rate · ' + gd.deals + ' deals';
+  }
+}
+
+function _initMapTooltip() {
+  var wrap = document.getElementById('region-svg-wrap');
+  var tip  = document.getElementById('map-tip');
+  var svg  = document.getElementById('region-map-svg');
+  if (!svg || !tip || !wrap) return;
+  var BU_LABELS = { 'ERP': 'ERP', 'Supply Chain': 'SC', 'Redzone': 'RZN' };
+  svg.querySelectorAll('[data-region]').forEach(function(p) {
+    p.addEventListener('mouseenter', function() {
+      var d = REGION_MAP_DATA[p.getAttribute('data-region')];
+      if (!d) return;
+      var html =
+        '<div class="map-tip-title">' + esc(d.label) + '</div>' +
+        '<div class="map-tip-row"><span class="map-tip-lbl">Pipeline ACV</span><span class="map-tip-val">' + fmtAcv(d.pipeline) + '</span></div>' +
+        '<div class="map-tip-row"><span class="map-tip-lbl">Closed Won</span><span class="map-tip-val">' + fmtAcv(d.won) + '</span></div>' +
+        '<div class="map-tip-row"><span class="map-tip-lbl">Win Rate</span><span class="map-tip-val">' + _mapWinRate(d).toFixed(1) + '%</span></div>' +
+        '<div class="map-tip-row"><span class="map-tip-lbl">Open Deals</span><span class="map-tip-val">' + d.deals + '</span></div>';
+      if (d.bu_breakdown && d.bu_breakdown.length) {
+        html += '<div style="margin-top:6px;padding-top:5px;border-top:1px solid var(--b)">' +
+          '<div class="map-tip-row" style="margin-bottom:2px">' +
+            '<span class="map-tip-lbl" style="min-width:28px">BU</span>' +
+            '<span class="map-tip-lbl">Pipeline</span>' +
+            '<span class="map-tip-lbl">Win Rate</span>' +
+          '</div>';
+        d.bu_breakdown.forEach(function(b) {
+          var bLabel = BU_LABELS[b.bu] || b.bu;
+          var bDenom = b.won_deals + b.lost_deals;
+          var bWr    = bDenom > 0 ? (b.won_deals / bDenom * 100).toFixed(1) + '%' : '—';
+          html += '<div class="map-tip-row">' +
+            '<span class="map-tip-val" style="min-width:28px">' + esc(bLabel) + '</span>' +
+            '<span class="map-tip-val">' + fmtAcv(b.pipeline_acv) + '</span>' +
+            '<span class="map-tip-val">' + bWr + '</span>' +
+          '</div>';
+        });
+        html += '</div>';
+      }
+      tip.innerHTML = html;
+      tip.style.display = 'block';
+    });
+    p.addEventListener('mousemove', function(e) {
+      var r    = wrap.getBoundingClientRect();
+      var tipW = tip.offsetWidth  || 210;
+      var tipH = tip.offsetHeight || 140;
+      var x = e.clientX - r.left + 14, y = e.clientY - r.top + 14;
+      if (e.clientX + tipW + 14 > window.innerWidth)  x = e.clientX - r.left - tipW - 14;
+      if (e.clientY + tipH + 14 > window.innerHeight) y = e.clientY - r.top  - tipH - 14;
+      tip.style.left = x + 'px';
+      tip.style.top  = y + 'px';
+    });
+    p.addEventListener('mouseleave', function() { tip.style.display = 'none'; });
+  });
+}
+
+function _drawD3Map(world) {
+  var wrap = document.getElementById('region-svg-wrap');
+  if (!wrap || typeof d3 === 'undefined' || typeof topojson === 'undefined') return;
+  var existing = document.getElementById('region-map-svg');
+  if (existing) existing.parentNode.removeChild(existing);
+
+  var W = 900, H = 440;
+  var svg = d3.select(wrap).insert('svg', ':first-child')
+    .attr('id', 'region-map-svg')
+    .attr('viewBox', '0 0 ' + W + ' ' + H)
+    .style('width', '100%')
+    .style('height', 'auto')
+    .style('display', 'block')
+    .style('border-radius', '6px');
+
+  svg.append('rect')
+    .attr('width', W).attr('height', H).attr('rx', 8)
+    .attr('class', 'map-ocean');
+
+  var projection = d3.geoNaturalEarth1()
+    .scale(143)
+    .translate([W / 2, H / 2 + 20]);
+
+  var geoPath = d3.geoPath().projection(projection);
+
+  // Bucket each country geometry into its region (or unassigned)
+  var REGIONS = ['NAmer', 'LAmer', 'EMEA', 'Asia/Pac'];
+  var regionGeoms = {};
+  REGIONS.forEach(function(r) { regionGeoms[r] = []; });
+  var unassignedGeoms = [];
+
+  world.objects.countries.geometries.forEach(function(geom) {
+    var region = COUNTRY_REGION[+geom.id];
+    if (region && regionGeoms[region]) {
+      regionGeoms[region].push(geom);
+    } else {
+      unassignedGeoms.push(geom);
+    }
+  });
+
+  // Unassigned countries — subtle fill, no hover, no stroke
+  if (unassignedGeoms.length) {
+    svg.append('path')
+      .datum(topojson.merge(world, unassignedGeoms))
+      .attr('class', 'country')
+      .attr('d', geoPath)
+      .attr('fill', '#1e2848')
+      .style('pointer-events', 'none');
+  }
+
+  // One merged solid shape per region — no internal country borders
+  REGIONS.forEach(function(region) {
+    var geoms = regionGeoms[region];
+    if (!geoms.length) return;
+    svg.append('path')
+      .datum(topojson.merge(world, geoms))
+      .attr('class', 'country')
+      .attr('data-region', region)
+      .attr('d', geoPath)
+      .attr('fill', '#1a2540');
+  });
+}
+
+function _loadAndDrawMap() {
+  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+    .then(function(r) { return r.json(); })
+    .then(function(world) {
+      _drawD3Map(world);
+      setMapMetric(_mapMetric);
+      _initMapTooltip();
+    })
+    .catch(function(e) { console.warn('[map] world-atlas load failed:', e); });
+}
+
+function renderRegionCards(breakdown) {
+  var grid = document.getElementById('region-cards-grid');
+  if (!grid) return;
+  var ORDER  = ['NAmer', 'EMEA', 'Asia/Pac', 'LAmer'];
+  var LABELS = { 'NAmer':'North America', 'EMEA':'EMEA', 'Asia/Pac':'Asia Pacific', 'LAmer':'Latin America' };
+  var byRegion = {};
+  (breakdown || []).forEach(function(r) { byRegion[r.region] = r; });
+  var hasData = ORDER.some(function(k) { return byRegion[k] && (byRegion[k].pipeline_acv || byRegion[k].pipeline_deals); });
+  if (!hasData) { grid.style.display = 'none'; return; }
+  grid.style.display = 'grid';
+  grid.innerHTML = ORDER.map(function(key) {
+    var d  = byRegion[key] || {};
+    var wr = (d.win_rate != null) ? d.win_rate.toFixed(1) + '%' : '—';
+    return '<div class="stat-card">' +
+      '<div class="region-card-name">' + esc(LABELS[key]) + '</div>' +
+      '<div class="region-card-main">' + (d.pipeline_acv != null ? fmtAcv(d.pipeline_acv) : '—') + '</div>' +
+      '<div class="region-card-sub">pipeline ACV</div>' +
+      '<div class="region-card-row"><span class="stat-lbl">Closed Won</span><span class="region-card-val">' + (d.won_acv != null ? fmtAcv(d.won_acv) : '—') + '</span></div>' +
+      '<div class="region-card-row"><span class="stat-lbl">Win Rate</span><span class="region-card-val">' + wr + '</span></div>' +
+      '<div class="region-card-row"><span class="stat-lbl">Open Deals</span><span class="region-card-val">' + (d.pipeline_deals != null ? d.pipeline_deals : '—') + '</span></div>' +
+    '</div>';
+  }).join('');
+}
+
+function updateRegionMapData(breakdown) {
+  if (!Array.isArray(breakdown) || !breakdown.length) return;
+  var labels = {
+    'NAmer':'North America', 'LAmer':'Latin America',
+    'EMEA':'EMEA', 'Asia/Pac':'Asia Pacific', 'Global':'Global/Unassigned',
+  };
+  breakdown.forEach(function(row) {
+    var key = row.region;
+    if (!labels[key]) return;
+    REGION_MAP_DATA[key] = {
+      label:        labels[key],
+      pipeline:     row.pipeline_acv   || 0,
+      deals:        row.pipeline_deals || 0,
+      won:          row.won_acv        || 0,
+      won_deals:    row.won_deals      || 0,
+      lost_deals:   row.lost_deals     || 0,
+      bu_breakdown: row.bu_breakdown   || [],
+    };
+  });
+  renderRegionCards(breakdown);
+  if (_mapInited) setMapMetric(_mapMetric);
+}
+
+function renderRegionMap() {
+  if (!_mapInited) {
+    _mapInited = true;
+    setMapMetric('pipeline');
+    _loadAndDrawMap();
+  } else {
+    setMapMetric(_mapMetric);
+  }
+}
+
 // ── MAIN RENDER ────────────────────────────────────────────────────────────
 function render(data) {
   console.log('[pipeline-health] API response:', data);
@@ -1589,6 +1932,7 @@ function render(data) {
   renderStage(data);
   renderMeddpicc(data);
   renderRenewals(data);
+  renderRegionMap();
   renderReview(data.review || {});
 }
 
@@ -1609,6 +1953,23 @@ function loadData() {
 }
 
 // ── RUN ANALYSIS ───────────────────────────────────────────────────────────
+function loadRegionalBreakdown() {
+  var buSelect = document.getElementById('bu-select');
+  var bu = buSelect ? buSelect.value : '';
+  var url = API_URL + '?mode=regional_breakdown' + (bu ? '&bu=' + encodeURIComponent(bu) : '');
+  fetch(url + '&t=' + Date.now())
+    .then(function(r) {
+      if (!r.ok) throw new Error('http_' + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      updateRegionMapData(data || []);
+    })
+    .catch(function(e) {
+      console.warn('[pipeline-health] Regional breakdown load error:', e.message);
+    });
+}
+
 (function() {
   var runBtn   = document.getElementById('run-btn');
   var runLabel = document.getElementById('run-label');
@@ -1781,6 +2142,8 @@ document.getElementById('save-cfg-btn').addEventListener('click', function() {
 
 // ── INIT ───────────────────────────────────────────────────────────────────
 loadData();
+renderRegionMap();
+loadRegionalBreakdown();
 </script>
 </body>
 </html>

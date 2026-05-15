@@ -726,3 +726,100 @@ def get_pipeline_by_owner(bu: str | None = None, fiscal_quarter: int = 0) -> dic
         "total_owners": len(result_owners),
         "bu_filter":    bu or "All",
     }
+
+
+def get_regional_breakdown(bu: str | None = None) -> list:
+    """Pipeline and closed-deal metrics grouped by Opp_Owner_Region for FY2027."""
+    bu_clause = _bu_filter(bu)
+    _region_filter = "AND COALESCE(Opp_Owner_Region, 'Global') IN ('NAmer', 'LAmer', 'EMEA', 'Asia/Pac', 'Global')"
+    _fy_filter     = "AND fiscal_year = 2027"
+    _stage_filter  = "AND (IsClosed = FALSE OR StageName IN ('Closed-Won', 'Closed-Lost'))"
+
+    sql = f"""
+        WITH base AS (
+            SELECT
+                Opp_Owner_Region,
+                BU,
+                StageName,
+                COALESCE(ACV, 0) AS ACV,
+                COALESCE(IsClosed, FALSE) AS IsClosed,
+                COALESCE(Is_Won, FALSE) AS Is_Won,
+                FiscalYear AS fiscal_year
+            FROM {_tbl('opportunities')}
+            WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
+        )
+        SELECT
+            COALESCE(Opp_Owner_Region, 'Global') AS region,
+            COUNTIF(IsClosed = FALSE)                                           AS pipeline_deals,
+            COALESCE(SUM(CASE WHEN IsClosed = FALSE THEN ACV ELSE 0 END), 0)    AS pipeline_acv,
+            COUNTIF(IsClosed = TRUE AND Is_Won = TRUE)                          AS won_deals,
+            COALESCE(SUM(CASE WHEN IsClosed = TRUE AND Is_Won = TRUE THEN ACV ELSE 0 END), 0) AS won_acv,
+            COUNTIF(IsClosed = TRUE AND Is_Won = FALSE)                         AS lost_deals
+        FROM base
+        WHERE TRUE {_fy_filter} {_stage_filter} {_region_filter} {bu_clause}
+        GROUP BY 1
+        ORDER BY pipeline_acv DESC
+    """
+
+    bu_sql = f"""
+        WITH base AS (
+            SELECT
+                Opp_Owner_Region,
+                BU,
+                StageName,
+                COALESCE(ACV, 0) AS ACV,
+                COALESCE(IsClosed, FALSE) AS IsClosed,
+                COALESCE(Is_Won, FALSE) AS Is_Won,
+                FiscalYear AS fiscal_year
+            FROM {_tbl('opportunities')}
+            WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
+        )
+        SELECT
+            COALESCE(Opp_Owner_Region, 'Global') AS region,
+            BU                                   AS bu,
+            COUNTIF(IsClosed = FALSE)                                           AS pipeline_deals,
+            COALESCE(SUM(CASE WHEN IsClosed = FALSE THEN ACV ELSE 0 END), 0)    AS pipeline_acv,
+            COUNTIF(IsClosed = TRUE AND Is_Won = TRUE)                          AS won_deals,
+            COALESCE(SUM(CASE WHEN IsClosed = TRUE AND Is_Won = TRUE THEN ACV ELSE 0 END), 0) AS won_acv,
+            COUNTIF(IsClosed = TRUE AND Is_Won = FALSE)                         AS lost_deals
+        FROM base
+        WHERE TRUE {_fy_filter} {_stage_filter} {_region_filter}
+          {bu_clause}
+        GROUP BY 1, 2
+        ORDER BY region, pipeline_acv DESC
+    """
+
+    rows    = _query(sql)
+    bu_rows = _query(bu_sql)
+
+    bu_by_region: dict = {}
+    for r in bu_rows:
+        won   = int(r.get("won_deals", 0) or 0)
+        lost  = int(r.get("lost_deals", 0) or 0)
+        denom = won + lost
+        bu_by_region.setdefault(r["region"], []).append({
+            "bu":           r["bu"],
+            "pipeline_acv": safe_float(r.get("pipeline_acv", 0)),
+            "won_acv":      safe_float(r.get("won_acv", 0)),
+            "won_deals":    won,
+            "lost_deals":   lost,
+            "win_rate":     round(won / denom * 100, 1) if denom else 0.0,
+        })
+
+    result = []
+    for r in rows:
+        won    = int(r.get("won_deals", 0) or 0)
+        lost   = int(r.get("lost_deals", 0) or 0)
+        denom  = won + lost
+        region = r["region"]
+        result.append({
+            "region":         region,
+            "pipeline_acv":   safe_float(r.get("pipeline_acv", 0)),
+            "pipeline_deals": int(r.get("pipeline_deals", 0) or 0),
+            "won_acv":        safe_float(r.get("won_acv", 0)),
+            "won_deals":      won,
+            "lost_deals":     lost,
+            "win_rate":       round(won / denom * 100, 1) if denom else 0.0,
+            "bu_breakdown":   bu_by_region.get(region, []),
+        })
+    return result
