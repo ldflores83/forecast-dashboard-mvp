@@ -63,6 +63,15 @@ def dashboard_api(request):
             from teams.icp import orchestrator as icp_orchestrator
             result = icp_orchestrator.run(fiscal_quarter=fiscal_quarter, force_refresh=True)
             return (json.dumps(result, default=str), 200, CORS)
+        elif mode == "pipeline_health":
+            from teams.pipeline_health import orchestrator as ph_orchestrator
+            bu = request.args.get("bu") or None
+            result = ph_orchestrator.run_pipeline_health(
+                fiscal_quarter=fiscal_quarter,
+                bu=bu,
+                force_refresh=True,
+            )
+            return (json.dumps(result, default=str), 200, CORS)
         elif mode == "digest":
             from shared.digest_utils import (
                 get_hero_metrics as _get_hero,
@@ -95,6 +104,20 @@ def dashboard_api(request):
                 {"digest_text": digest_text, "week_key": week_key, "slack_sent": slack_sent},
                 default=str,
             ), 200, CORS)
+        elif mode == "pipeline_health_config":
+            from google.cloud import storage as _gcs
+            _ph_blob = _gcs.Client().bucket("forecast-dashboard-mvp-frontend").blob("pipeline_health_config.json")
+            if request.method == "POST":
+                body = request.get_json(silent=True) or {}
+                body["saved_at"] = datetime.now(timezone.utc).isoformat()
+                _ph_blob.upload_from_string(json.dumps(body), content_type="application/json")
+                return (json.dumps({"saved": True}), 200, CORS)
+            else:
+                try:
+                    raw = _ph_blob.download_as_text()
+                    return (raw, 200, CORS)
+                except Exception:
+                    return (json.dumps({}), 200, CORS)
         elif mode == "digest_config":
             from google.cloud import storage as _gcs
             _cfg_blob = _gcs.Client().bucket("forecast-dashboard-mvp-frontend").blob("digest_config.json")

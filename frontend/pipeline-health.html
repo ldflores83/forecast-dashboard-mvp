@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pipeline Health — QAD FY2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── RESET + TOKENS ──────────────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--sans:'Plus Jakarta Sans',sans-serif;--mono:'DM Mono',monospace;--r:10px;--r-sm:6px;--ease:.18s ease}
+[data-theme="dark"]{
+  --bg:#08090f;--bg2:#0e1018;--surf:#131622;--surf2:#1a1e2e;
+  --b:rgba(255,255,255,.06);--b2:rgba(255,255,255,.11);
+  --t:#dde3f0;--t2:#7a8499;--t3:#3d4459;
+  --blue:#4f8ef7;--blue-bg:rgba(79,142,247,.1);
+  --green:#2dd4a0;--green-bg:rgba(45,212,160,.1);
+  --purple:#a78bfa;--purple-bg:rgba(167,139,250,.1);
+  --amber:#fbbf24;--amber-bg:rgba(251,191,36,.1);
+  --red:#f87171;--red-bg:rgba(248,113,113,.1);
+  --shadow:0 2px 12px rgba(0,0,0,.4)
+}
+[data-theme="light"]{
+  --bg:#f2f4f8;--bg2:#e9ecf3;--surf:#fff;--surf2:#f8f9fc;
+  --b:rgba(0,0,0,.06);--b2:rgba(0,0,0,.12);
+  --t:#0d1018;--t2:#5a6070;--t3:#9aa0b0;
+  --blue:#2563eb;--blue-bg:rgba(37,99,235,.08);
+  --green:#059669;--green-bg:rgba(5,150,105,.08);
+  --purple:#7c3aed;--purple-bg:rgba(124,58,237,.08);
+  --amber:#d97706;--amber-bg:rgba(217,119,6,.08);
+  --red:#dc2626;--red-bg:rgba(220,38,38,.08);
+  --shadow:0 1px 4px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.05)
+}
+body{background:var(--bg);color:var(--t);font-family:var(--sans);font-size:14px;line-height:1.6;transition:background var(--ease),color var(--ease)}
+
+/* ── TOPBAR ──────────────────────────────────────────────────────────────── */
+.topbar{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--b);height:52px;display:flex;align-items:center;padding:0 24px;gap:16px;transition:background var(--ease)}
+.topbar-left{display:flex;align-items:center;gap:12px;min-width:0}
+.back-link{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t3);text-decoration:none;padding:4px 8px;border-radius:var(--r-sm);transition:all var(--ease);white-space:nowrap;flex-shrink:0}
+.back-link:hover{color:var(--t2);background:var(--b)}
+.back-link svg{flex-shrink:0}
+.divider-v{width:1px;height:18px;background:var(--b2);flex-shrink:0}
+.page-ident{display:flex;align-items:center;gap:8px;min-width:0}
+.page-title{font-size:15px;font-weight:600;color:var(--green);white-space:nowrap}
+.page-spark{font-size:11px;color:var(--t3)}
+.page-pulse{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.tb-meta{font-family:var(--mono);font-size:10px;color:var(--t3);white-space:nowrap;display:flex;align-items:center;gap:7px}
+.tb-week{color:var(--t2)}
+.tb-sep{color:var(--t3)}
+.tb-reviewed{color:var(--green)}
+.bu-select{height:30px;padding:0 28px 0 10px;background:var(--surf);border:1px solid var(--b2);border-radius:var(--r-sm);color:var(--t2);font:500 12px var(--sans);cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a8499' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;transition:border-color var(--ease);outline:none;flex-shrink:0}
+.bu-select:focus{border-color:var(--green)}
+.run-btn{display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;background:var(--green-bg);border:1px solid rgba(45,212,160,.28);border-radius:var(--r-sm);cursor:pointer;color:var(--green);font:600 12px/1 var(--sans);transition:all var(--ease);flex-shrink:0;white-space:nowrap}
+.run-btn:hover{background:rgba(45,212,160,.18);border-color:rgba(45,212,160,.5)}
+.run-btn:disabled{opacity:.45;cursor:not-allowed}
+.theme-btn{width:32px;height:32px;background:var(--surf);border:1px solid var(--b2);border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t2);transition:all var(--ease);flex-shrink:0}
+.theme-btn:hover{color:var(--t)}
+
+/* ── META BAR ────────────────────────────────────────────────────────────── */
+.meta-bar{background:var(--surf);border-bottom:1px solid var(--b);padding:7px 24px;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10px;color:var(--t3);flex-wrap:wrap}
+.meta-sep{color:var(--b2);margin:0 2px}
+.meta-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;padding:2px 7px;border-radius:4px;border:1px solid}
+.meta-badge.passed{background:var(--green-bg);color:var(--green);border-color:rgba(45,212,160,.25)}
+.meta-badge.flagged{background:var(--amber-bg);color:var(--amber);border-color:rgba(251,191,36,.25)}
+.meta-badge.error{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.25)}
+.meta-hash{background:var(--surf2);border:1px solid var(--b);border-radius:3px;padding:1px 6px;letter-spacing:.5px;color:var(--t3)}
+
+/* ── TABS ────────────────────────────────────────────────────────────────── */
+.tab-bar{background:var(--surf);border-bottom:1px solid var(--b);padding:0 24px;display:flex;gap:0;overflow-x:auto}
+.tab-btn{display:flex;align-items:center;gap:6px;height:42px;padding:0 16px;font-size:12px;font-weight:500;color:var(--t3);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;transition:all var(--ease);white-space:nowrap;flex-shrink:0}
+.tab-btn:hover{color:var(--t2)}
+.tab-btn.active{color:var(--green);border-bottom-color:var(--green)}
+.tab-btn svg{flex-shrink:0;opacity:.7}
+.tab-btn.active svg{opacity:1}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+
+/* ── LAYOUT ──────────────────────────────────────────────────────────────── */
+.main{max-width:1200px;margin:0 auto;padding:32px 24px 72px;display:flex;flex-direction:column;gap:40px}
+
+/* ── LOADING ─────────────────────────────────────────────────────────────── */
+.loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:96px 24px;color:var(--t3);font-size:13px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:16px;height:16px;border:2px solid var(--b2);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite}
+
+/* ── EMPTY STATE ─────────────────────────────────────────────────────────── */
+.empty-wrap{display:flex;align-items:center;justify-content:center;padding:96px 24px}
+.empty-card{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:56px 48px;text-align:center;max-width:440px;box-shadow:var(--shadow)}
+.empty-icon{width:52px;height:52px;border-radius:50%;background:var(--green-bg);border:1px solid rgba(45,212,160,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.empty-title{font-size:17px;font-weight:600;color:var(--t);margin-bottom:8px;letter-spacing:-.2px}
+.empty-sub{font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:20px}
+.empty-cmd{font-family:var(--mono);font-size:11px;background:var(--surf2);border:1px solid var(--b2);border-radius:var(--r-sm);padding:9px 14px;color:var(--t2);display:inline-block}
+
+/* ── SECTION HEADER ──────────────────────────────────────────────────────── */
+.sec-header{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.sec-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sec-label{font-size:13px;font-weight:600;color:var(--t);white-space:nowrap}
+.sec-line{flex:1;height:1px;background:var(--b)}
+.sec-sub{font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1.5px;white-space:nowrap}
+
+/* ── BU SCORECARD ────────────────────────────────────────────────────────── */
+.scorecard-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+.scorecard{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.scorecard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.scorecard.healthy::before{background:var(--green)}
+.scorecard.warning::before{background:var(--amber)}
+.scorecard.critical::before{background:var(--red)}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sc-name{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.5px}
+.sc-status{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;border:1px solid}
+.sc-status.healthy{background:var(--green-bg);color:var(--green);border-color:rgba(45,212,160,.3)}
+.sc-status.warning{background:var(--amber-bg);color:var(--amber);border-color:rgba(251,191,36,.3)}
+.sc-status.critical{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.3)}
+.sc-stat{margin-top:8px}
+.sc-stat-val{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--t);letter-spacing:-.5px}
+.sc-stat-lbl{font-size:10px;color:var(--t3);margin-top:2px}
+
+/* ── NARRATIVE ───────────────────────────────────────────────────────────── */
+.narrative-block{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:24px;box-shadow:var(--shadow);font-size:13px;color:var(--t2);line-height:1.75;white-space:pre-wrap}
+
+/* ── TOP DEALS TABLE ─────────────────────────────────────────────────────── */
+.deal-table-wrap{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.deal-table{width:100%;border-collapse:collapse;font-size:12px}
+.deal-table thead th{background:var(--bg2);padding:9px 12px;text-align:left;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:var(--t3);border-bottom:1px solid var(--b);white-space:nowrap}
+.deal-table tbody tr{border-bottom:1px solid var(--b);transition:background var(--ease)}
+.deal-table tbody tr:last-child{border-bottom:none}
+.deal-table tbody tr:hover{background:var(--surf2)}
+.deal-table td{padding:10px 12px;vertical-align:top;color:var(--t2)}
+.deal-table td.right{text-align:right}
+.deal-name{font-size:12px;font-weight:500;color:var(--t);line-height:1.3}
+.acct-name{font-size:11px;color:var(--t3);margin-top:1px}
+.acv-cell{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--t);white-space:nowrap}
+
+/* ── BU CHIPS ────────────────────────────────────────────────────────────── */
+.bu-chip{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:4px;letter-spacing:.5px;white-space:nowrap}
+.bu-erp{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(79,142,247,.2)}
+.bu-sc{background:var(--green-bg);color:var(--green);border:1px solid rgba(45,212,160,.2)}
+.bu-rz{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(251,191,36,.2)}
+
+/* ── FLAG CHIPS ──────────────────────────────────────────────────────────── */
+.flag{display:inline-flex;align-items:center;font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:4px;white-space:nowrap;border:1px solid}
+.flag.critical{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.25)}
+.flag.warning{background:var(--amber-bg);color:var(--amber);border-color:rgba(251,191,36,.25)}
+.flag.ok{background:var(--green-bg);color:var(--green);border-color:rgba(45,212,160,.25)}
+
+/* ── STAT CARDS ──────────────────────────────────────────────────────────── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);cursor:help;position:relative}
+.stat-val{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--t);letter-spacing:-.5px;line-height:1}
+.stat-lbl{font-size:11px;color:var(--t3);margin-top:6px}
+.stat-card.danger .stat-val{color:var(--red)}
+.stat-card.warn .stat-val{color:var(--amber)}
+/* ── MEDDPICC LEGEND ─────────────────────────────────────────────────────── */
+.medd-legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.medd-pill{display:inline-flex;align-items:flex-start;gap:8px;font-size:11px;color:var(--t2);line-height:1.45;padding:9px 12px;background:var(--surf);border:1px solid var(--b);border-radius:var(--r-sm);flex:1 1 160px;box-shadow:var(--shadow)}
+.medd-pill-letter{font-family:var(--mono);font-weight:600;font-size:14px;color:var(--purple);flex-shrink:0;min-width:14px;line-height:1.3}
+.medd-pill strong{color:var(--t);font-weight:600}
+
+/* ── STAGE FUNNEL ────────────────────────────────────────────────────────── */
+.funnel-wrap{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
+.funnel-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;cursor:pointer;padding:6px 8px;border-radius:var(--r-sm);transition:background var(--ease)}
+.funnel-row:last-child{margin-bottom:0}
+.funnel-row:hover{background:var(--surf2)}
+.funnel-row.selected{background:var(--green-bg)}
+.funnel-stage-name{font-size:12px;font-weight:500;color:var(--t);width:140px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.funnel-bar-wrap{flex:1;height:22px;background:var(--bg2);border-radius:4px;overflow:hidden;position:relative}
+.funnel-bar{height:100%;border-radius:4px;transition:width .4s ease;min-width:3px}
+/* Health-based bar colors */
+.funnel-bar.h-ok{background:rgba(45,212,160,.22);border:1px solid rgba(45,212,160,.45)}
+.funnel-bar.h-warn{background:rgba(251,191,36,.22);border:1px solid rgba(251,191,36,.45)}
+.funnel-bar.h-crit{background:rgba(248,113,113,.22);border:1px solid rgba(248,113,113,.45)}
+.funnel-bar.h-na{background:var(--b2);border:1px solid var(--b2)}
+.funnel-meta{display:flex;gap:8px;align-items:center;flex-shrink:0;min-width:200px;justify-content:flex-end}
+.funnel-count{font-family:var(--mono);font-size:11px;color:var(--t2)}
+.funnel-acv{font-family:var(--mono);font-size:11px;color:var(--t3)}
+.funnel-overdue{font-family:var(--mono);font-size:10px}
+.overdue-ok{color:var(--green)}
+.overdue-warn{color:var(--amber)}
+.overdue-crit{color:var(--red)}
+/* Renewals compact table */
+.renewal-mini-wrap{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);margin-bottom:24px}
+.renewal-mini-head{background:var(--bg2);padding:9px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--b)}
+.renewal-mini-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:var(--t3)}
+.renewal-mini-table{width:100%;border-collapse:collapse;font-size:12px}
+.renewal-mini-table th{background:var(--bg2);padding:7px 14px;text-align:left;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--t3);border-bottom:1px solid var(--b)}
+.renewal-mini-table td{padding:8px 14px;border-bottom:1px solid var(--b);color:var(--t2)}
+.renewal-mini-table tr:last-child td{border-bottom:none}
+.renewal-mini-table tr:hover td{background:var(--surf2)}
+
+/* ── STAGE DETAIL PANEL ──────────────────────────────────────────────────── */
+.stage-detail{background:var(--surf2);border:1px solid var(--b2);border-radius:var(--r);padding:20px;margin-bottom:24px;display:none}
+.stage-detail.visible{display:block}
+.stage-detail-title{font-size:13px;font-weight:600;color:var(--t);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.stage-criteria-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.criteria-block{background:var(--surf);border:1px solid var(--b);border-radius:var(--r-sm);padding:14px}
+.criteria-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px}
+.criteria-label.entry{color:var(--green)}
+.criteria-label.exit{color:var(--amber)}
+.criteria-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.criteria-list li{font-size:12px;color:var(--t2);display:flex;align-items:flex-start;gap:7px;line-height:1.4}
+.criteria-list li::before{content:'·';color:var(--t3);flex-shrink:0;margin-top:1px}
+
+/* ── MEDDPICC HEATMAP ────────────────────────────────────────────────────── */
+.heatmap-wrap{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);margin-bottom:24px}
+.heatmap-table{width:100%;border-collapse:collapse;font-size:12px}
+.heatmap-table th{background:var(--bg2);padding:8px 10px;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--t3);border-bottom:1px solid var(--b);text-align:center;white-space:nowrap}
+.heatmap-table th.row-head{text-align:left}
+.heatmap-table td{padding:9px 10px;border-bottom:1px solid var(--b);text-align:center;font-family:var(--mono);font-size:11px;transition:background var(--ease)}
+.heatmap-table td.row-head{text-align:left;font-family:var(--sans);font-size:12px;color:var(--t2);font-weight:500}
+.heatmap-table tr:last-child td{border-bottom:none}
+.heatmap-table tr:hover td{filter:brightness(1.08)}
+.hm-cell{display:inline-flex;align-items:center;justify-content:center;width:44px;height:24px;border-radius:4px;font-size:10px;font-weight:600}
+.hm-ok{background:var(--green-bg);color:var(--green)}
+.hm-warn{background:var(--amber-bg);color:var(--amber)}
+.hm-crit{background:var(--red-bg);color:var(--red)}
+.hm-na{background:var(--b);color:var(--t3)}
+
+/* ── BTL DEALS TABLE ─────────────────────────────────────────────────────── */
+.btl-wrap{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);margin-bottom:24px}
+.btl-table{width:100%;border-collapse:collapse;font-size:12px}
+.btl-table thead th{background:var(--bg2);padding:9px 12px;text-align:left;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:var(--t3);border-bottom:1px solid var(--b);white-space:nowrap}
+.btl-table tbody tr{border-bottom:1px solid var(--b);transition:background var(--ease)}
+.btl-table tbody tr:last-child{border-bottom:none}
+.btl-table tbody tr:hover{background:var(--surf2)}
+.btl-table td{padding:9px 12px;vertical-align:top;color:var(--t2);font-size:12px}
+.missing-criteria{display:flex;gap:4px;flex-wrap:wrap}
+.mc-chip{display:inline-flex;align-items:center;font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:3px;background:var(--red-bg);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+
+/* ── REVIEW FOOTER ───────────────────────────────────────────────────────── */
+.review-footer{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);padding:20px 24px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px}
+.review-top-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.rev-pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:20px;border:1px solid;flex-shrink:0}
+.rev-pill.passed{background:var(--green-bg);color:var(--green);border-color:rgba(45,212,160,.25)}
+.rev-pill.flagged{background:var(--amber-bg);color:var(--amber);border-color:rgba(251,191,36,.25)}
+.rev-pill.error{background:var(--red-bg);color:var(--red);border-color:rgba(248,113,113,.25)}
+.rev-desc{font-size:11px;color:var(--t3)}
+.rev-notes-wrap{display:flex;flex-direction:column;gap:4px}
+.rev-note{font-size:11px;color:var(--t2);display:flex;align-items:flex-start;gap:6px}
+.rev-note-dot{color:var(--t3);flex-shrink:0}
+.rev-correction{font-size:11px;color:var(--amber);display:flex;align-items:flex-start;gap:6px}
+.body-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);margin-bottom:6px}
+
+/* ── CONFIG TABLES ───────────────────────────────────────────────────────── */
+.cfg-section{background:var(--surf);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);margin-bottom:20px}
+.cfg-section-head{background:var(--bg2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--b)}
+.cfg-section-title{font-size:12px;font-weight:600;color:var(--t)}
+.cfg-table{width:100%;border-collapse:collapse;font-size:12px}
+.cfg-table th{padding:8px 12px;text-align:left;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--t3);background:var(--bg2);border-bottom:1px solid var(--b)}
+.cfg-table td{padding:8px 12px;border-bottom:1px solid var(--b);color:var(--t2);vertical-align:middle}
+.cfg-table tr:last-child td{border-bottom:none}
+.cfg-input{background:var(--bg2);border:1px solid var(--b2);border-radius:4px;padding:4px 8px;color:var(--t);font:12px var(--mono);width:100%;outline:none;transition:border-color var(--ease)}
+.cfg-input:focus{border-color:var(--green)}
+.cfg-checkbox{width:14px;height:14px;accent-color:var(--green);cursor:pointer}
+.save-btn{display:flex;align-items:center;gap:6px;height:34px;padding:0 16px;background:var(--green-bg);border:1px solid rgba(45,212,160,.35);border-radius:var(--r-sm);cursor:pointer;color:var(--green);font:600 12px var(--sans);transition:all var(--ease)}
+.save-btn:hover{background:rgba(45,212,160,.18);border-color:rgba(45,212,160,.6)}
+.save-btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ── TOAST ───────────────────────────────────────────────────────────────── */
+.toast{position:fixed;bottom:24px;right:24px;z-index:9999;padding:10px 18px;border-radius:var(--r-sm);font-size:12px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.35);transform:translateY(8px);opacity:0;transition:all .22s ease;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok{background:#162a1e;color:var(--green);border:1px solid rgba(45,212,160,.3)}
+.toast.err{background:#2a1616;color:var(--red);border:1px solid rgba(248,113,113,.3)}
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────────────── */
+@media(max-width:960px){
+  .scorecard-grid{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .stage-criteria-grid{grid-template-columns:1fr}
+  .topbar{padding:0 16px}
+  .main{padding:24px 16px 56px}
+  .tb-meta{display:none}
+}
+@media(max-width:640px){
+  .meta-bar{display:none}
+  .stat-grid{grid-template-columns:1fr 1fr}
+  .funnel-stage-name{width:100px}
+}
+</style>
+</head>
+<body>
+
+<!-- ── TOPBAR ─────────────────────────────────────────────────────────────── -->
+<header>
+  <div class="topbar">
+    <div class="topbar-left">
+      <a class="back-link" href="revenue-intelligence.html">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13 8H3M7 4l-4 4 4 4"/></svg>
+        Back
+      </a>
+      <div class="divider-v"></div>
+      <div class="page-ident">
+        <div class="page-pulse"></div>
+        <span class="page-title">Pipeline Health</span>
+        <span class="page-spark">✦</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="tb-meta" id="tb-meta" style="display:none">
+        <span class="tb-week" id="tb-week"></span>
+        <span class="tb-sep">·</span>
+        <span id="tb-generated"></span>
+        <span class="tb-sep">·</span>
+        <span class="tb-reviewed" id="tb-reviewed"></span>
+      </div>
+      <select class="bu-select" id="bu-select" title="Filter by Business Unit">
+        <option value="">All BUs</option>
+        <option value="ERP BU">ERP BU</option>
+        <option value="Supply Chain BU">Supply Chain BU</option>
+        <option value="Redzone BU">Redzone BU</option>
+      </select>
+      <button class="run-btn" id="run-btn">
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><polygon points="2,1 11,6 2,11"/></svg>
+        <span id="run-label">Run Analysis</span>
+      </button>
+      <button class="theme-btn" id="theme-btn" title="Toggle theme">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <circle cx="8" cy="8" r="3"/>
+          <line x1="8" y1="1" x2="8" y2="2.5"/><line x1="8" y1="13.5" x2="8" y2="15"/>
+          <line x1="1" y1="8" x2="2.5" y2="8"/><line x1="13.5" y1="8" x2="15" y2="8"/>
+          <line x1="3.05" y1="3.05" x2="4.1" y2="4.1"/><line x1="11.9" y1="11.9" x2="12.95" y2="12.95"/>
+          <line x1="12.95" y1="3.05" x2="11.9" y2="4.1"/><line x1="4.1" y1="11.9" x2="3.05" y2="12.95"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ── META BAR ───────────────────────────────────────────────────────────── -->
+<div id="meta-bar" class="meta-bar" style="display:none">
+  <span id="mb-week"></span>
+  <span class="meta-sep">·</span>
+  <span id="mb-generated"></span>
+  <span class="meta-sep">·</span>
+  <span id="mb-bu"></span>
+  <span class="meta-sep">·</span>
+  <span id="mb-status"></span>
+  <span class="meta-sep">·</span>
+  <span style="color:var(--t3)">hash</span>
+  <span id="mb-hash" class="meta-hash"></span>
+</div>
+
+<!-- ── TAB BAR ────────────────────────────────────────────────────────────── -->
+<div class="tab-bar" id="tab-bar" style="display:none">
+  <button class="tab-btn active" data-tab="overview">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+    Overview
+  </button>
+  <button class="tab-btn" data-tab="stage">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 4h12M2 8h8M2 12h5"/></svg>
+    Stage &amp; Push
+  </button>
+  <button class="tab-btn" data-tab="meddpicc">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="2" width="12" height="12" rx="1"/><line x1="6" y1="2" x2="6" y2="14"/><line x1="10" y1="2" x2="10" y2="14"/><line x1="2" y1="6" x2="14" y2="6"/><line x1="2" y1="10" x2="14" y2="10"/></svg>
+    MEDDPICC
+  </button>
+  <button class="tab-btn" data-tab="config">
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M12.95 3.05l-1.41 1.41M4.46 11.54l-1.41 1.41"/></svg>
+    Config
+  </button>
+</div>
+
+<!-- ── MAIN ───────────────────────────────────────────────────────────────── -->
+<main class="main" id="page-main">
+
+  <!-- LOADING -->
+  <div id="loading-state" class="loading">
+    <div class="spinner"></div>
+    <span>Loading pipeline health...</span>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div id="empty-state" class="empty-wrap" style="display:none">
+    <div class="empty-card">
+      <div class="empty-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <div class="empty-title">No pipeline analysis yet</div>
+      <div class="empty-sub">Click Run Analysis to generate this week's pipeline health report. The AI analysis will appear here once complete.</div>
+      <div class="empty-cmd">?mode=pipeline_health</div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content" style="display:none">
+
+    <!-- ── TAB: OVERVIEW ──────────────────────────────────────────────────── -->
+    <div class="tab-pane active" id="tab-overview">
+
+      <div class="sec-header">
+        <div class="sec-icon" style="background:var(--green-bg);border:1px solid rgba(45,212,160,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linecap="round"><polyline points="2,10 6,6 9,9 14,4"/></svg>
+        </div>
+        <span class="sec-label">BU Scorecards</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub" id="ov-sub">HEALTH STATUS</span>
+      </div>
+
+      <div class="scorecard-grid" id="scorecard-grid"></div>
+
+      <div class="sec-header" style="margin-top:8px">
+        <div class="sec-icon" style="background:var(--blue-bg);border:1px solid rgba(79,142,247,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round"><path d="M8 1l1.5 4h4l-3.2 2.4 1.2 4L8 9.2l-3.5 2.2 1.2-4L2.5 5h4z"/></svg>
+        </div>
+        <span class="sec-label">Executive Narrative</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">AI SYNTHESIS</span>
+      </div>
+
+      <div class="narrative-block" id="narrative-block"></div>
+
+      <div class="sec-header" style="margin-top:32px">
+        <div class="sec-icon" style="background:var(--red-bg);border:1px solid rgba(248,113,113,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round"><path d="M8 2L14.5 13H1.5L8 2z"/><line x1="8" y1="7" x2="8" y2="9.5"/><circle cx="8" cy="11.5" r=".5" fill="var(--red)"/></svg>
+        </div>
+        <span class="sec-label">Top Stalling Deals</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">NEEDS ATTENTION</span>
+      </div>
+
+      <div class="deal-table-wrap">
+        <table class="deal-table">
+          <thead>
+            <tr>
+              <th>Opportunity / Account</th>
+              <th>BU</th>
+              <th>Stage</th>
+              <th style="text-align:right">ACV</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="stalling-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Review footer -->
+      <div class="review-footer" id="review-footer" style="margin-top:8px">
+        <div class="review-top-row">
+          <span class="rev-pill" id="rev-pill">✓ Review Passed</span>
+          <span class="rev-desc">AI reviewer validated agent outputs against BigQuery source data</span>
+        </div>
+        <div id="rev-corrections-wrap" style="display:none">
+          <div class="body-label" style="color:var(--amber)">Corrections Made</div>
+          <div class="rev-notes-wrap" id="rev-corrections"></div>
+        </div>
+        <div id="rev-notes-wrap" style="display:none">
+          <div class="body-label">Review Notes</div>
+          <div class="rev-notes-wrap" id="rev-notes"></div>
+        </div>
+      </div>
+
+    </div><!-- /#tab-overview -->
+
+    <!-- ── TAB: STAGE & PUSH ──────────────────────────────────────────────── -->
+    <div class="tab-pane" id="tab-stage">
+
+      <div class="sec-header">
+        <div class="sec-icon" style="background:var(--blue-bg);border:1px solid rgba(79,142,247,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--blue)" stroke-width="1.5" stroke-linecap="round"><path d="M2 4h12M2 8h8M2 12h5"/></svg>
+        </div>
+        <span class="sec-label">Stage Funnel</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">CLICK A STAGE FOR CRITERIA</span>
+      </div>
+
+      <div class="funnel-wrap" id="funnel-wrap"></div>
+
+      <div class="stage-detail" id="stage-detail">
+        <div class="stage-detail-title" id="stage-detail-title"></div>
+        <div class="stage-criteria-grid" id="stage-criteria-grid"></div>
+      </div>
+
+      <!-- Renewals compact table — shown only when renewal stages exist -->
+      <div id="renewal-table-wrap" style="display:none">
+        <div class="renewal-mini-wrap">
+          <div class="renewal-mini-head">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-linecap="round"><path d="M14 8A6 6 0 112 8"/><polyline points="8,2 8,8 11,11"/></svg>
+            <span class="renewal-mini-label">Renewal Pipeline</span>
+          </div>
+          <table class="renewal-mini-table">
+            <thead><tr><th>Stage</th><th>Deals</th><th style="text-align:right">Open ACV</th></tr></thead>
+            <tbody id="renewal-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="sec-header" style="margin-top:8px">
+        <div class="sec-icon" style="background:var(--red-bg);border:1px solid rgba(248,113,113,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round"><path d="M8 1v8M5 6l3 3 3-3M2 12h12"/></svg>
+        </div>
+        <span class="sec-label">Push Analysis</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">CLOSE DATE INTEGRITY</span>
+      </div>
+
+      <div class="stat-grid" id="push-stats"></div>
+
+      <div class="deal-table-wrap">
+        <table class="deal-table">
+          <thead>
+            <tr>
+              <th>Opportunity / Account</th>
+              <th>Stage</th>
+              <th style="text-align:right">ACV</th>
+              <th style="text-align:right">Pushes</th>
+              <th>Days Dark</th>
+              <th>Owner</th>
+            </tr>
+          </thead>
+          <tbody id="zombie-body"></tbody>
+        </table>
+      </div>
+
+    </div><!-- /#tab-stage -->
+
+    <!-- ── TAB: MEDDPICC ─────────────────────────────────────────────────── -->
+    <div class="tab-pane" id="tab-meddpicc">
+
+      <div class="sec-header">
+        <div class="sec-icon" style="background:var(--purple-bg);border:1px solid rgba(167,139,250,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--purple)" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="2" width="12" height="12" rx="1"/><line x1="6" y1="2" x2="6" y2="14"/><line x1="10" y1="2" x2="10" y2="14"/><line x1="2" y1="6" x2="14" y2="6"/><line x1="2" y1="10" x2="14" y2="10"/></svg>
+        </div>
+        <span class="sec-label">MEDDPICC Gap Heatmap</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">GAP RATE BY STAGE · CRITERIA</span>
+      </div>
+
+      <div class="medd-legend">
+        <div class="medd-pill"><span class="medd-pill-letter">M</span><div><strong>Metrics</strong> — Financial impact quantified (ROI, cost savings)</div></div>
+        <div class="medd-pill"><span class="medd-pill-letter">E</span><div><strong>Economic Buyer</strong> — Budget owner identified and engaged</div></div>
+        <div class="medd-pill"><span class="medd-pill-letter">D</span><div><strong>Decision Criteria / Process</strong> — Evaluation steps documented</div></div>
+        <div class="medd-pill"><span class="medd-pill-letter">I</span><div><strong>Identify Pain</strong> — Business problem clearly articulated</div></div>
+        <div class="medd-pill"><span class="medd-pill-letter">C</span><div><strong>Champion</strong> — Internal advocate confirmed and active</div></div>
+      </div>
+
+      <div class="heatmap-wrap">
+        <table class="heatmap-table" id="heatmap-table">
+          <thead>
+            <tr>
+              <th class="row-head">Stage</th>
+              <th title="Metrics — financial impact quantified">M</th>
+              <th title="Economic Buyer — budget owner identified and engaged">E</th>
+              <th title="Decision Criteria / Process — evaluation steps documented">D</th>
+              <th title="Identify Pain — business problem clearly articulated">I</th>
+              <th title="Champion — internal advocate confirmed and active">C</th>
+              <th>Deals</th>
+            </tr>
+          </thead>
+          <tbody id="heatmap-body"></tbody>
+        </table>
+      </div>
+
+      <div class="sec-header">
+        <div class="sec-icon" style="background:var(--red-bg);border:1px solid rgba(248,113,113,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--red)" stroke-width="1.5" stroke-linecap="round"><path d="M8 2L14.5 13H1.5L8 2z"/><line x1="8" y1="7" x2="8" y2="9.5"/><circle cx="8" cy="11.5" r=".5" fill="var(--red)"/></svg>
+        </div>
+        <span class="sec-label">Below-the-Line Deals</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">MISSING REQUIRED CRITERIA</span>
+      </div>
+
+      <div class="btl-wrap">
+        <table class="btl-table">
+          <thead>
+            <tr>
+              <th>Opportunity / Account</th>
+              <th>Stage</th>
+              <th style="text-align:right">ACV</th>
+              <th>Missing Criteria</th>
+              <th>Risk Note</th>
+            </tr>
+          </thead>
+          <tbody id="btl-body"></tbody>
+        </table>
+      </div>
+
+    </div><!-- /#tab-meddpicc -->
+
+    <!-- ── TAB: CONFIG ────────────────────────────────────────────────────── -->
+    <div class="tab-pane" id="tab-config">
+
+      <div class="sec-header">
+        <div class="sec-icon" style="background:var(--amber-bg);border:1px solid rgba(251,191,36,.22)">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--amber)" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M12.95 3.05l-1.41 1.41M4.46 11.54l-1.41 1.41"/></svg>
+        </div>
+        <span class="sec-label">Pipeline Health Configuration</span>
+        <div class="sec-line"></div>
+        <span class="sec-sub">THRESHOLDS · SLAs · CRITERIA</span>
+      </div>
+
+      <!-- Stage day thresholds -->
+      <div class="cfg-section">
+        <div class="cfg-section-head">
+          <span class="cfg-section-title">Stage Max Day Thresholds</span>
+          <span style="font-size:11px;color:var(--t3)">Days before a deal is flagged as overdue</span>
+        </div>
+        <table class="cfg-table" id="cfg-days-table">
+          <thead><tr><th>Stage</th><th>Max Days</th><th>Notes</th></tr></thead>
+          <tbody id="cfg-days-body"></tbody>
+        </table>
+      </div>
+
+      <!-- MEDDPICC required criteria per stage -->
+      <div class="cfg-section">
+        <div class="cfg-section-head">
+          <span class="cfg-section-title">MEDDPICC Required Criteria by Stage</span>
+          <span style="font-size:11px;color:var(--t3)">Check which criteria are required for each stage</span>
+        </div>
+        <table class="cfg-table" id="cfg-medd-table">
+          <thead>
+            <tr>
+              <th>Stage</th>
+              <th style="text-align:center">M</th>
+              <th style="text-align:center">E</th>
+              <th style="text-align:center">D</th>
+              <th style="text-align:center">I</th>
+              <th style="text-align:center">C</th>
+            </tr>
+          </thead>
+          <tbody id="cfg-medd-body"></tbody>
+        </table>
+      </div>
+
+      <!-- BDE SLA thresholds -->
+      <div class="cfg-section">
+        <div class="cfg-section-head">
+          <span class="cfg-section-title">BDE Handoff SLA</span>
+          <span style="font-size:11px;color:var(--t3)">Days to first touch after handoff from BDE</span>
+        </div>
+        <table class="cfg-table">
+          <thead><tr><th>Threshold</th><th>Days</th></tr></thead>
+          <tbody id="cfg-bde-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Role segment keywords -->
+      <div class="cfg-section">
+        <div class="cfg-section-head">
+          <span class="cfg-section-title">Role Segment Keywords</span>
+          <span style="font-size:11px;color:var(--t3)">Comma-separated keywords matched against Owner_Role</span>
+        </div>
+        <table class="cfg-table">
+          <thead><tr><th>Segment</th><th>Keywords</th></tr></thead>
+          <tbody id="cfg-roles-body"></tbody>
+        </table>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:center">
+        <button class="save-btn" id="save-cfg-btn">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13 2H4L2 4v9a1 1 0 001 1h10a1 1 0 001-1V3a1 1 0 00-1-1z"/><polyline points="9,2 9,6 6,6"/><polyline points="6,11 8,13 10,11"/></svg>
+          Save Configuration
+        </button>
+        <span id="cfg-saved-at" style="font-family:var(--mono);font-size:10px;color:var(--t3)"></span>
+      </div>
+
+    </div><!-- /#tab-config -->
+
+  </div><!-- /#content -->
+
+</main>
+
+<!-- ── TOAST ───────────────────────────────────────────────────────────────── -->
+<div class="toast" id="toast"></div>
+
+<script>
+var GCS_URL = 'https://storage.googleapis.com/forecast-dashboard-mvp-frontend/pipeline_health_output.json';
+var API_URL = 'https://us-central1-forecast-dashboard-mvp.cloudfunctions.net/dashboard-api';
+
+var _data = null;
+
+// ── THEME ──────────────────────────────────────────────────────────────────
+var _html = document.documentElement;
+_html.dataset.theme = localStorage.getItem('theme') || 'dark';
+document.getElementById('theme-btn').addEventListener('click', function() {
+  _html.dataset.theme = _html.dataset.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', _html.dataset.theme);
+});
+
+// ── TABS ───────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var tab = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-pane').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'config') loadConfig();
+  });
+});
+
+// ── UTILITIES ──────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtAcv(v) {
+  var n = parseFloat(v);
+  if (isNaN(n)) return '—';
+  if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return '$' + Math.round(n/1000) + 'K';
+  return '$' + Math.round(n);
+}
+function fmtTime(iso) {
+  if (!iso) return '';
+  try { return new Date(iso).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZoneName:'short'}); } catch(e){return '';}
+}
+function fmtDate(iso) {
+  if (!iso) return '';
+  try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch(e){return iso;}
+}
+function buChip(bu) {
+  if (!bu) return '';
+  var cls = bu.includes('ERP') ? 'bu-erp' : bu.includes('Supply') ? 'bu-sc' : 'bu-rz';
+  return '<span class="bu-chip ' + cls + '">' + esc(bu.replace(' BU','')) + '</span>';
+}
+function toast(msg, type) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (type === 'err' ? 'err' : 'ok');
+  el.classList.add('show');
+  setTimeout(function(){ el.classList.remove('show'); }, 3000);
+}
+
+// ── RENDER META ────────────────────────────────────────────────────────────
+function renderMeta(meta) {
+  var week   = meta.week || '—';
+  var gen    = fmtTime(meta.generated_at);
+  var status = meta.reviewer_status || 'unknown';
+  var hash   = meta.source_hash || '—';
+  var bu     = meta.bu_filter || 'All';
+
+  document.getElementById('meta-bar').style.display = 'flex';
+  document.getElementById('tab-bar').style.display  = 'flex';
+  document.getElementById('mb-week').textContent = 'Week of ' + week;
+  document.getElementById('mb-generated').textContent = gen ? 'Generated ' + gen : '';
+  document.getElementById('mb-bu').textContent = 'BU: ' + bu;
+  document.getElementById('mb-hash').textContent = hash;
+
+  var sm = {passed:{cls:'passed',l:'✓ Reviewed'},flagged:{cls:'flagged',l:'⚠ Flagged'},error:{cls:'error',l:'✕ Error'}};
+  var s  = sm[status] || {cls:'error',l:status};
+  document.getElementById('mb-status').innerHTML = '<span class="meta-badge ' + s.cls + '">' + s.l + '</span>';
+
+  document.getElementById('tb-meta').style.display = 'flex';
+  document.getElementById('tb-week').textContent = 'Week of ' + week;
+  document.getElementById('tb-generated').textContent = gen;
+  var tbRev = document.getElementById('tb-reviewed');
+  if (status === 'passed') { tbRev.textContent = '✓ Reviewed'; tbRev.style.color = 'var(--green)'; }
+  else if (status === 'flagged') { tbRev.textContent = '⚠ Flagged'; tbRev.style.color = 'var(--amber)'; }
+  else { tbRev.textContent = '✕ Error'; tbRev.style.color = 'var(--red)'; }
+}
+
+// ── RENDER OVERVIEW ────────────────────────────────────────────────────────
+function renderOverview(data) {
+  var scorecard = data.bu_scorecard || {};
+  var buDefs = [
+    {key:'ERP BU',          color:'var(--blue)',  cls:'bu-erp',  name:'ERP BU'},
+    {key:'Supply Chain BU', color:'var(--green)', cls:'bu-sc',   name:'Supply Chain BU'},
+    {key:'Redzone BU',      color:'var(--amber)', cls:'bu-rz',   name:'Redzone BU'},
+  ];
+
+  var stageHealth = data.stage_health || {};
+  var byStage = {};
+  (stageHealth.stages || []).forEach(function(s) { byStage[s.stage_name] = s; });
+
+  document.getElementById('scorecard-grid').innerHTML = buDefs.map(function(def) {
+    var status = (scorecard[def.key] || 'unknown').toLowerCase();
+    var statusLabel = status === 'healthy' ? '● Healthy' : status === 'warning' ? '⚠ Warning' : status === 'critical' ? '✕ Critical' : status;
+    var dealCount = 0;
+    var openAcv = 0;
+    // Approximate from pipeline_by_owner
+    var owners = (data.pipeline_by_owner || {}).owners || [];
+    owners.forEach(function(o) {
+      // We don't have per-BU breakdown in owners easily — just show totals from stage_health
+    });
+    return '<div class="scorecard ' + status + '">' +
+      '<div class="sc-top">' +
+        '<span class="sc-name" style="color:' + def.color + '">' + esc(def.key) + '</span>' +
+        '<span class="sc-status ' + status + '">' + statusLabel + '</span>' +
+      '</div>' +
+      '<div class="sc-stat"><div class="sc-stat-val">' + esc(status.charAt(0).toUpperCase() + status.slice(1)) + '</div><div class="sc-stat-lbl">Pipeline status</div></div>' +
+      '</div>';
+  }).join('');
+
+  document.getElementById('ov-sub').textContent = Object.keys(scorecard).length + ' BUs ASSESSED';
+  document.getElementById('narrative-block').textContent = data.narrative || '—';
+
+  // Top stalling deals
+  var synth = (data.agent_outputs || {});
+  // top_3_risk_deals is nested under stage_risk_analysis
+  var stalling = ((synth.stage_risk || {}).stage_risk_analysis || {}).top_3_risk_deals || [];
+  var stallingFromAgent = stalling.length > 0;
+  if (!stalling.length) {
+    // Fall back to top_10_worst push deals (field: opp_name)
+    var worst = (data.push_analysis || {}).top_10_worst || [];
+    stalling = worst.slice(0,5).map(function(d) {
+      return {deal_name: d.opp_name, account_name: '', bu: '', stage: d.stage, acv: d.acv, status: 'Push: ' + d.push_count + 'x', diagnosis: ''};
+    });
+  }
+  document.getElementById('stalling-body').innerHTML = stalling.slice(0,8).map(function(d) {
+    var label = stallingFromAgent ? (d.diagnosis || '—') : (d.status || '—');
+    var statusCls = (label).toLowerCase().includes('crit') || (label).toLowerCase().includes('zombie') ? 'critical' : 'warning';
+    return '<tr>' +
+      '<td><div class="deal-name">' + esc(d.deal_name || '—') + '</div>' +
+          '<div class="acct-name">' + esc(d.account_name || '') + '</div></td>' +
+      '<td>' + buChip(d.bu || '') + '</td>' +
+      '<td style="color:var(--t2);font-size:12px">' + esc(d.stage || '—') + '</td>' +
+      '<td class="acv-cell right">' + fmtAcv(d.acv) + '</td>' +
+      '<td><span class="flag ' + statusCls + '" style="max-width:220px;white-space:normal;line-height:1.3">' + esc(label) + '</span></td>' +
+      '</tr>';
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:20px">No stalling deals</td></tr>';
+}
+
+// ── RENDER REVIEW ──────────────────────────────────────────────────────────
+function renderReview(review) {
+  var status = review.status || 'unknown';
+  var pill = document.getElementById('rev-pill');
+  var sm = {passed:{cls:'passed',l:'✓ Review Passed'},flagged:{cls:'flagged',l:'⚠ Review Flagged'},error:{cls:'error',l:'✕ Review Error'}};
+  var s = sm[status] || {cls:'error',l:status};
+  pill.className = 'rev-pill ' + s.cls;
+  pill.textContent = s.l;
+
+  var corrections = (review.corrections || []).filter(Boolean);
+  if (corrections.length) {
+    document.getElementById('rev-corrections-wrap').style.display = 'block';
+    document.getElementById('rev-corrections').innerHTML = corrections.map(function(c) {
+      return '<div class="rev-correction">✎ ' + esc(c) + '</div>';
+    }).join('');
+  }
+  var notes = (review.notes || []).filter(Boolean);
+  if (notes.length) {
+    document.getElementById('rev-notes-wrap').style.display = 'block';
+    document.getElementById('rev-notes').innerHTML = notes.map(function(n) {
+      return '<div class="rev-note"><span class="rev-note-dot">·</span>' + esc(n) + '</div>';
+    }).join('');
+  }
+}
+
+// ── STAGE CRITERIA (hardcoded from Crystal's methodology) ──────────────────
+var STAGE_CRITERIA = {
+  'Prospecting': {
+    entry: ['Identified target account in ICP','Account in Salesforce with contact'],
+    exit:  ['Discovery call scheduled','Pain hypothesis documented'],
+    group: 'early'
+  },
+  'Discovery': {
+    entry: ['Pain hypothesis confirmed','BDE/AE intro call complete'],
+    exit:  ['M + I documented in MEDDPICC','Economic Buyer identified'],
+    group: 'early'
+  },
+  'Scoping': {
+    entry: ['Pain documented','Discovery call complete'],
+    exit:  ['Technical fit confirmed','Solution mapped to pain'],
+    group: 'mid'
+  },
+  'Evaluation': {
+    entry: ['Champion identified','Technical evaluation started'],
+    exit:  ['Demo complete','Economic buyer engaged','Decision criteria documented'],
+    group: 'mid'
+  },
+  'Proposal': {
+    entry: ['Mutual success plan aligned','Economic buyer meeting complete'],
+    exit:  ['Proposal accepted','Verbal commitment received'],
+    group: 'late'
+  },
+  'Contracts': {
+    entry: ['Legal review initiated','MSA redlines received'],
+    exit:  ['Signed agreement','Closed-Won'],
+    group: 'late'
+  },
+  'Solution Exploration': {
+    entry: ['Discovery complete','Technical requirements gathered'],
+    exit:  ['Solution validated against requirements'],
+    group: 'mid'
+  },
+  'Evaluation & Alignment': {
+    entry: ['Solution presented','Stakeholders aligned on fit'],
+    exit:  ['All required MEDDPICC criteria met for stage','Decision criteria locked'],
+    group: 'mid'
+  },
+  'Proposal & Negotiation': {
+    entry: ['Proposal sent','Commercial terms under discussion'],
+    exit:  ['Terms agreed','Legal initiated'],
+    group: 'late'
+  },
+  'Awaiting Signature': {
+    entry: ['All terms agreed','Final document sent'],
+    exit:  ['Signed · Closed-Won'],
+    group: 'late'
+  },
+  'Development': {
+    entry: ['Lead qualified','Account research complete'],
+    exit:  ['Discovery meeting booked'],
+    group: 'early'
+  },
+  'Sales Ready': {
+    entry: ['BDE handoff complete','AE briefed'],
+    exit:  ['AE first touch within 7 days'],
+    group: 'early'
+  },
+};
+
+// Fixed order for Net New funnel — only these 6 stages get bars + criteria panel
+var NET_NEW_ORDER = ['Prospecting', 'Discovery', 'Scoping', 'Evaluation', 'Proposal', 'Contracts'];
+
+// ── RENDER STAGE & PUSH ────────────────────────────────────────────────────
+function renderStage(data) {
+  var stageHealth = data.stage_health || {};
+  var allStages   = stageHealth.stages || [];
+
+  // Build lookup map
+  var stageMap = {};
+  allStages.forEach(function(s) { stageMap[s.stage_name] = s; });
+
+  // Net New stages in fixed order (skip missing ones gracefully)
+  var netNew = NET_NEW_ORDER.map(function(n) { return stageMap[n] || null; }).filter(Boolean);
+
+  // Everything else → renewals/legacy table
+  var renewals = allStages.filter(function(s) { return NET_NEW_ORDER.indexOf(s.stage_name) === -1; });
+
+  // Bar widths proportional to total_acv_usd
+  var maxAcv = 0;
+  netNew.forEach(function(s) { if ((s.total_acv_usd || 0) > maxAcv) maxAcv = s.total_acv_usd; });
+  if (maxAcv === 0) maxAcv = 1;
+
+  var funnelHtml = netNew.map(function(s, i) {
+    var acv      = s.total_acv_usd || 0;
+    var pct      = Math.max(4, Math.round((acv / maxAcv) * 100));
+    var overPct  = s.pct_over_max_days || 0;
+    var maxDays  = s.max_days_allowed;
+
+    // Bar color by health (pct_over_max_days); gray when no threshold defined
+    var barClass = maxDays == null ? 'h-na'
+                 : overPct > 50   ? 'h-crit'
+                 : overPct >= 20  ? 'h-warn'
+                 :                  'h-ok';
+
+    var overdueLabel = maxDays && overPct > 0
+      ? '<span class="funnel-overdue ' + (overPct > 50 ? 'overdue-crit' : overPct >= 20 ? 'overdue-warn' : 'overdue-ok') + '">' + Math.round(overPct) + '% &gt;' + maxDays + 'd</span>'
+      : '';
+
+    return '<div class="funnel-row" onclick="selectStage(' + i + ', this)">' +
+      '<div class="funnel-stage-name">' + esc(s.stage_name) + '</div>' +
+      '<div class="funnel-bar-wrap"><div class="funnel-bar ' + barClass + '" style="width:' + pct + '%"></div></div>' +
+      '<div class="funnel-meta">' +
+        '<span class="funnel-count">' + s.deal_count + '</span>' +
+        '<span class="funnel-acv">' + fmtAcv(acv) + '</span>' +
+        (s.avg_days_in_stage ? '<span class="funnel-acv">~' + Math.round(s.avg_days_in_stage) + 'd</span>' : '') +
+        overdueLabel +
+      '</div>' +
+      '</div>';
+  }).join('');
+
+  document.getElementById('funnel-wrap').innerHTML = funnelHtml
+    || '<div style="color:var(--t3);padding:20px;text-align:center">No net new stage data</div>';
+
+  // Renewals table
+  var renewalWrap = document.getElementById('renewal-table-wrap');
+  if (renewals.length) {
+    renewalWrap.style.display = 'block';
+    var sorted = renewals.slice().sort(function(a, b) { return (b.total_acv_usd || 0) - (a.total_acv_usd || 0); });
+    document.getElementById('renewal-body').innerHTML = sorted.map(function(s) {
+      return '<tr>' +
+        '<td style="font-weight:500;color:var(--t)">' + esc(s.stage_name) + '</td>' +
+        '<td style="font-family:var(--mono);color:var(--t2)">' + s.deal_count + '</td>' +
+        '<td style="font-family:var(--mono);text-align:right;color:var(--t2)">' + fmtAcv(s.total_acv_usd || 0) + '</td>' +
+        '</tr>';
+    }).join('');
+  } else {
+    renewalWrap.style.display = 'none';
+  }
+
+  // Store for selectStage()
+  window._stageData = netNew;
+
+  // Push stats — compute weighted avg push from avg_push_by_stage (no top-level avg_pushes field)
+  var push = data.push_analysis || {};
+  var zombies = push.zombie_deals || [];
+  var stageAvgs = push.avg_push_by_stage || [];
+  var totalDeals = stageAvgs.reduce(function(s,r){return s + (r.deal_count||0);}, 0);
+  var totalPushes = stageAvgs.reduce(function(s,r){return s + (r.avg_push_count||0) * (r.deal_count||0);}, 0);
+  var avgPushesVal = totalDeals > 0 ? (totalPushes / totalDeals).toFixed(1) : '—';
+  document.getElementById('push-stats').innerHTML = [
+    {val: zombies.length, lbl: 'Zombie Deals', cls: zombies.length > 5 ? 'danger' : zombies.length > 2 ? 'warn' : '',
+     tip: 'Open opportunities with 3+ quarter pushes AND over max days in stage — likely abandoned pipeline inflating forecast numbers'},
+    {val: push.pushed_5x_count || 0, lbl: 'Pushed 5×+', cls: (push.pushed_5x_count||0) > 3 ? 'danger' : '',
+     tip: 'Deals pushed to a future quarter 5 or more times — highest forecast distortion risk'},
+    {val: avgPushesVal, lbl: 'Avg Pushes / Deal', cls: '',
+     tip: 'Average number of quarter pushes across all open pipeline opportunities'},
+    {val: push.overdue_close_count || 0, lbl: 'Overdue Close', cls: (push.overdue_close_count||0) > 5 ? 'warn' : '',
+     tip: 'Deals past their expected close date with no stage update — close date integrity risk'},
+  ].map(function(s) {
+    return '<div class="stat-card ' + s.cls + '" title="' + esc(s.tip) + '"><div class="stat-val">' + esc(s.val) + '</div><div class="stat-lbl">' + esc(s.lbl) + '</div></div>';
+  }).join('');
+
+  // Zombie table — field is opp_name (not deal_name), days_in_stage (not days_since_activity)
+  document.getElementById('zombie-body').innerHTML = zombies.slice(0,10).map(function(d) {
+    return '<tr>' +
+      '<td><div class="deal-name">' + esc(d.opp_name || '—') + '</div><div class="acct-name">' + esc(d.account_name || '') + '</div></td>' +
+      '<td style="color:var(--t2);font-size:12px">' + esc(d.stage || '—') + '</td>' +
+      '<td class="acv-cell right">' + fmtAcv(d.acv) + '</td>' +
+      '<td class="right" style="font-family:var(--mono);color:var(--amber)">' + esc(d.push_count || '—') + '</td>' +
+      '<td style="font-family:var(--mono);font-size:11px;color:var(--red)">' + esc(d.days_in_stage ? d.days_in_stage + 'd' : '—') + '</td>' +
+      '<td style="font-size:11px;color:var(--t3)">' + esc(d.owner_name || '—') + '</td>' +
+      '</tr>';
+  }).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:20px">No zombie deals</td></tr>';
+
+  window._stageData = stageHealth.stages || [];
+}
+
+var _selectedStageIdx = null;
+function selectStage(idx, row) {
+  var stages = window._stageData || [];
+  var s = stages[idx];
+  if (!s) return;
+
+  // Only show criteria panel for Net New stages that have criteria defined
+  var criteria = STAGE_CRITERIA[s.stage_name];
+  if (!criteria) {
+    // Deselect any active row and hide panel
+    _selectedStageIdx = null;
+    document.querySelectorAll('.funnel-row').forEach(function(r) { r.classList.remove('selected'); });
+    document.getElementById('stage-detail').classList.remove('visible');
+    return;
+  }
+
+  // Toggle off if same row clicked again
+  if (_selectedStageIdx === idx) {
+    _selectedStageIdx = null;
+    document.querySelectorAll('.funnel-row').forEach(function(r) { r.classList.remove('selected'); });
+    document.getElementById('stage-detail').classList.remove('visible');
+    return;
+  }
+
+  _selectedStageIdx = idx;
+  document.querySelectorAll('.funnel-row').forEach(function(r) { r.classList.remove('selected'); });
+  row.classList.add('selected');
+
+  document.getElementById('stage-detail-title').innerHTML =
+    '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><line x1="8" y1="6" x2="8" y2="8"/><circle cx="8" cy="10" r=".5" fill="currentColor"/></svg> ' +
+    esc(s.stage_name) + ' — Entry / Exit Criteria';
+
+  document.getElementById('stage-criteria-grid').innerHTML =
+    '<div class="criteria-block">' +
+      '<div class="criteria-label entry">Entry Criteria</div>' +
+      '<ul class="criteria-list">' + criteria.entry.map(function(c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>' +
+    '</div>' +
+    '<div class="criteria-block">' +
+      '<div class="criteria-label exit">Exit Criteria</div>' +
+      '<ul class="criteria-list">' + criteria.exit.map(function(c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ul>' +
+    '</div>';
+
+  document.getElementById('stage-detail').classList.add('visible');
+}
+
+// ── MEDDPICC CRITERION MAPS ────────────────────────────────────────────────
+var CRIT_NAMES = {M:'Metrics', E:'Economic Buyer', D:'Decision Criteria', I:'Identify Pain', C:'Champion'};
+var CRIT_RISK  = {
+  M: 'no financial impact quantified',
+  E: 'budget authority not identified',
+  D: 'evaluation steps undocumented',
+  I: 'business pain not articulated',
+  C: 'no internal advocate confirmed',
+};
+
+function gapSentence(gaps) {
+  if (!gaps || !gaps.length) return '';
+  var names = gaps.map(function(g) { return CRIT_NAMES[g] || g; });
+  var risks  = gaps.map(function(g) { return CRIT_RISK[g] || g; });
+  var nameStr = names.length === 1 ? names[0]
+              : names.slice(0,-1).join(', ') + ' and ' + names[names.length-1];
+  var riskStr = risks.join(', ');
+  return 'Missing ' + nameStr + ' — deal advancing with ' + riskStr;
+}
+
+// ── RENDER MEDDPICC ────────────────────────────────────────────────────────
+function renderMeddpicc(data) {
+  var gapData = data.meddpicc_gaps || {};
+  var byStage = gapData.by_stage || [];
+  // Criteria in data: M, E, D, I, C  (D = Decision Criteria/Process combined)
+  var CRITERIA_ORDER = ['M', 'E', 'D', 'I', 'C'];
+
+  document.getElementById('heatmap-body').innerHTML = byStage.map(function(row) {
+    // meddpicc_gaps is an array: [{criterion, missing_count, gap_pct}, ...]
+    // Convert to a dict keyed by criterion for easy lookup
+    var gapMap = {};
+    (row.meddpicc_gaps || []).forEach(function(g) {
+      gapMap[g.criterion] = g.gap_pct;
+    });
+
+    var cells = CRITERIA_ORDER.map(function(k) {
+      var pct = gapMap[k];
+      if (pct == null) return '<td><span class="hm-cell hm-na">—</span></td>';
+      var cls = pct > 50 ? 'hm-crit' : pct > 25 ? 'hm-warn' : 'hm-ok';
+      return '<td><span class="hm-cell ' + cls + '">' + Math.round(pct) + '%</span></td>';
+    }).join('');
+
+    return '<tr><td class="row-head">' + esc(row.stage_name) + '</td>' + cells +
+      '<td style="text-align:center;font-family:var(--mono);color:var(--t3);font-size:11px">' + (row.deal_count || '') + '</td></tr>';
+  }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:20px">No MEDDPICC data</td></tr>';
+
+  // BTL deals from top_offenders: {opp_name, account_name, stage, acv, gaps (criterion array), gap_count}
+  var btl = gapData.top_offenders || [];
+  document.getElementById('btl-body').innerHTML = btl.slice(0,15).map(function(d) {
+    var missing = d.gaps || [];
+    return '<tr>' +
+      '<td><div class="deal-name">' + esc(d.opp_name || '—') + '</div><div class="acct-name">' + esc(d.account_name || '') + '</div></td>' +
+      '<td style="font-size:12px;color:var(--t2)">' + esc(d.stage || '—') + '</td>' +
+      '<td class="acv-cell" style="text-align:right">' + fmtAcv(d.acv) + '</td>' +
+      '<td><div class="missing-criteria">' + missing.map(function(m) { return '<span class="mc-chip">' + esc(m) + '</span>'; }).join('') + '</div></td>' +
+      '<td style="font-size:11px;color:var(--t2);line-height:1.45;max-width:240px">' + esc(gapSentence(missing)) + '</td>' +
+      '</tr>';
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:20px">No BTL deals</td></tr>';
+}
+
+// ── MAIN RENDER ────────────────────────────────────────────────────────────
+function render(data) {
+  console.log('[pipeline-health] API response:', data);
+  _data = data;
+  document.getElementById('loading-state').style.display = 'none';
+  document.getElementById('content').style.display = 'block';
+
+  renderMeta(data.meta || {});
+  renderOverview(data);
+  renderStage(data);
+  renderMeddpicc(data);
+  renderReview(data.review || {});
+}
+
+// ── LOAD DATA ──────────────────────────────────────────────────────────────
+function loadData() {
+  fetch(GCS_URL + '?t=' + Date.now())
+    .then(function(r) {
+      if (r.status === 404 || r.status === 403) throw new Error('not_found');
+      if (!r.ok) throw new Error('http_' + r.status);
+      return r.json();
+    })
+    .then(render)
+    .catch(function(e) {
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('empty-state').style.display = 'flex';
+      if (e.message !== 'not_found') console.warn('[pipeline-health] Load error:', e.message);
+    });
+}
+
+// ── RUN ANALYSIS ───────────────────────────────────────────────────────────
+(function() {
+  var runBtn   = document.getElementById('run-btn');
+  var runLabel = document.getElementById('run-label');
+  var buSelect = document.getElementById('bu-select');
+
+  function lock() { runBtn.disabled = true; runLabel.textContent = 'Running…'; }
+  function unlock() { runBtn.disabled = false; runLabel.textContent = 'Run Analysis'; }
+
+  runBtn.addEventListener('click', function() {
+    if (runBtn.disabled) return;
+    lock();
+    var bu = buSelect.value;
+    var url = API_URL + '?mode=pipeline_health' + (bu ? '&bu=' + encodeURIComponent(bu) : '');
+    fetch(url)
+      .then(function(r) {
+        if (!r.ok) throw new Error('http_' + r.status);
+        return r.json();
+      })
+      .then(function(data) {
+        render(data);
+        unlock();
+        toast('Pipeline health updated', 'ok');
+      })
+      .catch(function(e) {
+        unlock();
+        toast('Run failed — check console', 'err');
+        console.warn('[pipeline-health] Run error:', e.message);
+      });
+  });
+
+  // BU filter re-fetches GCS with a different run, but we just reload from GCS for the cached view
+  // and prompt user to re-run if they want a different BU
+  buSelect.addEventListener('change', function() {
+    var bu = buSelect.value;
+    if (bu && _data && (_data.meta||{}).bu_filter !== bu) {
+      toast('BU filter changed — click Run Analysis to generate ' + (bu||'All BUs') + ' view', 'ok');
+    }
+  });
+})();
+
+// ── CONFIG ─────────────────────────────────────────────────────────────────
+var DEFAULT_CONFIG = {
+  stage_max_days: {
+    'Prospecting': null, 'Discovery': 30, 'Scoping': 30, 'Evaluation': 30,
+    'Proposal': 60, 'Contracts': 30, 'Development': 90, 'Sales Ready': 7,
+  },
+  meddpicc_criteria: {
+    'Prospecting': {M:false,E:false,D:false,I:true, C:false},
+    'Discovery':   {M:true, E:true, D:false,I:false,C:false},
+    'Evaluation':  {M:false,E:true, D:true, I:false,C:true},
+    'Proposal':    {M:false,E:true, D:false,I:false,C:false},
+    'Contracts':   {M:false,E:true, D:true, I:false,C:false},
+  },
+  bde_sla: {
+    first_touch_days: 7,
+    no_activity_warn_days: 7,
+  },
+  role_keywords: {
+    BDE: 'bde, business development, lde',
+    CSM: 'customer success, csm',
+    AE:  '(all others)',
+  },
+};
+
+var _cfg = null;
+
+function loadConfig() {
+  fetch(API_URL + '?mode=pipeline_health_config')
+    .then(function(r) { return r.json(); })
+    .then(function(saved) {
+      _cfg = Object.keys(saved).length ? saved : JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+      if (saved.saved_at) document.getElementById('cfg-saved-at').textContent = 'Last saved: ' + fmtDate(saved.saved_at);
+      renderConfig(_cfg);
+    })
+    .catch(function() {
+      _cfg = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+      renderConfig(_cfg);
+    });
+}
+
+function renderConfig(cfg) {
+  // Stage day thresholds
+  var days = cfg.stage_max_days || DEFAULT_CONFIG.stage_max_days;
+  document.getElementById('cfg-days-body').innerHTML = Object.keys(days).map(function(stage) {
+    var val = days[stage];
+    return '<tr>' +
+      '<td>' + esc(stage) + '</td>' +
+      '<td><input class="cfg-input" data-cfg="days" data-key="' + esc(stage) + '" type="number" value="' + (val == null ? '' : val) + '" placeholder="No limit" style="width:100px"></td>' +
+      '<td style="color:var(--t3);font-size:11px">' + (val == null ? 'No threshold' : val + ' days max') + '</td>' +
+      '</tr>';
+  }).join('');
+
+  // MEDDPICC criteria checkboxes
+  var medd = cfg.meddpicc_criteria || DEFAULT_CONFIG.meddpicc_criteria;
+  var cols = ['M','E','D','I','C'];
+  document.getElementById('cfg-medd-body').innerHTML = Object.keys(medd).map(function(stage) {
+    var row = medd[stage] || {};
+    return '<tr><td>' + esc(stage) + '</td>' + cols.map(function(c) {
+      return '<td style="text-align:center"><input class="cfg-checkbox" type="checkbox" data-cfg="medd" data-stage="' + esc(stage) + '" data-col="' + esc(c) + '"' + (row[c] ? ' checked' : '') + '></td>';
+    }).join('') + '</tr>';
+  }).join('');
+
+  // BDE SLA
+  var bde = cfg.bde_sla || DEFAULT_CONFIG.bde_sla;
+  document.getElementById('cfg-bde-body').innerHTML = [
+    {key:'first_touch_days',    lbl:'First Touch SLA'},
+    {key:'no_activity_warn_days',lbl:'No Activity Warning'},
+  ].map(function(r) {
+    return '<tr><td>' + esc(r.lbl) + '</td><td><input class="cfg-input" data-cfg="bde" data-key="' + esc(r.key) + '" type="number" value="' + (bde[r.key]||'') + '" style="width:100px"> <span style="color:var(--t3);font-size:11px">days</span></td></tr>';
+  }).join('');
+
+  // Role keywords
+  var roles = cfg.role_keywords || DEFAULT_CONFIG.role_keywords;
+  document.getElementById('cfg-roles-body').innerHTML = ['BDE','CSM','AE'].map(function(seg) {
+    var val = roles[seg] || '';
+    var readonly = seg === 'AE' ? ' readonly style="opacity:.5"' : '';
+    return '<tr><td style="font-family:var(--mono);font-size:11px;color:var(--t2)">' + esc(seg) + '</td>' +
+      '<td><input class="cfg-input" data-cfg="roles" data-key="' + esc(seg) + '" value="' + esc(val) + '" placeholder="comma-separated keywords"' + readonly + '></td></tr>';
+  }).join('');
+}
+
+document.getElementById('save-cfg-btn').addEventListener('click', function() {
+  var btn = this;
+  btn.disabled = true;
+
+  // Collect all inputs
+  var days = {};
+  document.querySelectorAll('[data-cfg="days"]').forEach(function(el) {
+    days[el.dataset.key] = el.value === '' ? null : parseInt(el.value, 10);
+  });
+
+  var medd = {};
+  document.querySelectorAll('[data-cfg="medd"]').forEach(function(el) {
+    if (!medd[el.dataset.stage]) medd[el.dataset.stage] = {};
+    medd[el.dataset.stage][el.dataset.col] = el.checked;
+  });
+
+  var bde = {};
+  document.querySelectorAll('[data-cfg="bde"]').forEach(function(el) {
+    bde[el.dataset.key] = parseInt(el.value, 10);
+  });
+
+  var roles = {};
+  document.querySelectorAll('[data-cfg="roles"]').forEach(function(el) {
+    roles[el.dataset.key] = el.value;
+  });
+
+  var payload = {stage_max_days: days, meddpicc_criteria: medd, bde_sla: bde, role_keywords: roles};
+
+  fetch(API_URL + '?mode=pipeline_health_config', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload),
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(res) {
+      btn.disabled = false;
+      if (res.saved) {
+        toast('Configuration saved', 'ok');
+        document.getElementById('cfg-saved-at').textContent = 'Last saved: ' + fmtDate(new Date().toISOString());
+      } else {
+        toast('Save failed', 'err');
+      }
+    })
+    .catch(function() {
+      btn.disabled = false;
+      toast('Save failed — check console', 'err');
+    });
+});
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>
