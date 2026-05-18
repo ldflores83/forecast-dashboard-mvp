@@ -446,6 +446,11 @@ tbody tr:hover{background:var(--bg2)}
         <div class="nrr-val" style="color:var(--purple)" id="wf-expansion">$—</div>
       </div>
       <div class="nrr-row">
+        <div class="nrr-label">+ Cloud Conv</div>
+        <div class="nrr-bar-wrap"><div id="wf-bar-cc" class="nrr-bar" style="width:0%;background:#0891b2"></div></div>
+        <div class="nrr-val" style="color:#0891b2" id="wf-cloudconv">$—</div>
+      </div>
+      <div class="nrr-row">
         <div class="nrr-label" style="color:var(--t3)">Renewals Won
           <span class="tip"><span class="tip-icon">?</span><span class="tip-content">ARR retained by CS. Not included in net ARR movement — renewing a contract protects existing ARR, it does not create new ARR.</span></span>
         </div>
@@ -932,18 +937,18 @@ function renderFromAPI(d, q) {
 
   // ── WATERFALL ──────────────────────────────────────────────────────────────
   var startARR  = wf.starting_arr || 436700000;
-  var salesNew  = (wf.net_new||0) + (wf.expansion||0) + (wf.migration||0);
+  var salesNew  = (wf.net_new||0) + (wf.expansion||0) + (wf.migration||0) + (wf.cloud_conversion||0);
   var churnACV  = Math.abs(wf.churn||0);
   var endARR    = wf.ending_arr  || startARR;
   var netGrowth = wf.net_growth  || 0;
   var renWonACV = wf.renewal_won_acv || 0;
-  var maxMov    = Math.max(wf.net_new||0, wf.expansion||0, wf.migration||0, churnACV, renWonACV, 1);
+  var maxMov    = Math.max(wf.net_new||0, wf.expansion||0, wf.migration||0, wf.cloud_conversion||0, churnACV, renWonACV, 1);
 
   set('wf-quarter-label', q === 'FY' ? 'Full Year' : q);
   // Strip
   set('wf-starting',    fmt(startARR));
   set('wf-new-revenue', fmt(salesNew));
-  set('wf-new-sub',     fmt(wf.net_new||0) + ' NN + ' + fmt(wf.expansion||0) + ' Exp + ' + fmt(wf.migration||0) + ' Mig');
+  set('wf-new-sub',     fmt(wf.net_new||0) + ' NN + ' + fmt(wf.expansion||0) + ' Exp + ' + fmt(wf.migration||0) + ' Mig + ' + fmt(wf.cloud_conversion||0) + ' Cloud Conv');
   set('wf-churn',       fmt(churnACV));
   set('wf-churn-sub',   (wf.renewal_lost_count||0) + ' lost renewals');
   set('wf-ending',      fmt(Math.max(endARR,0)));
@@ -953,11 +958,13 @@ function renderFromAPI(d, q) {
   set('wf-starting-2',  fmt(startARR));
   set('wf-netnew',      fmt(wf.net_new||0));
   set('wf-expansion',   fmt(wf.expansion||0));
+  set('wf-cloudconv',   fmt(wf.cloud_conversion||0));
   set('wf-ren-won',     fmt(renWonACV) + ' (ref)');
   set('wf-churn-2',     fmt(churnACV));
   set('wf-ending-2',    fmt(Math.max(endARR,0)));
   setW('wf-bar-nn',    (wf.net_new||0)/maxMov*100);
   setW('wf-bar-exp',   (wf.expansion||0)/maxMov*100);
+  setW('wf-bar-cc',    (wf.cloud_conversion||0)/maxMov*100);
   setW('wf-bar-ren',   renWonACV/maxMov*100);
   setW('wf-bar-churn', churnACV/maxMov*100);
   // Growth cell color
@@ -967,9 +974,9 @@ function renderFromAPI(d, q) {
     gc.style.background = netGrowth >= 0 ? 'var(--green-bg)' : 'var(--red-bg)';
     ng.style.color      = netGrowth >= 0 ? 'var(--green)'    : 'var(--red)';
   }
-  var wfNN = (wf.net_new||0)/1e6, wfExp = (wf.expansion||0)/1e6, wfMig = (wf.migration||0)/1e6, wfChurn = -(churnACV/1e6);
-  console.log('Waterfall components (M):', {net_new: wfNN, expansion: wfExp, migration: wfMig, churn: wfChurn});
-  buildWaterfallChart(wfNN, wfExp, wfMig, wfChurn, c);
+  var wfNN = (wf.net_new||0)/1e6, wfExp = (wf.expansion||0)/1e6, wfMig = (wf.migration||0)/1e6, wfCC = (wf.cloud_conversion||0)/1e6, wfChurn = -(churnACV/1e6);
+  console.log('Waterfall components (M):', {net_new: wfNN, expansion: wfExp, migration: wfMig, cloud_conv: wfCC, churn: wfChurn});
+  buildWaterfallChart(wfNN, wfExp, wfMig, wfCC, wfChurn, c);
 
   // ── REVENUE DYNAMICS ───────────────────────────────────────────────────────
   var totalSales = 0, totalChurn = 0;
@@ -1288,16 +1295,16 @@ function getChartColors() {
   };
 }
 
-function buildWaterfallChart(nn, exp, mig, churn, c) {
+function buildWaterfallChart(nn, exp, mig, cc, churn, c) {
   var ctx = document.getElementById('wfChart').getContext('2d');
   if (wfChart) wfChart.destroy();
   wfChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Net New', 'Expansion', 'Migration', 'Churn'],
+      labels: ['Net New', 'Expansion', 'Migration', 'Cloud Conv', 'Churn'],
       datasets: [{
-        data: [nn, exp, mig, churn],
-        backgroundColor: [c.green, '#a78bfa', c.amber, c.red],
+        data: [nn, exp, mig, cc, churn],
+        backgroundColor: [c.green, '#a78bfa', c.amber, '#0891b2', c.red],
         borderRadius: 6,
         borderWidth: 0
       }]

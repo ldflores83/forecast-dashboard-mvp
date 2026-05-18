@@ -258,6 +258,7 @@ def build_payload(fiscal_quarter):
             "net_new":            _f(w.get("net_new")),
             "expansion":          _f(w.get("expansion")),
             "migration":          _f(w.get("migration")),
+            "cloud_conversion":   _f(w.get("cloud_conversion")),
             "churn":              _f(w.get("churn")),          # already negative
             "renewal_won_acv":    _f(w.get("renewal_won_acv")), # reference only
             "renewal_won_count":  int(w.get("renewal_won_count") or 0),

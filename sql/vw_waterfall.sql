@@ -27,6 +27,10 @@ movements AS (
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Net New'   AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0)               AS net_new,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Expansion' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0)               AS expansion,
     GREATEST(COALESCE(SUM(CASE WHEN Sales_Motion = 'Migration' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0), 0)  AS migration,
+    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal'
+                       AND Substage = 'Closed - Conversion'
+                       AND Is_Won = TRUE
+                       THEN ATR_Value_USD END), 0)                                                   AS cloud_conversion,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value_USD > 0 THEN ATR_Value_USD END), 0) AS churn_arr,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Won THEN ACV_USD END), 0)                 AS renewal_won_acv,
     COUNTIF(Sales_Motion = 'Renewal' AND Is_Won)                                                  AS renewal_won_count,
@@ -42,6 +46,10 @@ fy AS (
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Net New'   AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0)               AS net_new,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Expansion' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0)               AS expansion,
     GREATEST(COALESCE(SUM(CASE WHEN Sales_Motion = 'Migration' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0), 0)  AS migration,
+    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal'
+                       AND Substage = 'Closed - Conversion'
+                       AND Is_Won = TRUE
+                       THEN ATR_Value_USD END), 0)                                                   AS cloud_conversion,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value_USD > 0 THEN ATR_Value_USD END), 0) AS churn_arr,
     COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Won THEN ACV_USD END), 0)                 AS renewal_won_acv,
     COUNTIF(Sales_Motion = 'Renewal' AND Is_Won)                                                  AS renewal_won_count,
@@ -57,12 +65,15 @@ SELECT
   net_new,
   expansion,
   migration,
-  -churn_arr                                                    AS churn,
+  cloud_conversion,
+  -churn_arr                                                                                   AS churn,
   renewal_won_acv,
   renewal_won_count,
   renewal_lost_count,
-  436700000.0 + net_new + expansion + migration - churn_arr    AS ending_arr,
-  net_new + expansion + migration - churn_arr                   AS net_growth
+  436700000.0 + net_new + expansion + migration + cloud_conversion - churn_arr                AS ending_arr,
+  net_new + expansion + migration + cloud_conversion - churn_arr                               AS net_growth,
+  net_new + expansion + migration + cloud_conversion                                           AS sales_new_arr,
+  SAFE_DIVIDE(net_new + expansion + migration + cloud_conversion, NULLIF(churn_arr, 0)) * 100  AS sales_coverage_pct
 FROM (SELECT * FROM movements UNION ALL SELECT * FROM fy)
 ORDER BY fiscal_quarter
 ;
