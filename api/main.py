@@ -16,6 +16,7 @@ from google.cloud import bigquery
 
 PROJECT = "forecast-dashboard-mvp"
 DATASET = "forecast_data"
+FY      = 2027
 
 bq = bigquery.Client(project=PROJECT)
 
@@ -174,6 +175,7 @@ def build_payload(fiscal_quarter):
     hero_rows = query(f"""
         SELECT * FROM {ref('vw_hero_metrics')}
         WHERE fiscal_quarter = {fq}
+          AND fiscal_year = {FY}
     """)
     h = dict(hero_rows[0]) if hero_rows else {}
 
@@ -181,6 +183,7 @@ def build_payload(fiscal_quarter):
     wf_rows = query(f"""
         SELECT * FROM {ref('vw_waterfall')}
         WHERE fiscal_quarter = {fq}
+          AND fiscal_year = {FY}
     """)
     w = dict(wf_rows[0]) if wf_rows else {}
 
@@ -196,6 +199,7 @@ def build_payload(fiscal_quarter):
     pipe_rows = query(f"""
         SELECT * FROM {ref('vw_pipeline')}
         WHERE fiscal_quarter = {fq}
+          AND fiscal_year = {FY}
         ORDER BY record_type, dimension
     """)
 
@@ -217,6 +221,7 @@ def build_payload(fiscal_quarter):
     lost_rows = query(f"""
         SELECT * FROM {ref('vw_lost_analysis')}
         WHERE fiscal_quarter = {fq}
+          AND fiscal_year = {FY}
         ORDER BY record_type, reason_rank NULLS LAST
     """)
 

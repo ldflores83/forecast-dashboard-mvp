@@ -120,7 +120,8 @@ by_motion AS (
     FiscalYear      AS fiscal_year,
     Sales_Motion    AS motion,
     COALESCE(SUM(CASE WHEN Is_Won  THEN ACV_USD END), 0) AS won_acv,
-    COALESCE(SUM(CASE WHEN Is_Lost THEN ACV_USD END), 0) AS lost_acv,
+    COALESCE(SUM(CASE WHEN Is_Lost AND Sales_Motion = 'Renewal' AND ATR_Value_USD > 0 THEN ATR_Value_USD
+                       WHEN Is_Lost AND Sales_Motion != 'Renewal' THEN ACV_USD END), 0) AS lost_acv,
     COALESCE(SUM(CASE WHEN Is_Open THEN ACV_USD END), 0) AS open_acv,
     COUNTIF(Is_Won)     AS won_count,
     COUNTIF(Is_Lost)    AS lost_count,
@@ -143,7 +144,8 @@ by_motion_fy AS (
     FiscalYear      AS fiscal_year,
     Sales_Motion    AS motion,
     COALESCE(SUM(CASE WHEN Is_Won  THEN ACV_USD END), 0) AS won_acv,
-    COALESCE(SUM(CASE WHEN Is_Lost THEN ACV_USD END), 0) AS lost_acv,
+    COALESCE(SUM(CASE WHEN Is_Lost AND Sales_Motion = 'Renewal' AND ATR_Value_USD > 0 THEN ATR_Value_USD
+                       WHEN Is_Lost AND Sales_Motion != 'Renewal' THEN ACV_USD END), 0) AS lost_acv,
     COALESCE(SUM(CASE WHEN Is_Open THEN ACV_USD END), 0) AS open_acv,
     COUNTIF(Is_Won)     AS won_count,
     COUNTIF(Is_Lost)    AS lost_count,

@@ -741,7 +741,9 @@ def get_regional_breakdown(bu: str | None = None) -> list:
                 Opp_Owner_Region,
                 BU,
                 StageName,
-                COALESCE(ACV, 0) AS ACV,
+                Sales_Motion,
+                Category,
+                COALESCE(ACV_USD, 0) AS ACV,
                 COALESCE(IsClosed, FALSE) AS IsClosed,
                 COALESCE(Is_Won, FALSE) AS Is_Won,
                 FiscalYear AS fiscal_year
@@ -753,7 +755,9 @@ def get_regional_breakdown(bu: str | None = None) -> list:
             COUNTIF(IsClosed = FALSE)                                           AS pipeline_deals,
             COALESCE(SUM(CASE WHEN IsClosed = FALSE THEN ACV ELSE 0 END), 0)    AS pipeline_acv,
             COUNTIF(IsClosed = TRUE AND Is_Won = TRUE)                          AS won_deals,
-            COALESCE(SUM(CASE WHEN IsClosed = TRUE AND Is_Won = TRUE THEN ACV ELSE 0 END), 0) AS won_acv,
+            COALESCE(SUM(CASE WHEN IsClosed = TRUE AND Is_Won = TRUE
+                              AND Sales_Motion IN ('Net New','Expansion','Migration')
+                              AND Category = 'Solutions' THEN ACV ELSE 0 END), 0) AS won_acv,
             COUNTIF(IsClosed = TRUE AND Is_Won = FALSE)                         AS lost_deals
         FROM base
         WHERE TRUE {_fy_filter} {_stage_filter} {_region_filter} {bu_clause}
@@ -767,7 +771,9 @@ def get_regional_breakdown(bu: str | None = None) -> list:
                 Opp_Owner_Region,
                 BU,
                 StageName,
-                COALESCE(ACV, 0) AS ACV,
+                Sales_Motion,
+                Category,
+                COALESCE(ACV_USD, 0) AS ACV,
                 COALESCE(IsClosed, FALSE) AS IsClosed,
                 COALESCE(Is_Won, FALSE) AS Is_Won,
                 FiscalYear AS fiscal_year
@@ -780,7 +786,9 @@ def get_regional_breakdown(bu: str | None = None) -> list:
             COUNTIF(IsClosed = FALSE)                                           AS pipeline_deals,
             COALESCE(SUM(CASE WHEN IsClosed = FALSE THEN ACV ELSE 0 END), 0)    AS pipeline_acv,
             COUNTIF(IsClosed = TRUE AND Is_Won = TRUE)                          AS won_deals,
-            COALESCE(SUM(CASE WHEN IsClosed = TRUE AND Is_Won = TRUE THEN ACV ELSE 0 END), 0) AS won_acv,
+            COALESCE(SUM(CASE WHEN IsClosed = TRUE AND Is_Won = TRUE
+                              AND Sales_Motion IN ('Net New','Expansion','Migration')
+                              AND Category = 'Solutions' THEN ACV ELSE 0 END), 0) AS won_acv,
             COUNTIF(IsClosed = TRUE AND Is_Won = FALSE)                         AS lost_deals
         FROM base
         WHERE TRUE {_fy_filter} {_stage_filter} {_region_filter}

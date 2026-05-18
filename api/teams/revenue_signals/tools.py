@@ -201,7 +201,7 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
         SELECT
             BU,
             COALESCE(SUM(CASE WHEN Sales_Motion IN ('Net New','Expansion','Migration')
-                              AND Is_Open = TRUE THEN ACV END), 0) AS open_sales_acv,
+                              AND Is_Open = TRUE THEN ACV_USD END), 0) AS open_sales_acv,
             COUNTIF(Sales_Motion IN ('Net New','Expansion','Migration')
                     AND Is_Open = TRUE)                            AS open_sales_count
         FROM {tbl}
@@ -216,8 +216,8 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
     by_stage_sql = f"""
         SELECT
             StageName AS stage,
-            COALESCE(SUM(ACV), 0) AS open_acv,
-            COUNT(*)              AS deal_count
+            COALESCE(SUM(ACV_USD), 0) AS open_acv,
+            COUNT(*)                  AS deal_count
         FROM {tbl}
         WHERE Is_Open = TRUE
           AND Sales_Motion IN ('Net New','Expansion','Migration')
@@ -237,7 +237,7 @@ def get_flagged_deals(fiscal_quarter: int = 0) -> dict:
             COUNTIF(Is_Open = TRUE)                                           AS total_open,
             COUNTIF(Last_Activity_Date IS NULL AND Is_Open = TRUE)           AS null_activity_count,
             COALESCE(SUM(CASE WHEN Sales_Motion IN ('Net New','Expansion','Migration')
-                              AND Is_Open = TRUE THEN ACV END), 0)           AS total_open_sales_acv,
+                              AND Is_Open = TRUE THEN ACV_USD END), 0)       AS total_open_sales_acv,
             COUNTIF(
                 Last_Stage_Change_Date IS NOT NULL
                 AND DATE_DIFF(CURRENT_DATE(), DATE(Last_Stage_Change_Date), DAY) > 30
@@ -698,6 +698,7 @@ def get_winloss_data(fiscal_quarter: int = 0) -> dict:
         WHERE IsClosed = TRUE
           AND Category = 'Solutions'
           AND Is_Channel = FALSE
+          AND Sales_Motion IN ('Net New','Expansion','Migration','Renewal')
           AND FiscalYear = {FISCAL_YEAR}
           AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
         GROUP BY Sales_Motion
@@ -712,6 +713,8 @@ def get_winloss_data(fiscal_quarter: int = 0) -> dict:
             COALESCE(SUM(ACV), 0)            AS reason_acv
         FROM {tbl}
         WHERE Is_Lost = TRUE
+          AND Sales_Motion IN ('Net New','Expansion','Migration')
+          AND Category = 'Solutions'
           AND FiscalYear = {FISCAL_YEAR}
           AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
         GROUP BY Loss_Reason
@@ -727,6 +730,8 @@ def get_winloss_data(fiscal_quarter: int = 0) -> dict:
             COALESCE(SUM(ACV), 0)  AS lost_acv
         FROM {tbl}
         WHERE Is_Lost = TRUE
+          AND Sales_Motion IN ('Net New','Expansion','Migration')
+          AND Category = 'Solutions'
           AND FiscalYear = {FISCAL_YEAR}
           AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
         GROUP BY StageName
@@ -744,6 +749,8 @@ def get_winloss_data(fiscal_quarter: int = 0) -> dict:
             COALESCE(SUM(CASE WHEN Is_Won  THEN ACV END), 0) AS won_acv
         FROM {tbl}
         WHERE IsClosed = TRUE
+          AND Sales_Motion IN ('Net New','Expansion','Migration')
+          AND Category = 'Solutions'
           AND FiscalYear = {FISCAL_YEAR}
           AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
         GROUP BY BU
@@ -765,6 +772,8 @@ def get_winloss_data(fiscal_quarter: int = 0) -> dict:
             CloseDate
         FROM {tbl}
         WHERE IsClosed = TRUE
+          AND Sales_Motion IN ('Net New','Expansion','Migration')
+          AND Category = 'Solutions'
           AND FiscalYear = {FISCAL_YEAR}
           AND BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
         ORDER BY ACV DESC
@@ -781,7 +790,10 @@ def get_winloss_data(fiscal_quarter: int = 0) -> dict:
     # ── Shape win rates ────────────────────────────────────────────────────────
     total_closed = sum(safe_int(r.get("closed_count")) for r in motion_rows)
     total_won    = sum(safe_int(r.get("won_count"))    for r in motion_rows)
-    total_lost   = sum(safe_int(r.get("lost_count"))   for r in motion_rows)
+    total_lost   = sum(
+        safe_int(r.get("lost_count")) for r in motion_rows
+        if r.get("Sales_Motion") in ("Net New", "Expansion", "Migration")
+    )
 
     win_rates    = {}
     avg_deal     = {}
