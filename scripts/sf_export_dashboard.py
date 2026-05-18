@@ -60,7 +60,7 @@ MOTION_MAP = {
     # Net New
     'New Customer':          'Net New',
     'New Users':             'Net New',
-    'New Site':              'Net New',
+    'New Site':              'Migration',
     # Expansion
     'New Modules':           'Expansion',
     'Upgrade':               'Expansion',
@@ -207,6 +207,19 @@ CONTACT_ROLES_SOQL = f"""
 SELECT OpportunityId, ContactId, Contact.Name, Contact.Title, Role, IsPrimary
 FROM OpportunityContactRole
 WHERE Opportunity.FiscalYear IN ({FISCAL_YEAR_FILTER})
+"""
+
+SPLITS_SOQL = """
+SELECT
+    OpportunityId,
+    SplitOwnerId,
+    SplitOwner.Name,
+    SplitType.MasterLabel,
+    SplitPercentage,
+    Split
+FROM OpportunitySplit
+WHERE Opportunity.FiscalYear >= 2026
+  AND SplitType.MasterLabel = 'Solutions Revenue'
 """
 
 HISTORY_SCHEMA = [
@@ -448,6 +461,40 @@ def fetch_contact_roles(sf):
     df = df[["opportunityid", "contactid", "contact_name", "contact_title", "role", "isprimary"]]
     df["isprimary"] = df["isprimary"].fillna(False).astype(bool)
     print(f"  Fetched {len(df)} contact role rows")
+    return df
+
+
+def fetch_splits(sf):
+    print("  Running OpportunitySplit SOQL query...")
+    result = sf.query_all(SPLITS_SOQL)
+    records = [flatten_record(r) for r in result["records"]]
+    if not records:
+        print("  No split records found")
+        return pd.DataFrame(columns=["opportunity_id", "split_owner_id", "split_owner_name",
+                                     "split_type", "split_pct", "split_acv_usd"])
+    df = pd.DataFrame(records)
+    df = df.rename(columns={
+        "OpportunityId":         "opportunity_id",
+        "SplitOwnerId":          "split_owner_id",
+        "SplitOwner_Name":       "split_owner_name",
+        "SplitType_MasterLabel": "split_type",
+        "SplitPercentage":       "split_pct",
+        "Split":                 "split_acv_usd",
+    })
+    df = ensure_columns(df, {
+        "opportunity_id":   None,
+        "split_owner_id":   None,
+        "split_owner_name": None,
+        "split_type":       None,
+        "split_pct":        None,
+        "split_acv_usd":    None,
+    })
+    df = df[["opportunity_id", "split_owner_id", "split_owner_name", "split_type", "split_pct", "split_acv_usd"]]
+    df["split_pct"]     = pd.to_numeric(df["split_pct"],     errors="coerce")
+    df["split_acv_usd"] = pd.to_numeric(df["split_acv_usd"], errors="coerce")
+    # Keep one Solutions Revenue split per opp (highest ACV in case of multiples)
+    df = df.sort_values("split_acv_usd", ascending=False).drop_duplicates(subset=["opportunity_id"])
+    print(f"  Fetched {len(df)} split records ({len(df)} unique opps)")
     return df
 
 
@@ -800,38 +847,55 @@ def main():
     print(f"  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 60)
 
-    print("\n[1/9] Connecting to Salesforce...")
+    print("\n[1/10] Connecting to Salesforce...")
     sf = connect_sf()
 
-    print("\n[2/9] Fetching FX rates...")
+    print("\n[2/10] Fetching FX rates...")
     fx_rates = fetch_fx_rates(sf)
 
-    print("\n[3/9] Fetching opportunities...")
+    print("\n[3/10] Fetching opportunities...")
     df_raw = fetch_opportunities(sf)
 
-    print("\n[4/9] Transforming...")
+    print("\n[4/10] Transforming...")
     df = transform(df_raw, fx_rates=fx_rates)
 
-    print("\n[5/9] Filtering opportunities...")
+    print("\n[5/10] Filtering opportunities...")
     df = apply_filters(df)
     print_preview(df)
 
-    print("\n[6/9] Fetching related objects...")
+    print("\n[6/10] Fetching OpportunitySplits (Solutions Revenue)...")
+    splits_df = fetch_splits(sf)
+    if not splits_df.empty:
+        df = df.merge(
+            splits_df[["opportunity_id", "split_owner_name", "split_acv_usd"]].rename(columns={
+                "split_owner_name": "Split_Owner_Name",
+                "split_acv_usd":    "Split_Solutions_ACV",
+            }),
+            left_on="Id",
+            right_on="opportunity_id",
+            how="left",
+        ).drop(columns=["opportunity_id"])
+        print(f"  Joined splits: {splits_df['split_owner_name'].notna().sum()} opps have a Solutions Revenue split")
+    else:
+        df["Split_Owner_Name"]    = None
+        df["Split_Solutions_ACV"] = None
+
+    print("\n[7/10] Fetching related objects...")
     history_df       = fetch_opportunity_history(sf)
     contact_roles_df = fetch_contact_roles(sf)
     gong_df          = fetch_gong_conversations(sf)
 
-    print("\n[7/9] Saving opportunity CSV...")
+    print("\n[8/10] Saving opportunity CSV...")
     save_csv(df)
 
-    print("\n[8/9] Uploading to BigQuery...")
+    print("\n[9/10] Uploading to BigQuery...")
     row_counts = {
         BQ_TABLE:               upload_bq(df, BQ_TABLE),
         BQ_TABLE_HISTORY:       upload_bq(history_df, BQ_TABLE_HISTORY, HISTORY_SCHEMA),
         BQ_TABLE_CONTACT_ROLES: upload_bq(contact_roles_df, BQ_TABLE_CONTACT_ROLES, CONTACT_ROLE_SCHEMA),
     }
 
-    print("\n[9/9] Uploading Gong conversations to BigQuery...")
+    print("\n[10/10] Uploading Gong conversations to BigQuery...")
     if not gong_df.empty:
         row_counts[BQ_TABLE_GONG] = upload_bq(gong_df, BQ_TABLE_GONG, GONG_SCHEMA)
     else:

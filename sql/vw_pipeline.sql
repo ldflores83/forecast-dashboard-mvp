@@ -76,15 +76,15 @@ bu_summary AS (
     COALESCE(SUM(CASE WHEN o.Is_Open AND o.Sales_Motion = 'Migration' AND o.Category = 'Solutions' THEN o.ACV_USD END), 0) AS open_migration_acv,
     COALESCE(SUM(CASE WHEN o.Is_Open AND o.Sales_Motion = 'Renewal'   THEN o.ACV_USD END), 0) AS open_renewal_acv,
 
-    -- Win rate (all time for the period)
-    COUNTIF(o.IsClosed AND o.Is_Won)                                      AS won_count,
-    COUNTIF(o.IsClosed)                                                   AS closed_count,
-    COALESCE(SUM(CASE WHEN o.Is_Won THEN o.ACV_USD END), 0)               AS won_acv,
+    -- Win rate (all time for the period) — Solutions non-Renewal only
+    COUNTIF(o.IsClosed AND o.Is_Won AND o.Sales_Motion != 'Renewal' AND o.Category = 'Solutions')   AS won_count,
+    COUNTIF(o.IsClosed AND o.Sales_Motion != 'Renewal' AND o.Category = 'Solutions')                AS closed_count,
+    COALESCE(SUM(CASE WHEN o.Is_Won AND o.Sales_Motion != 'Renewal' AND o.Category = 'Solutions' THEN o.ACV_USD END), 0) AS won_acv,
 
     -- Avg deal (won only)
     SAFE_DIVIDE(
-      SUM(CASE WHEN o.Is_Won THEN o.ACV_USD END),
-      NULLIF(COUNTIF(o.Is_Won), 0)
+      SUM(CASE WHEN o.Is_Won AND o.Sales_Motion != 'Renewal' AND o.Category = 'Solutions' THEN o.ACV_USD END),
+      NULLIF(COUNTIF(o.Is_Won AND o.Sales_Motion != 'Renewal' AND o.Category = 'Solutions'), 0)
     )                                                                     AS avg_deal_won,
 
     -- Account intent signals (aggregated across open opps in this BU/quarter)
@@ -116,12 +116,12 @@ bu_fy AS (
     COALESCE(SUM(CASE WHEN o.Is_Open AND o.Sales_Motion = 'Expansion' AND o.Category = 'Solutions' THEN o.ACV_USD END), 0) AS open_expansion_acv,
     COALESCE(SUM(CASE WHEN o.Is_Open AND o.Sales_Motion = 'Migration' AND o.Category = 'Solutions' THEN o.ACV_USD END), 0) AS open_migration_acv,
     COALESCE(SUM(CASE WHEN o.Is_Open AND o.Sales_Motion = 'Renewal'   THEN o.ACV_USD END), 0) AS open_renewal_acv,
-    COUNTIF(o.IsClosed AND o.Is_Won)                                      AS won_count,
-    COUNTIF(o.IsClosed)                                                   AS closed_count,
-    COALESCE(SUM(CASE WHEN o.Is_Won THEN o.ACV_USD END), 0)               AS won_acv,
+    COUNTIF(o.IsClosed AND o.Is_Won AND o.Sales_Motion != 'Renewal' AND o.Category = 'Solutions')   AS won_count,
+    COUNTIF(o.IsClosed AND o.Sales_Motion != 'Renewal' AND o.Category = 'Solutions')                AS closed_count,
+    COALESCE(SUM(CASE WHEN o.Is_Won AND o.Sales_Motion != 'Renewal' AND o.Category = 'Solutions' THEN o.ACV_USD END), 0) AS won_acv,
     SAFE_DIVIDE(
-      SUM(CASE WHEN o.Is_Won THEN o.ACV_USD END),
-      NULLIF(COUNTIF(o.Is_Won), 0)
+      SUM(CASE WHEN o.Is_Won AND o.Sales_Motion != 'Renewal' AND o.Category = 'Solutions' THEN o.ACV_USD END),
+      NULLIF(COUNTIF(o.Is_Won AND o.Sales_Motion != 'Renewal' AND o.Category = 'Solutions'), 0)
     )                                                                     AS avg_deal_won,
     AVG(CASE WHEN o.Is_Open THEN acc.q_score END)                         AS q_score,
     MAX(CASE WHEN o.Is_Open THEN acc.q_trend END)                         AS q_trend,
