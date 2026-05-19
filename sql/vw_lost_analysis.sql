@@ -19,6 +19,10 @@ WITH lost_totals AS (
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND Name NOT LIKE '%Amendment%'
     AND Name NOT LIKE '%zzz%'
+    AND UPPER(Name) NOT LIKE '%REBILL%'
+    AND UPPER(Name) NOT LIKE '%RE-INVOICE%'
+    AND UPPER(Name) NOT LIKE '%REINVOICE%'
+    AND UPPER(Name) NOT LIKE '%RE INVOICE%'
   GROUP BY FiscalQuarter, FiscalYear
 ),
 
@@ -35,6 +39,10 @@ lost_totals_fy AS (
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND Name NOT LIKE '%Amendment%'
     AND Name NOT LIKE '%zzz%'
+    AND UPPER(Name) NOT LIKE '%REBILL%'
+    AND UPPER(Name) NOT LIKE '%RE-INVOICE%'
+    AND UPPER(Name) NOT LIKE '%REINVOICE%'
+    AND UPPER(Name) NOT LIKE '%RE INVOICE%'
   GROUP BY FiscalYear
 ),
 
@@ -52,6 +60,10 @@ lost_by_bu AS (
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND Name NOT LIKE '%Amendment%'
     AND Name NOT LIKE '%zzz%'
+    AND UPPER(Name) NOT LIKE '%REBILL%'
+    AND UPPER(Name) NOT LIKE '%RE-INVOICE%'
+    AND UPPER(Name) NOT LIKE '%REINVOICE%'
+    AND UPPER(Name) NOT LIKE '%RE INVOICE%'
   GROUP BY FiscalQuarter, FiscalYear, BU
 ),
 
@@ -68,6 +80,10 @@ lost_by_bu_fy AS (
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND Name NOT LIKE '%Amendment%'
     AND Name NOT LIKE '%zzz%'
+    AND UPPER(Name) NOT LIKE '%REBILL%'
+    AND UPPER(Name) NOT LIKE '%RE-INVOICE%'
+    AND UPPER(Name) NOT LIKE '%REINVOICE%'
+    AND UPPER(Name) NOT LIKE '%RE INVOICE%'
   GROUP BY FiscalYear, BU
 ),
 
@@ -90,6 +106,10 @@ loss_reasons AS (
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND Name NOT LIKE '%Amendment%'
     AND Name NOT LIKE '%zzz%'
+    AND UPPER(Name) NOT LIKE '%REBILL%'
+    AND UPPER(Name) NOT LIKE '%RE-INVOICE%'
+    AND UPPER(Name) NOT LIKE '%REINVOICE%'
+    AND UPPER(Name) NOT LIKE '%RE INVOICE%'
   GROUP BY FiscalQuarter, FiscalYear, Loss_Reason
 ),
 
@@ -110,56 +130,83 @@ loss_reasons_fy AS (
     AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND Name NOT LIKE '%Amendment%'
     AND Name NOT LIKE '%zzz%'
+    AND UPPER(Name) NOT LIKE '%REBILL%'
+    AND UPPER(Name) NOT LIKE '%RE-INVOICE%'
+    AND UPPER(Name) NOT LIKE '%REINVOICE%'
+    AND UPPER(Name) NOT LIKE '%RE INVOICE%'
   GROUP BY FiscalYear, Loss_Reason
 ),
 
 -- ── By motion (won + lost + open) ─────────────────────────
+-- won_acv: Renewal uses ACV_USD; Sales motions use split_solutions_acv (no fallback)
 by_motion AS (
   SELECT
-    FiscalQuarter   AS fiscal_quarter,
-    FiscalYear      AS fiscal_year,
-    Sales_Motion    AS motion,
-    COALESCE(SUM(CASE WHEN Is_Won  THEN ACV_USD END), 0) AS won_acv,
-    COALESCE(SUM(CASE WHEN Is_Lost AND Sales_Motion = 'Renewal' AND ATR_Value_USD > 0 THEN ATR_Value_USD
-                       WHEN Is_Lost AND Sales_Motion != 'Renewal' THEN ACV_USD END), 0) AS lost_acv,
-    COALESCE(SUM(CASE WHEN Is_Open THEN ACV_USD END), 0) AS open_acv,
-    COUNTIF(Is_Won)     AS won_count,
-    COUNTIF(Is_Lost)    AS lost_count,
-    COUNTIF(Is_Open)    AS open_count,
-    COUNTIF(IsClosed)   AS closed_count,
-    SAFE_DIVIDE(COUNTIF(Is_Won), NULLIF(COUNTIF(IsClosed), 0)) * 100 AS win_rate_pct,
-    SAFE_DIVIDE(SUM(CASE WHEN Is_Won THEN ACV_USD END), NULLIF(COUNTIF(Is_Won), 0)) AS avg_deal_won
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
-  WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
-    AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
-    AND Name NOT LIKE '%Amendment%'
-    AND Name NOT LIKE '%zzz%'
-    AND (Sales_Motion = 'Renewal' OR (Sales_Motion IN ('Net New', 'Expansion', 'Migration') AND Category = 'Solutions'))
-  GROUP BY FiscalQuarter, FiscalYear, Sales_Motion
+    o.FiscalQuarter   AS fiscal_quarter,
+    o.FiscalYear      AS fiscal_year,
+    o.Sales_Motion    AS motion,
+    COALESCE(SUM(CASE
+      WHEN o.Is_Won AND o.Sales_Motion = 'Renewal'                               THEN o.ACV_USD
+      WHEN o.Is_Won AND o.Sales_Motion IN ('Net New','Expansion','Migration')     THEN s.split_solutions_acv
+    END), 0)          AS won_acv,
+    COALESCE(SUM(CASE WHEN o.Is_Lost AND o.Sales_Motion = 'Renewal' AND o.ATR_Value_USD > 0 THEN o.ATR_Value_USD
+                       WHEN o.Is_Lost AND o.Sales_Motion != 'Renewal' THEN o.ACV_USD END), 0) AS lost_acv,
+    COALESCE(SUM(CASE WHEN o.Is_Open THEN o.ACV_USD END), 0) AS open_acv,
+    COUNTIF(o.Is_Won)     AS won_count,
+    COUNTIF(o.Is_Lost)    AS lost_count,
+    COUNTIF(o.Is_Open)    AS open_count,
+    COUNTIF(o.IsClosed)   AS closed_count,
+    SAFE_DIVIDE(COUNTIF(o.Is_Won), NULLIF(COUNTIF(o.IsClosed), 0)) * 100 AS win_rate_pct,
+    SAFE_DIVIDE(SUM(CASE WHEN o.Is_Won THEN o.ACV_USD END), NULLIF(COUNTIF(o.Is_Won), 0)) AS avg_deal_won
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities` o
+  LEFT JOIN `forecast-dashboard-mvp.forecast_data.opportunity_splits` s
+    ON o.Id = s.opportunity_id
+    AND s.split_type = 'Solutions Revenue'
+  WHERE o.BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
+    AND o.Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
+    AND o.Name NOT LIKE '%Amendment%'
+    AND o.Name NOT LIKE '%zzz%'
+    AND UPPER(o.Name) NOT LIKE '%REBILL%'
+    AND UPPER(o.Name) NOT LIKE '%RE-INVOICE%'
+    AND UPPER(o.Name) NOT LIKE '%REINVOICE%'
+    AND UPPER(o.Name) NOT LIKE '%RE INVOICE%'
+    AND o.Type != 'Admin $0'
+    AND (o.Sales_Motion = 'Renewal' OR (o.Sales_Motion IN ('Net New', 'Expansion', 'Migration') AND o.Category = 'Solutions'))
+  GROUP BY o.FiscalQuarter, o.FiscalYear, o.Sales_Motion
 ),
 
 by_motion_fy AS (
   SELECT
-    0               AS fiscal_quarter,
-    FiscalYear      AS fiscal_year,
-    Sales_Motion    AS motion,
-    COALESCE(SUM(CASE WHEN Is_Won  THEN ACV_USD END), 0) AS won_acv,
-    COALESCE(SUM(CASE WHEN Is_Lost AND Sales_Motion = 'Renewal' AND ATR_Value_USD > 0 THEN ATR_Value_USD
-                       WHEN Is_Lost AND Sales_Motion != 'Renewal' THEN ACV_USD END), 0) AS lost_acv,
-    COALESCE(SUM(CASE WHEN Is_Open THEN ACV_USD END), 0) AS open_acv,
-    COUNTIF(Is_Won)     AS won_count,
-    COUNTIF(Is_Lost)    AS lost_count,
-    COUNTIF(Is_Open)    AS open_count,
-    COUNTIF(IsClosed)   AS closed_count,
-    SAFE_DIVIDE(COUNTIF(Is_Won), NULLIF(COUNTIF(IsClosed), 0)) * 100 AS win_rate_pct,
-    SAFE_DIVIDE(SUM(CASE WHEN Is_Won THEN ACV_USD END), NULLIF(COUNTIF(Is_Won), 0)) AS avg_deal_won
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
-  WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
-    AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
-    AND Name NOT LIKE '%Amendment%'
-    AND Name NOT LIKE '%zzz%'
-    AND (Sales_Motion = 'Renewal' OR (Sales_Motion IN ('Net New', 'Expansion', 'Migration') AND Category = 'Solutions'))
-  GROUP BY FiscalYear, Sales_Motion
+    0                 AS fiscal_quarter,
+    o.FiscalYear      AS fiscal_year,
+    o.Sales_Motion    AS motion,
+    COALESCE(SUM(CASE
+      WHEN o.Is_Won AND o.Sales_Motion = 'Renewal'                               THEN o.ACV_USD
+      WHEN o.Is_Won AND o.Sales_Motion IN ('Net New','Expansion','Migration')     THEN s.split_solutions_acv
+    END), 0)          AS won_acv,
+    COALESCE(SUM(CASE WHEN o.Is_Lost AND o.Sales_Motion = 'Renewal' AND o.ATR_Value_USD > 0 THEN o.ATR_Value_USD
+                       WHEN o.Is_Lost AND o.Sales_Motion != 'Renewal' THEN o.ACV_USD END), 0) AS lost_acv,
+    COALESCE(SUM(CASE WHEN o.Is_Open THEN o.ACV_USD END), 0) AS open_acv,
+    COUNTIF(o.Is_Won)     AS won_count,
+    COUNTIF(o.Is_Lost)    AS lost_count,
+    COUNTIF(o.Is_Open)    AS open_count,
+    COUNTIF(o.IsClosed)   AS closed_count,
+    SAFE_DIVIDE(COUNTIF(o.Is_Won), NULLIF(COUNTIF(o.IsClosed), 0)) * 100 AS win_rate_pct,
+    SAFE_DIVIDE(SUM(CASE WHEN o.Is_Won THEN o.ACV_USD END), NULLIF(COUNTIF(o.Is_Won), 0)) AS avg_deal_won
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities` o
+  LEFT JOIN `forecast-dashboard-mvp.forecast_data.opportunity_splits` s
+    ON o.Id = s.opportunity_id
+    AND s.split_type = 'Solutions Revenue'
+  WHERE o.BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
+    AND o.Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
+    AND o.Name NOT LIKE '%Amendment%'
+    AND o.Name NOT LIKE '%zzz%'
+    AND UPPER(o.Name) NOT LIKE '%REBILL%'
+    AND UPPER(o.Name) NOT LIKE '%RE-INVOICE%'
+    AND UPPER(o.Name) NOT LIKE '%REINVOICE%'
+    AND UPPER(o.Name) NOT LIKE '%RE INVOICE%'
+    AND o.Type != 'Admin $0'
+    AND (o.Sales_Motion = 'Renewal' OR (o.Sales_Motion IN ('Net New', 'Expansion', 'Migration') AND o.Category = 'Solutions'))
+  GROUP BY o.FiscalYear, o.Sales_Motion
 )
 
 -- ── Unified output ────────────────────────────────────────

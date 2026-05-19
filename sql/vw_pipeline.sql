@@ -102,6 +102,10 @@ bu_summary AS (
     AND o.Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND o.Name NOT LIKE '%Amendment%'
     AND o.Name NOT LIKE '%zzz%'
+    AND UPPER(o.Name) NOT LIKE '%REBILL%'
+    AND UPPER(o.Name) NOT LIKE '%RE-INVOICE%'
+    AND UPPER(o.Name) NOT LIKE '%REINVOICE%'
+    AND UPPER(o.Name) NOT LIKE '%RE INVOICE%'
   GROUP BY o.BU, o.FiscalQuarter, o.FiscalYear
 ),
 
@@ -136,6 +140,10 @@ bu_fy AS (
     AND o.Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
     AND o.Name NOT LIKE '%Amendment%'
     AND o.Name NOT LIKE '%zzz%'
+    AND UPPER(o.Name) NOT LIKE '%REBILL%'
+    AND UPPER(o.Name) NOT LIKE '%RE-INVOICE%'
+    AND UPPER(o.Name) NOT LIKE '%REINVOICE%'
+    AND UPPER(o.Name) NOT LIKE '%RE INVOICE%'
   GROUP BY o.BU, o.FiscalYear
 )
 

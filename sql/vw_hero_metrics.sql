@@ -3,79 +3,119 @@
 -- Hero KPIs: renewal win rate, sales coverage of churn,
 -- open expansion pipeline, lost renewals (churn)
 -- Granularity: one row per fiscal_quarter + one row for FY (quarter = 0)
+-- Sales metrics use split_solutions_acv (no ACV_USD fallback)
 -- ============================================================
 CREATE OR REPLACE VIEW `forecast-dashboard-mvp.forecast_data.vw_hero_metrics` AS
 
 WITH base AS (
   SELECT
-    FiscalQuarter                                         AS fiscal_quarter,
-    FiscalYear                                            AS fiscal_year,
+    o.FiscalQuarter                                         AS fiscal_quarter,
+    o.FiscalYear                                            AS fiscal_year,
 
     -- Renewal counts
-    COUNTIF(Sales_Motion = 'Renewal' AND IsClosed AND Is_Won)     AS renewal_won_count,
-    COUNTIF(Sales_Motion = 'Renewal' AND IsClosed AND Is_Lost)    AS renewal_lost_count,
-    COUNTIF(Sales_Motion = 'Renewal' AND IsClosed)                AS renewal_closed_count,
+    COUNTIF(o.Sales_Motion = 'Renewal' AND o.IsClosed AND o.Is_Won)     AS renewal_won_count,
+    COUNTIF(o.Sales_Motion = 'Renewal' AND o.IsClosed AND o.Is_Lost)    AS renewal_lost_count,
+    COUNTIF(o.Sales_Motion = 'Renewal' AND o.IsClosed)                  AS renewal_closed_count,
 
     -- Renewal ACV
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Won  THEN ACV_USD END), 0) AS renewal_won_acv,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value_USD > 0 THEN ATR_Value_USD END), 0) AS renewal_lost_acv,
+    COALESCE(SUM(CASE WHEN o.Sales_Motion = 'Renewal' AND o.Is_Won
+                      THEN o.ACV_USD END), 0)                           AS renewal_won_acv,
+    COALESCE(SUM(CASE WHEN o.Sales_Motion = 'Renewal' AND o.Is_Lost AND o.ATR_Value_USD > 0
+                      THEN o.ATR_Value_USD END), 0)                     AS renewal_lost_acv,
 
-    -- Sales new revenue (Net New + Expansion + Migration won)
-    COALESCE(SUM(CASE WHEN Sales_Motion IN ('Net New','Expansion','Migration') AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0) AS sales_won_acv,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Net New'   AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0) AS net_new_won_acv,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Expansion' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0) AS expansion_won_acv,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Migration' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0) AS migration_won_acv,
+    -- Sales new revenue: split_solutions_acv (no fallback)
+    COALESCE(SUM(CASE WHEN o.Sales_Motion IN ('Net New','Expansion','Migration')
+                       AND o.Category = 'Solutions' AND o.Is_Channel = FALSE AND o.Is_Won
+                      THEN s.split_solutions_acv END), 0)               AS sales_won_acv,
+    COALESCE(SUM(CASE WHEN o.Sales_Motion = 'Net New'
+                       AND o.Category = 'Solutions' AND o.Is_Channel = FALSE AND o.Is_Won
+                      THEN s.split_solutions_acv END), 0)               AS net_new_won_acv,
+    COALESCE(SUM(CASE WHEN o.Sales_Motion = 'Expansion'
+                       AND o.Category = 'Solutions' AND o.Is_Channel = FALSE AND o.Is_Won
+                      THEN s.split_solutions_acv END), 0)               AS expansion_won_acv,
+    COALESCE(SUM(CASE WHEN o.Sales_Motion = 'Migration'
+                       AND o.Category = 'Solutions' AND o.Is_Channel = FALSE AND o.Is_Won
+                      THEN s.split_solutions_acv END), 0)               AS migration_won_acv,
 
-    -- Open expansion pipeline
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Expansion' AND Category = 'Solutions' AND Is_Open THEN ACV_USD END), 0) AS expansion_open_acv,
-    COUNTIF(Sales_Motion = 'Expansion' AND Category = 'Solutions' AND Is_Open)                                  AS expansion_open_count,
+    -- Open expansion pipeline (ACV_USD — split attribution not needed)
+    COALESCE(SUM(CASE WHEN o.Sales_Motion = 'Expansion'
+                       AND o.Category = 'Solutions' AND o.Is_Open
+                      THEN o.ACV_USD END), 0)                           AS expansion_open_acv,
+    COUNTIF(o.Sales_Motion = 'Expansion' AND o.Category = 'Solutions' AND o.Is_Open) AS expansion_open_count,
 
     -- Totals
-    COALESCE(SUM(CASE WHEN Is_Won  THEN ACV_USD END), 0) AS total_won_acv,
-    COALESCE(SUM(CASE WHEN Is_Lost THEN ACV_USD END), 0) AS total_lost_acv,
-    COALESCE(SUM(CASE WHEN Is_Open THEN ACV_USD END), 0) AS total_open_acv,
-    COUNT(*) AS total_opps,
-    COUNTIF(Is_Won)  AS won_opps,
-    COUNTIF(Is_Lost) AS lost_opps,
-    COUNTIF(Is_Open) AS open_opps
+    COALESCE(SUM(CASE WHEN o.Is_Won  THEN o.ACV_USD END), 0)           AS total_won_acv,
+    COALESCE(SUM(CASE WHEN o.Is_Lost THEN o.ACV_USD END), 0)           AS total_lost_acv,
+    COALESCE(SUM(CASE WHEN o.Is_Open THEN o.ACV_USD END), 0)           AS total_open_acv,
+    COUNT(*)                                                            AS total_opps,
+    COUNTIF(o.Is_Won)                                                   AS won_opps,
+    COUNTIF(o.Is_Lost)                                                  AS lost_opps,
+    COUNTIF(o.Is_Open)                                                  AS open_opps
 
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
-  WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
-    AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
-    AND Name NOT LIKE '%Amendment%'
-    AND Name NOT LIKE '%zzz%'
-  GROUP BY FiscalQuarter, FiscalYear
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities` o
+  LEFT JOIN `forecast-dashboard-mvp.forecast_data.opportunity_splits` s
+    ON o.Id = s.opportunity_id
+    AND s.split_type = 'Solutions Revenue'
+  WHERE o.BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
+    AND o.Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
+    AND o.Name NOT LIKE '%Amendment%'
+    AND o.Name NOT LIKE '%zzz%'
+    AND UPPER(o.Name) NOT LIKE '%REBILL%'
+    AND UPPER(o.Name) NOT LIKE '%RE-INVOICE%'
+    AND UPPER(o.Name) NOT LIKE '%REINVOICE%'
+    AND UPPER(o.Name) NOT LIKE '%RE INVOICE%'
+    AND o.Type != 'Admin $0'
+  GROUP BY o.FiscalQuarter, o.FiscalYear
 ),
 
 fy AS (
-  -- Full year rollup (fiscal_quarter = 0 signals FY)
   SELECT
     0                                                             AS fiscal_quarter,
-    FiscalYear                                                    AS fiscal_year,
-    COUNTIF(Sales_Motion = 'Renewal' AND IsClosed AND Is_Won)     AS renewal_won_count,
-    COUNTIF(Sales_Motion = 'Renewal' AND IsClosed AND Is_Lost)    AS renewal_lost_count,
-    COUNTIF(Sales_Motion = 'Renewal' AND IsClosed)                AS renewal_closed_count,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Won  THEN ACV_USD END), 0) AS renewal_won_acv,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Renewal' AND Is_Lost AND ATR_Value_USD > 0 THEN ATR_Value_USD END), 0) AS renewal_lost_acv,
-    COALESCE(SUM(CASE WHEN Sales_Motion IN ('Net New','Expansion','Migration') AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0) AS sales_won_acv,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Net New'   AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0) AS net_new_won_acv,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Expansion' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0) AS expansion_won_acv,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Migration' AND Category = 'Solutions' AND Is_Channel = FALSE AND Is_Won THEN ACV_USD END), 0) AS migration_won_acv,
-    COALESCE(SUM(CASE WHEN Sales_Motion = 'Expansion' AND Category = 'Solutions' AND Is_Open THEN ACV_USD END), 0) AS expansion_open_acv,
-    COUNTIF(Sales_Motion = 'Expansion' AND Category = 'Solutions' AND Is_Open)                                  AS expansion_open_count,
-    COALESCE(SUM(CASE WHEN Is_Won  THEN ACV_USD END), 0) AS total_won_acv,
-    COALESCE(SUM(CASE WHEN Is_Lost THEN ACV_USD END), 0) AS total_lost_acv,
-    COALESCE(SUM(CASE WHEN Is_Open THEN ACV_USD END), 0) AS total_open_acv,
-    COUNT(*) AS total_opps,
-    COUNTIF(Is_Won)  AS won_opps,
-    COUNTIF(Is_Lost) AS lost_opps,
-    COUNTIF(Is_Open) AS open_opps
-  FROM `forecast-dashboard-mvp.forecast_data.opportunities`
-  WHERE BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
-    AND Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
-    AND Name NOT LIKE '%Amendment%'
-    AND Name NOT LIKE '%zzz%'
-  GROUP BY FiscalYear
+    o.FiscalYear                                                  AS fiscal_year,
+    COUNTIF(o.Sales_Motion = 'Renewal' AND o.IsClosed AND o.Is_Won)     AS renewal_won_count,
+    COUNTIF(o.Sales_Motion = 'Renewal' AND o.IsClosed AND o.Is_Lost)    AS renewal_lost_count,
+    COUNTIF(o.Sales_Motion = 'Renewal' AND o.IsClosed)                  AS renewal_closed_count,
+    COALESCE(SUM(CASE WHEN o.Sales_Motion = 'Renewal' AND o.Is_Won
+                      THEN o.ACV_USD END), 0)                           AS renewal_won_acv,
+    COALESCE(SUM(CASE WHEN o.Sales_Motion = 'Renewal' AND o.Is_Lost AND o.ATR_Value_USD > 0
+                      THEN o.ATR_Value_USD END), 0)                     AS renewal_lost_acv,
+    COALESCE(SUM(CASE WHEN o.Sales_Motion IN ('Net New','Expansion','Migration')
+                       AND o.Category = 'Solutions' AND o.Is_Channel = FALSE AND o.Is_Won
+                      THEN s.split_solutions_acv END), 0)               AS sales_won_acv,
+    COALESCE(SUM(CASE WHEN o.Sales_Motion = 'Net New'
+                       AND o.Category = 'Solutions' AND o.Is_Channel = FALSE AND o.Is_Won
+                      THEN s.split_solutions_acv END), 0)               AS net_new_won_acv,
+    COALESCE(SUM(CASE WHEN o.Sales_Motion = 'Expansion'
+                       AND o.Category = 'Solutions' AND o.Is_Channel = FALSE AND o.Is_Won
+                      THEN s.split_solutions_acv END), 0)               AS expansion_won_acv,
+    COALESCE(SUM(CASE WHEN o.Sales_Motion = 'Migration'
+                       AND o.Category = 'Solutions' AND o.Is_Channel = FALSE AND o.Is_Won
+                      THEN s.split_solutions_acv END), 0)               AS migration_won_acv,
+    COALESCE(SUM(CASE WHEN o.Sales_Motion = 'Expansion'
+                       AND o.Category = 'Solutions' AND o.Is_Open
+                      THEN o.ACV_USD END), 0)                           AS expansion_open_acv,
+    COUNTIF(o.Sales_Motion = 'Expansion' AND o.Category = 'Solutions' AND o.Is_Open) AS expansion_open_count,
+    COALESCE(SUM(CASE WHEN o.Is_Won  THEN o.ACV_USD END), 0)           AS total_won_acv,
+    COALESCE(SUM(CASE WHEN o.Is_Lost THEN o.ACV_USD END), 0)           AS total_lost_acv,
+    COALESCE(SUM(CASE WHEN o.Is_Open THEN o.ACV_USD END), 0)           AS total_open_acv,
+    COUNT(*)                                                            AS total_opps,
+    COUNTIF(o.Is_Won)                                                   AS won_opps,
+    COUNTIF(o.Is_Lost)                                                  AS lost_opps,
+    COUNTIF(o.Is_Open)                                                  AS open_opps
+  FROM `forecast-dashboard-mvp.forecast_data.opportunities` o
+  LEFT JOIN `forecast-dashboard-mvp.forecast_data.opportunity_splits` s
+    ON o.Id = s.opportunity_id
+    AND s.split_type = 'Solutions Revenue'
+  WHERE o.BU IN ('ERP BU', 'Supply Chain BU', 'Redzone BU')
+    AND o.Substage NOT IN ('Combined', 'Credited', 'Closed-Duplicate', 'Junk')
+    AND o.Name NOT LIKE '%Amendment%'
+    AND o.Name NOT LIKE '%zzz%'
+    AND UPPER(o.Name) NOT LIKE '%REBILL%'
+    AND UPPER(o.Name) NOT LIKE '%RE-INVOICE%'
+    AND UPPER(o.Name) NOT LIKE '%REINVOICE%'
+    AND UPPER(o.Name) NOT LIKE '%RE INVOICE%'
+    AND o.Type != 'Admin $0'
+  GROUP BY o.FiscalYear
 )
 
 SELECT

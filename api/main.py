@@ -13,6 +13,7 @@ import json
 import functions_framework
 from datetime import datetime, timezone
 from google.cloud import bigquery
+from shared.config import STARTING_ARR_FY2027
 
 PROJECT = "forecast-dashboard-mvp"
 DATASET = "forecast_data"
@@ -39,7 +40,9 @@ def dashboard_api(request):
     mode = request.args.get("mode", "")
 
     try:
-        if mode == "signals":
+        if mode == "ping":
+            return (json.dumps({"status": "ok", "ts": datetime.utcnow().isoformat()}), 200, CORS)
+        elif mode == "signals":
             payload = build_signals_payload(fiscal_quarter)
         elif mode == "clear-cache":
             from shared import cache
@@ -194,6 +197,9 @@ def build_payload(fiscal_quarter):
           AND fiscal_year = 2027
         ORDER BY bu
     """)
+    # Sum channel/services across BUs for revenue_health (these fields are absent in vw_hero_metrics)
+    _dyn_channel  = sum(_f(dict(r).get("channel_won_acv"))  for r in dyn_rows)
+    _dyn_services = sum(_f(dict(r).get("services_won_acv")) for r in dyn_rows)
 
     # ── PIPELINE ──────────────────────────────────────────────────────────────
     pipe_rows = query(f"""
@@ -246,15 +252,15 @@ def build_payload(fiscal_quarter):
             "net_new_won_acv":     _f(h.get("net_new_won_acv")),
             "expansion_won_acv":   _f(h.get("expansion_won_acv")),
             "migration_won_acv":   _f(h.get("migration_won_acv")),
-            "channel_won_acv":     _f(h.get("channel_won_acv")),      # Solutions Channel
-            "services_won_acv":    _f(h.get("services_won_acv")),     # Services (excluded)
+            "channel_won_acv":     _dyn_channel,                        # Solutions Channel (from vw_revenue_dynamics)
+            "services_won_acv":    _dyn_services,                      # Services (from vw_revenue_dynamics)
             "total_won_acv":       _f(h.get("total_won_acv")),
             "total_lost_acv":      _f(h.get("total_lost_acv")),
             "total_open_acv":      _f(h.get("total_open_acv")),
         },
 
         "waterfall": {
-            "starting_arr":       _f(w.get("starting_arr", 436700000)),
+            "starting_arr":       _f(w.get("starting_arr", STARTING_ARR_FY2027)),
             "net_new":            _f(w.get("net_new")),
             "expansion":          _f(w.get("expansion")),
             "migration":          _f(w.get("migration")),
@@ -265,6 +271,7 @@ def build_payload(fiscal_quarter):
             "renewal_lost_count": int(w.get("renewal_lost_count") or 0),
             "ending_arr":         _f(w.get("ending_arr")),
             "net_growth":         _f(w.get("net_growth")),
+            "sales_new_arr":      _f(w.get("sales_new_arr")),
         },
 
         "by_bu":     _shape_by_bu(dyn_rows),

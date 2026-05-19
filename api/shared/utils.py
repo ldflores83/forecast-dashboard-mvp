@@ -14,6 +14,8 @@ import hashlib
 import json
 from datetime import datetime, timezone, date
 
+from .config import STARTING_ARR_FY2027
+
 
 def build_context(fiscal_quarter: int = 0) -> dict:
     """
@@ -37,8 +39,7 @@ def build_context(fiscal_quarter: int = 0) -> dict:
         "fiscal_year":     2027,
         "snapshot_date":   now.strftime("%Y-%m-%d"),
         "generated_at":    now.isoformat(),
-        # Starting ARR — QAD Tableau snapshot Feb 2026
-        "starting_arr":    436_700_000.0,
+        "starting_arr":    float(STARTING_ARR_FY2027),
     }
 
 

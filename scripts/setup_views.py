@@ -29,6 +29,7 @@ SQL_DIR   = os.path.join(os.path.dirname(__file__), "../sql")
 
 VIEWS = [
     "vw_hero_metrics",
+    "vw_opportunity_splits",
     "vw_waterfall",
     "vw_revenue_dynamics",
     "vw_pipeline",

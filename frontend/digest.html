@@ -405,7 +405,7 @@ async function checkDataStatus() {
     setStatus('icp', 'error', 'unreachable');
   }
   try {
-    const res = await fetch(API_BASE + '?mode=hero&fy=2027');
+    const res = await fetch(API_BASE + '?mode=ping');
     const ok = res.ok;
     setStatus('hero', ok ? 'ok' : 'error', ok ? 'available' : 'unavailable');
   } catch {

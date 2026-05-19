@@ -47,6 +47,7 @@ BQ_TABLE               = "opportunities"
 BQ_TABLE_HISTORY       = "opportunity_history"
 BQ_TABLE_CONTACT_ROLES = "contact_roles"
 BQ_TABLE_GONG          = "gong_conversations"
+BQ_TABLE_SPLITS        = "opportunity_splits"
 
 # Substages and name patterns to exclude (inflate lost renewals otherwise)
 EXCL_SUBSTAGE = ['Combined', 'Credited', 'Closed-Duplicate', 'Junk']
@@ -145,6 +146,7 @@ OPPORTUNITY_FIELDS = [
     "ATR_Value__c",
     "Total_Bookings_Net__c",
     "Solutions_Rev_ACV_Net__c",
+    "Category__c",
     "Substage__c",
     "Primary_Opp_Value_Stream__c",
     "Reason_LQ_Q__c",
@@ -216,7 +218,10 @@ SELECT
     SplitOwner.Name,
     SplitType.MasterLabel,
     SplitPercentage,
-    Split
+    SplitAmount,
+    Split_Solutions_Rev_ACV_Net__c,
+    Opportunity.Total_Bookings_Net__c,
+    Opportunity.Solutions_Rev_ACV_Net__c
 FROM OpportunitySplit
 WHERE Opportunity.FiscalYear >= 2026
   AND SplitType.MasterLabel = 'Solutions Revenue'
@@ -289,6 +294,19 @@ GONG_SCHEMA = [
     bigquery.SchemaField("call_url",       "STRING"),
     bigquery.SchemaField("talk_time_them", "FLOAT"),
     bigquery.SchemaField("talk_time_us",   "FLOAT"),
+]
+
+SPLITS_SCHEMA = [
+    bigquery.SchemaField("opportunity_id",              "STRING"),
+    bigquery.SchemaField("split_owner_id",              "STRING"),
+    bigquery.SchemaField("split_owner_name",            "STRING"),
+    bigquery.SchemaField("split_type",                  "STRING"),
+    bigquery.SchemaField("split_pct",                   "FLOAT"),
+    bigquery.SchemaField("total_bookings_net",          "FLOAT"),
+    bigquery.SchemaField("split_solutions_rev_acv_net", "FLOAT"),
+    bigquery.SchemaField("split_solutions_acv",         "FLOAT"),
+    bigquery.SchemaField("fiscal_year",                 "INTEGER"),
+    bigquery.SchemaField("close_date",                  "STRING"),
 ]
 
 
@@ -471,30 +489,35 @@ def fetch_splits(sf):
     if not records:
         print("  No split records found")
         return pd.DataFrame(columns=["opportunity_id", "split_owner_id", "split_owner_name",
-                                     "split_type", "split_pct", "split_acv_usd"])
+                                     "split_type", "split_pct", "total_bookings_net",
+                                     "split_solutions_rev_acv_net", "split_solutions_acv"])
     df = pd.DataFrame(records)
     df = df.rename(columns={
-        "OpportunityId":         "opportunity_id",
-        "SplitOwnerId":          "split_owner_id",
-        "SplitOwner_Name":       "split_owner_name",
-        "SplitType_MasterLabel": "split_type",
-        "SplitPercentage":       "split_pct",
-        "Split":                 "split_acv_usd",
+        "OpportunityId":                       "opportunity_id",
+        "SplitOwnerId":                        "split_owner_id",
+        "SplitOwner_Name":                     "split_owner_name",
+        "SplitType_MasterLabel":               "split_type",
+        "SplitPercentage":                     "split_pct",
+        "Split_Solutions_Rev_ACV_Net__c":      "split_solutions_rev_acv_net",
+        "Opportunity_Total_Bookings_Net__c":   "total_bookings_net",
+        "Opportunity_Solutions_Rev_ACV_Net__c":"opp_solutions_rev_acv_net",
     })
     df = ensure_columns(df, {
-        "opportunity_id":   None,
-        "split_owner_id":   None,
-        "split_owner_name": None,
-        "split_type":       None,
-        "split_pct":        None,
-        "split_acv_usd":    None,
+        "opportunity_id":             None,
+        "split_owner_id":             None,
+        "split_owner_name":           None,
+        "split_type":                 None,
+        "split_pct":                  None,
+        "total_bookings_net":         None,
+        "split_solutions_rev_acv_net": None,
     })
-    df = df[["opportunity_id", "split_owner_id", "split_owner_name", "split_type", "split_pct", "split_acv_usd"]]
-    df["split_pct"]     = pd.to_numeric(df["split_pct"],     errors="coerce")
-    df["split_acv_usd"] = pd.to_numeric(df["split_acv_usd"], errors="coerce")
-    # Keep one Solutions Revenue split per opp (highest ACV in case of multiples)
-    df = df.sort_values("split_acv_usd", ascending=False).drop_duplicates(subset=["opportunity_id"])
-    print(f"  Fetched {len(df)} split records ({len(df)} unique opps)")
+    df = df[["opportunity_id", "split_owner_id", "split_owner_name", "split_type",
+             "split_pct", "total_bookings_net", "split_solutions_rev_acv_net"]]
+    df["split_pct"]                  = pd.to_numeric(df["split_pct"],                  errors="coerce")
+    df["total_bookings_net"]         = pd.to_numeric(df["total_bookings_net"],         errors="coerce")
+    df["split_solutions_rev_acv_net"]= pd.to_numeric(df["split_solutions_rev_acv_net"],errors="coerce")
+    df["split_solutions_acv"] = df["split_solutions_rev_acv_net"].fillna(0)
+    print(f"  Fetched {len(df)} split records")
     return df
 
 
@@ -602,6 +625,7 @@ def transform(df, fx_rates=None):
         "ATR_Value__c":                "ATR_Value",
         "Total_Bookings_Net__c":       "ACV",
         "Solutions_Rev_ACV_Net__c":    "Solutions_ACV",
+        "Category__c":                 "Category",
         "Substage__c":                 "Substage",
         "Primary_Opp_Value_Stream__c": "BU",
         "Reason_LQ_Q__c":              "Loss_Reason",
@@ -651,6 +675,7 @@ def transform(df, fx_rates=None):
         "Owner_Name": None,
         "Owner_Role": None,
         "Lead_Source": None,
+        "Category": None,
         "Substage": None,
         "Name": "",
         "Last_Activity_Date": None,
@@ -713,18 +738,6 @@ def transform(df, fx_rates=None):
     }
     df["BU"] = df["BU"].map(BU_SUFFIX_MAP).fillna(df["BU"])
 
-    # Category — Solutions vs Services vs Other (mirrors SF reporting logic)
-    def get_category(opp_type):
-        if pd.isna(opp_type):
-            return "Other"
-        t = str(opp_type).strip()
-        if t in ("Services", "Professional Services"):
-            return "Services"
-        if t in ("Channel", "Solutions Channel"):
-            return "Channel"
-        return "Solutions"
-
-    df["Category"]   = df["Type"].apply(get_category)
     df["Is_Channel"] = df["Type"].isin(["Channel", "Solutions Channel"])
 
     # CS-sourced flag
@@ -864,21 +877,30 @@ def main():
     print_preview(df)
 
     print("\n[6/10] Fetching OpportunitySplits (Solutions Revenue)...")
-    splits_df = fetch_splits(sf)
+    splits_df     = fetch_splits(sf)
+    splits_upload = pd.DataFrame()
     if not splits_df.empty:
-        df = df.merge(
-            splits_df[["opportunity_id", "split_owner_name", "split_acv_usd"]].rename(columns={
-                "split_owner_name": "Split_Owner_Name",
-                "split_acv_usd":    "Split_Solutions_ACV",
-            }),
-            left_on="Id",
-            right_on="opportunity_id",
-            how="left",
-        ).drop(columns=["opportunity_id"])
-        print(f"  Joined splits: {splits_df['split_owner_name'].notna().sum()} opps have a Solutions Revenue split")
+        # Enrich splits with FiscalYear and CloseDate from the main DataFrame
+        opp_lookup = df[["Id", "FiscalYear", "CloseDate"]].rename(columns={"Id": "opportunity_id"})
+        splits_enriched = splits_df.merge(opp_lookup, on="opportunity_id", how="left")
+
+        # Build upload DataFrame — all records, no deduplication (vw_opportunity_splits handles it)
+        splits_upload = splits_enriched[[
+            "opportunity_id", "split_owner_id", "split_owner_name",
+            "split_type", "split_pct", "total_bookings_net",
+            "split_solutions_rev_acv_net", "split_solutions_acv",
+        ]].copy()
+        splits_upload["fiscal_year"] = splits_enriched["FiscalYear"].fillna(0).astype(int)
+        splits_upload["close_date"]  = pd.to_datetime(
+            splits_enriched["CloseDate"], errors="coerce"
+        ).dt.strftime("%Y-%m-%d")
+
+        unique_opps = splits_df["opportunity_id"].nunique()
+        nonzero     = int((splits_df["split_solutions_acv"] > 0).sum())
+        print(f"  Splits: {len(splits_df)} raw records across {unique_opps} unique opps")
+        print(f"  split_solutions_acv (from Split_Solutions_Rev_ACV_Net__c): {nonzero} non-zero records")
     else:
-        df["Split_Owner_Name"]    = None
-        df["Split_Solutions_ACV"] = None
+        print("  No split records found — skipping opportunity_splits upload")
 
     print("\n[7/10] Fetching related objects...")
     history_df       = fetch_opportunity_history(sf)
@@ -894,6 +916,10 @@ def main():
         BQ_TABLE_HISTORY:       upload_bq(history_df, BQ_TABLE_HISTORY, HISTORY_SCHEMA),
         BQ_TABLE_CONTACT_ROLES: upload_bq(contact_roles_df, BQ_TABLE_CONTACT_ROLES, CONTACT_ROLE_SCHEMA),
     }
+    if not splits_upload.empty:
+        row_counts[BQ_TABLE_SPLITS] = upload_bq(splits_upload, BQ_TABLE_SPLITS, SPLITS_SCHEMA)
+    else:
+        print(f"  Skipping {BQ_TABLE_SPLITS} — no split data fetched")
 
     print("\n[10/10] Uploading Gong conversations to BigQuery...")
     if not gong_df.empty:
